@@ -1,3 +1,7 @@
+/*
+    Each test should process 2.4kb json record (based on Clearbit API)
+    It should read multiple nested fields and 1 array
+*/
 package benchmark
 
 import (

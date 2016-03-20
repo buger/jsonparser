@@ -1,3 +1,7 @@
+/*
+    Each test should process 190 byte http log like json record
+    It should read multiple fields
+*/
 package benchmark
 
 import (

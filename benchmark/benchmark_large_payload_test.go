@@ -1,3 +1,8 @@
+/*
+    Each test should process 24kb json record (based on Discourse API)
+    It should read 2 arrays, and for each item in array get few fields.
+    Basically it means processing full JSON file.
+*/
 package benchmark
 
 import (
