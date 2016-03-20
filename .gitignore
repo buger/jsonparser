@@ -1,0 +1,8 @@
+
+*.test
+
+*.out
+
+*.mprof
+
+vendor/github.com/buger/goterm/
