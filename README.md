@@ -76,7 +76,9 @@ You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonpars
 ```
 func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error)
 ```
+Receives data structure, and key path to extract value from.
 
+Returns:
 `value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
 `dataType` - 	Can be: `NOT_EXIST`, `STRING`, `NUMBER`, `OBJECT`, `ARRAY`, `BOOLEAN` or `NULL`
 `offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
@@ -187,7 +189,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 
 Same patterns as at medium test. Both `ffjson` and `jsonparser` have own parsing code, and not depend on `encoding/json` or `interface{}`, thats one of the reasons why it so fast.
 
-## Questions and support 
+## Questions and support
 
 All bug-reports and suggestions should go though Github Issues.
 If you have some private questions you can send them directly to me: leonsbox@gmail.com
@@ -199,3 +201,14 @@ If you have some private questions you can send them directly to me: leonsbox@gm
 3. Commit your changes (git commit -am 'Added some feature')
 4. Push to the branch (git push origin my-new-feature)
 5. Create new Pull Request
+
+## Development
+
+All my development happens using Docker, and repo include some Make tasks to simplify development.
+
+* `make build` - builds docker image, usually can be called only once
+* `make test` - run tests
+* `make fmt` - run go fmt
+* `make bench` - run benchmarks (if you need to run only single benchmark modify `BENCHMARK` variable in make file)
+* `make profile` - runs benchmark and generate 3 files-  `cpu.out`, `mem.mprof` and `benchmark.test` binary, which can be used for `go tool pprof`
+* `make bash` - enter container (i use it for running `go tool pprof` above)

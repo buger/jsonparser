@@ -7,7 +7,7 @@ build:
 	docker build -t $(CONTAINER) .
 
 race:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) --env GORACE="halt_on_error=1" go test ./... $(ARGS) -v -race -timeout 15s
+	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) --env GORACE="halt_on_error=1" go test ./. $(ARGS) -v -race -timeout 15s
 
 bench:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -timeout 15s -v
