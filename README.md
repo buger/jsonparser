@@ -18,6 +18,8 @@ If you want to skip next sections, winner is `jsonparser` (obviously benchmarks 
 It is 3-9 times faster then standard `encoding/json` package (depending on payload size and usage), and almost infinitely (literally) better in memory consumption because it operate with data on byte level, and provide direct slice pointers.
 Few allocations you see in benchmarks happen because type conversions.
 
+`ffjson` goes next and looks really amazing considering that it is almost drop-in replacement for `encoding/json`.
+
 
 #### Small payload
 
@@ -75,8 +77,3 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | buger/jsonparser | **193601** | **120** | **32** |
 
 Same patterns as at medium test. Both `ffjson` and `jsonparser` have own parsing code, and not depend on `encoding/json` or `interface{}`, thats one of the reasons why it so fast.
-
-#### Conclusion
-
-`jsonparser` is obvious winner, especially at memory allocation. 
-`ffjson` goes next and looks really great, especially considering that it is almost drop-in replacement for `encoding/json`.
