@@ -1,15 +1,15 @@
 # Alternative JSON parser for Go (so far fastest)
 
-It does not require you to know structure of payload (eg. create structs), and allows accessing fields by providing path to them. So far it is the fastest JSON parser for Go, and it is up to **9 times faster** then standard `encoding/json` package (depending on payload size and usage), and almost **do not allocate any memory**, see benchmarks below.
+It does not require you to know the structure of the payload (eg. create structs), and allows accessing fields by providing the path to them. So far it is the fastest JSON parser for Go, and it is **9 times faster** then standard `encoding/json` package (depending on payload size and usage), **allocates almost no memory**. See benchmarks below.
 
 ## Rationale
-Originally i made it for the project which rely to lot of 3-rd party API, sometimes unpredictable and complex.
-I love simplicity and prefer to avoid external dependecies. `encoding/json` require you to exactly know your data structures, or if you prefer use `map[string]interface{}` instead, it will be very slow and hard to manage.
-I investigated what's on the marked and found that most of libraries are just wrappers around `encoding/json`, the only package that had own parser is `ffjson` (and it is awesome), but it still require you to create data structures. 
-Let's be honest JSON is not the hardest format to parse, so i wrote one, which focus on simplicity, performance.
+Originally I made this for a project that relies on a lot of 3rd party APIs that can be unpredictable and complex.
+I love simplicity and prefer to avoid external dependecies. `encoding/json` requires you to know exactly your data structures, or if you prefer to use `map[string]interface{}` instead, it will be very slow and hard to manage.
+I investigated what's on the market and found that most of libraries are just wrappers around `encoding/json`, the only package that had its own parser is `ffjson` (and it is awesome), but it still requires you to create data structures.
+Let's be honest, JSON is not the hardest format to parse, so i wrote one that focuses on simplicity and performance.
 
 ## Example
-For given JSON our goal is to extract user full name, github followers count and avatar. 
+For the given JSON our goal is to extract the user's full name, number of github followers and avatar.
 
 ```go
 import "github.com/buger/jsonparser"
@@ -28,7 +28,7 @@ data := []byte(`{
       "followers": 109
     },
     "avatars": [
-      { "url": "https://avatars1.githubusercontent.com/u/14009?v=3&s=460", "type": "thumbnail" } 
+      { "url": "https://avatars1.githubusercontent.com/u/14009?v=3&s=460", "type": "thumbnail" }
     ]
   },
   "company": {
@@ -50,15 +50,15 @@ jsonparser.GetNumber(person, "github", "followers")
 // In `company` it will be `{"name": "Acme"}`
 jsonparser.Get(data, "company")
 
-// If key not exists it will throw error
+// If the key doesn't exist it will throw an error
 size := 0
 if value, _, err := jsonparser.GetNumber(data, "company", "size"); err != nil {
   size = value
 }
 
-// Get always return byte sequence containing key value, if it is array, object or simple value
+// Get always returns a byte sequence containing key value, if it is array, object or simple value
 // You can use `ArrayEach` helper to iterate items
-// Underneeth it just calls `Get` until it can't find next item
+// Underneath it just calls `Get` until it can't find the next item
 arr, _, _, _ := jsonparser.Get(person, "gravatar", "avatars")
 jsonparser.ArrayEach(arr, func(value []byte, dataType int, offset int, err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
@@ -67,7 +67,7 @@ jsonparser.ArrayEach(arr, func(value []byte, dataType int, offset int, err error
 
 ## Reference
 
-Library api is really simple, you need only `Get` method to perform any operation. Rest it just helpers around it.   
+Library API is really simple. You just need the `Get` method to perform any operation. The rest is just helpers around it.
 
 You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonparser)
 
@@ -80,12 +80,12 @@ Receives data structure, and key path to extract value from.
 
 Returns:
 * `value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
-* `dataType` - 	Can be: `NOT_EXIST`, `STRING`, `NUMBER`, `OBJECT`, `ARRAY`, `BOOLEAN` or `NULL`
+* `dataType` - 	Can be: `NotExist`, `String`, `Number`, `Object`, `Array`, `Boolean` or `Null`
 * `offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
-* `err` - If key not found or any other parsing issue it should return error. If key not found it also sets `dataType` to `NOT_EXISTS`
+* `err` - If the key is not found or any other parsing issue, it should return error. If key not found it also sets `dataType` to `NotExist`
 
-Accept multiple keys to specify path to JSON value (in case of quering nested structures).
-If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
+Accepts multiple keys to specify path to JSON value (in case of quering nested structures).
+If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 
 ### **`GetBoolean`** and **`GetNumber`**
 ```
@@ -93,28 +93,28 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error)
 
 func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 ```
-If you know key type, you can use helpers above. Returns same arguments as `Get` except `dataType`.
+If you know the key type, you can use the helpers above. Returns same arguments as `Get` except `dataType`.
 If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
 ```
 func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error))
 ```
-Needed for iterating arrays, accepts callback function with same return arguments as `Get`.
+Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
 Expects to receive array data structure (you need to `Get` it first). See example above.
-Underneeth it just calls `Get` without arguments until it can't find next item.
+Underneath it just calls `Get` without arguments until it can't find next item.
 
 
 ## What makes it so fast?
 * It does not rely on `encoding/json`, `reflection` or `interface{}`, the only real package dependency is `bytes`.
 * Operates with JSON payload on byte level, providing you pointers to the original data structure: no memory allocation.
-* No automatic type conversions, by default everything is a []byte, but it provide you value type, so you can convert by yourself (there is few helpers included).
+* No automatic type conversions, by default everything is a []byte, but it provides you value type, so you can convert by yourself (there is few helpers included).
 
 
 ## Benchmarks
 
-There is 3 benchmark types, trying to simulate real-life usage for small, medium and large JSON payloads.
-For each metric, the lower value is better. Values better then standard encoding/json marked as bold text.
+There are 3 benchmark types, trying to simulate real-life usage for small, medium and large JSON payloads.
+For each metric, the lower value is better. Values better than standard encoding/json marked as bold text.
 
 Compared libraries:
 * https://golang.org/pkg/encoding/json
@@ -125,16 +125,16 @@ Compared libraries:
 * https://github.com/buger/jsonparser
 
 #### TLDR
-If you want to skip next sections, winner is `jsonparser` (obviously benchmarks are biased :smirk:).
-It is 3-9 times faster then standard `encoding/json` package (depending on payload size and usage), and almost infinitely (literally) better in memory consumption because it operate with data on byte level, and provide direct slice pointers.
-Few allocations you see in benchmarks happen because type conversions.
+If you want to skip next sections, the winner is `jsonparser` (obviously benchmarks are biased :smirk:).
+It is 3-9 times faster then standard `encoding/json` package (depending on payload size and usage), and almost infinitely (literally) better in memory consumption because it operates with data on byte level, and provide direct slice pointers.
+The few allocations you see in benchmarks happen because of type conversions.
 
-`ffjson` goes next and looks really amazing considering that it is almost drop-in replacement for `encoding/json`.
+`ffjson` comes in second place, and looks really amazing considering that it is almost drop-in replacement for `encoding/json`.
 
 
 #### Small payload
 
-Each test should process 190 byte http log like json record.
+Each test processes 190 bytes of http log as a JSON record.
 It should read multiple fields.
 https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payload_test.go
 
@@ -148,12 +148,12 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | pquerna/ffjson | **3163** | **624** | **15** |
 | buger/jsonparser | **714** | **4** | **2** |
 
-Winners are ffjson and jsonparser, where jsonparser is 8.6x faster then encoding/json and 4.4x faster then ffjson. 
-If you look at memory allocation, jsonparser have no rivals, as it makes no data copy and operate with raw []byte structures and pointers to it. 
+Winners are ffjson and jsonparser, where jsonparser is 8.6x faster then encoding/json and 4.4x faster then ffjson.
+If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
 
 #### Medium payload
 
-Each test should process 2.4kb json record (based on Clearbit API).
+Each test processes a 2.4kb JSON record (based on Clearbit API).
 It should read multiple nested fields and 1 array.
 
 https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_payload_test.go
@@ -168,15 +168,15 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | pquerna/ffjson | **19634** | **856** | **20** |
 | buger/jsonparser | **11442** | **18** | **2** |
 
-Pattern is clear, difference between ffjson and jsonparser in CPU is smaller, but memory consumption difference only grows.
+The pattern that emerges is clear: the difference between ffjson and jsonparser in CPU usage is smaller, but the memory consumption difference is growing.
 gabs, go-simplejson and jason are based on encoding/json and map[string]interface{} and actually only helpers for unstructured JSON, their performance correlate with `encoding/json interface{}`, and they will skip next round.
 
 
 #### Large payload
 
-Each test should process 24kb json record (based on Discourse API)
-It should read 2 arrays, and for each item in array get few fields.
-Basically it means processing full JSON file.
+Each test processes a 24kb JSON record (based on Discourse API)
+It should read 2 arrays, and for each item in array get a few fields.
+Basically it means processing a full JSON file.
 
 https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payload_test.go
 
@@ -187,7 +187,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | pquerna/ffjson | **287151** | **7792** | **298** |
 | buger/jsonparser | **193601** | **120** | **32** |
 
-Same patterns as at medium test. Both `ffjson` and `jsonparser` have own parsing code, and not depend on `encoding/json` or `interface{}`, thats one of the reasons why it so fast.
+The same patterns as in the medium test appears. Both `ffjson` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast.
 
 ## Questions and support
 
