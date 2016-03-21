@@ -5,14 +5,13 @@ import (
 	"errors"
 	"fmt"
 	tm "github.com/buger/goterm"
-	_ "runtime/debug"
+	d "runtime/debug"
 	"strconv"
 )
 
 var debug = false
 
-// In case if JSON is having non standard format (like prettifying)
-// and value start on new line or after more then 1 space
+// Find position of next character which is not ' ', ',', '}' or ']'
 func nextValue(data []byte) (offset int) {
 	for true {
 		if len(data) == offset {
@@ -29,6 +28,8 @@ func nextValue(data []byte) (offset int) {
 	return -1
 }
 
+// Tries to find the end of string
+// Support if string contains escaped quote symbols.
 func stringEnd(data []byte) int {
 	i := 0
 
@@ -52,6 +53,9 @@ func stringEnd(data []byte) int {
 	return i
 }
 
+// Find end of the data structure, array or object.
+// For array openSym and closeSym will be '[' and ']', for object '{' and '}'
+// Know about nested structures
 func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 	level := 0
 	i := 0
@@ -118,12 +122,24 @@ const (
 	NULL
 )
 
+/*
+Get - Receives data structure, and key path to extract value from.
+
+Returns:
+`value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
+`dataType` -    Can be: `NOT_EXIST`, `STRING`, `NUMBER`, `OBJECT`, `ARRAY`, `BOOLEAN` or `NULL`
+`offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
+`err` - If key not found or any other parsing issue it should return error. If key not found it also sets `dataType` to `NOT_EXISTS`
+
+Accept multiple keys to specify path to JSON value (in case of quering nested structures).
+If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
+*/
 func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error) {
-	// defer func() {
-	//     if r := recover(); r != nil {
-	//         err = errors.New(fmt.Sprintf("Unhandler JSON parsing error: %v, %s", r, string(d.Stack())))
-	//     }
-	// }()
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New(fmt.Sprintf("Unhandler JSON parsing error: %v, %s", r, string(d.Stack())))
+		}
+	}()
 
 	ln := len(data)
 
@@ -229,6 +245,9 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	return value, dataType, endOffset, nil
 }
 
+// Used for iterating arrays, accepts callback function with same return arguments as `Get`.
+// Expects to receive array data structure (you need to `Get` it first). See example above.
+// Underneeth it just calls `Get` without arguments until it can't find next item.
 func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error)) {
 	if len(data) == 0 {
 		return
@@ -250,6 +269,8 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	}
 }
 
+// Returns same arguments as `Get` except `dataType`.
+// If key data type do not match, it will return error.
 func GetNumber(data []byte, keys ...string) (val float64, offset int, err error) {
 	v, t, offset, e := Get(data, keys...)
 
@@ -265,15 +286,17 @@ func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 	return
 }
 
-func GetBoolean(data []byte, keys ...string) (val bool, err error) {
-	v, t, _, e := Get(data, keys...)
+// Returns same arguments as `Get` except `dataType`.
+// If key data type do not match, it will return error.
+func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
+	v, t, offset, e := Get(data, keys...)
 
 	if e != nil {
-		return false, e
+		return false, offset, e
 	}
 
 	if t != BOOLEAN {
-		return false, errors.New(fmt.Sprintf("Value is not a boolean: %s", string(v)))
+		return false, offset, errors.New(fmt.Sprintf("Value is not a boolean: %s", string(v)))
 	}
 
 	if v['0'] == 't' {
