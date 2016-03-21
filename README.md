@@ -41,7 +41,7 @@ data := []byte(`{
 person, _, _, _ := jsonparser.Get(data, "person")
 
 // You can specify key path by providing arguments to Get function
-jsonparser.Get(data, "name", "fullName")
+jsonparser.Get(person, "name", "fullName")
 
 // There is `GetNumber` and `GetBoolean` helpers if you exactly know key data type
 jsonparser.GetNumber(person, "github", "followers")
