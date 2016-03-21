@@ -1,4 +1,4 @@
-# jsonparser - Alternative JSON parser for Go, which do not rely on `encoding/json`
+Alternative JSON parser for Go, which do not rely on `encoding/json`
 
 It does not require you to know structure of payload (eg. create structs), and allows accessing fields by providing path to them. So far it is the fastest JSON parser for Go, and it is 3-9 times faster then standard `encoding/json` package (depending on payload size and usage), and almost do not allocate any memory, see benchmarks below.
 
