@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	tm "github.com/buger/goterm"
 	d "runtime/debug"
 	"strconv"
 )
-
-var debug = false
 
 // Find position of next character which is not ' ', ',', '}' or ']'
 func nextValue(data []byte) (offset int) {
@@ -63,9 +60,6 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 
 	for true {
 		if i >= ln {
-			if debug {
-				fmt.Println("can't find matching bracket", level, tm.Highlight(tm.Highlight(tm.Context(string(data), i, 500), string(openSym), tm.RED), string(closeSym), tm.BLUE))
-			}
 			return -1
 		}
 
@@ -81,21 +75,12 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 				return -1
 			}
 			i += se - 1
-			//fmt.Println("Found string:", level, tm.HighlightRegion(data, sFrom, i, tm.GREEN))
 		}
 
 		if c == openSym {
 			level += 1
-
-			if debug {
-				fmt.Println("Found open sym:", level, tm.HighlightRegion(string(data), i, i+1, tm.RED))
-			}
 		} else if c == closeSym {
 			level -= 1
-
-			if debug {
-				fmt.Println("Found close sym:", level, tm.HighlightRegion(string(data), i, i+1, tm.BLUE))
-			}
 		}
 
 		i++
@@ -103,10 +88,6 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 		if level == 0 {
 			break
 		}
-	}
-
-	if debug {
-		fmt.Println("Found matching brackets:", tm.HighlightRegion(string(data), 0, i, tm.YELLOW))
 	}
 
 	return i
