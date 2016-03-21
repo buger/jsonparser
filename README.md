@@ -79,10 +79,10 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 Receives data structure, and key path to extract value from.
 
 Returns:
-`value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
-`dataType` - 	Can be: `NOT_EXIST`, `STRING`, `NUMBER`, `OBJECT`, `ARRAY`, `BOOLEAN` or `NULL`
-`offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
-`err` - If key not found or any other parsing issue it should return error. If key not found it also sets `dataType` to `NOT_EXISTS`
+* `value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
+* `dataType` - 	Can be: `NOT_EXIST`, `STRING`, `NUMBER`, `OBJECT`, `ARRAY`, `BOOLEAN` or `NULL`
+* `offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
+* `err` - If key not found or any other parsing issue it should return error. If key not found it also sets `dataType` to `NOT_EXISTS`
 
 Accept multiple keys to specify path to JSON value (in case of quering nested structures).
 If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
