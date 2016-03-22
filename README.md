@@ -51,7 +51,7 @@ jsonparser.GetNumber(person, "github", "followers")
 jsonparser.Get(data, "company")
 
 // If the key doesn't exist it will throw an error
-size := 0
+var size float64
 if value, _, err := jsonparser.GetNumber(data, "company", "size"); err != nil {
   size = value
 }
