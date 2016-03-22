@@ -121,6 +121,8 @@ Compared libraries:
 * https://github.com/Jeffail/gabs
 * https://github.com/bitly/go-simplejson
 * https://github.com/antonholmquist/jason
+* https://github.com/mreiferson/go-ujson
+* https://github.com/ugorji/go/codec
 * https://github.com/pquerna/ffjson
 * https://github.com/buger/jsonparser
 
@@ -145,6 +147,8 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | Jeffail/gabs | 7836 | 1649 | 46 |
 | bitly/go-simplejson | 8273 | 2241 | 36 |
 | antonholmquist/jason | 20941 | 7237 | 101 |
+| github.com/ugorji/go/codec | 7731 | 2176 | 31 |
+| mreiferson/go-ujson | **5701** | **1409** | 37 |
 | pquerna/ffjson | **3163** | **624** | **15** |
 | buger/jsonparser | **714** | **4** | **2** |
 
@@ -165,11 +169,14 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | Jeffail/gabs | 71547 | 11202 | 235 |
 | bitly/go-simplejson | 67865 | 17187 | 220 |
 | antonholmquist/jason | 70964 | 19013 | 247 |
+| github.com/ugorji/go/codec | 108198 | 6712 | 152 |
+| mreiferson/go-ujson | **45554** | 11547 | 270 |
 | pquerna/ffjson | **19634** | **856** | **20** |
 | buger/jsonparser | **11442** | **18** | **2** |
 
 The pattern that emerges is clear: the difference between ffjson and jsonparser in CPU usage is smaller, but the memory consumption difference is growing.
 gabs, go-simplejson and jason are based on encoding/json and map[string]interface{} and actually only helpers for unstructured JSON, their performance correlate with `encoding/json interface{}`, and they will skip next round.
+`go-ujson` while have its own parser, shows same performance as `encoding/json`, also skips next round. Same situation with `ugorji/go/codec`, but it showed unexpectedly bad performance for complex payloads.
 
 
 #### Large payload
