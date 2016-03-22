@@ -16,8 +16,12 @@ func toArray(data []byte) (result [][]byte) {
 }
 
 func TestValidJSON(t *testing.T) {
-	if v, _, _, err := Get([]byte(`{"a": { "b": 1}, "c": 2 }`), "a", "b", "c"); err == nil {
-		t.Errorf("Should apply scope of parent when search for nested key: %s, %v", string(v), err)
+	if v, _, _, e := Get([]byte(`{"a":"b"}`), "a"); !bytes.Equal(v, []byte("b")) {
+		t.Errorf("Should read basic key %s %v", string(v), e)
+	}
+
+	if v, _, _, _ := Get([]byte(`{"a": "b"}`), "a"); !bytes.Equal(v, []byte("b")) {
+		t.Errorf("Should read basic key with space", v)
 	}
 
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b", "c"); !bytes.Equal(v, []byte("d")) {
@@ -28,12 +32,8 @@ func TestValidJSON(t *testing.T) {
 		t.Errorf("Should apply scope of parent when search for nested key: %s, %v", string(v), err)
 	}
 
-	if v, _, _, e := Get([]byte(`{"a":"b"}`), "a"); !bytes.Equal(v, []byte("b")) {
-		t.Errorf("Should read basic key %s %v", string(v), e)
-	}
-
-	if v, _, _, _ := Get([]byte(`{"a": "b"}`), "a"); !bytes.Equal(v, []byte("b")) {
-		t.Errorf("Should read basic key with space", v)
+	if v, _, _, err := Get([]byte(`{"a": { "b": 1}, "c": 2 }`), "b"); err == nil {
+		t.Errorf("Should apply scope to key level: %s, %v", string(v), err)
 	}
 
 	if v, _, _, _ := Get([]byte(`{"a": "b", "c": 1}`), "c"); !bytes.Equal(v, []byte("1")) {
@@ -48,9 +48,9 @@ func TestValidJSON(t *testing.T) {
 		t.Errorf("Should read numberic value as number", v)
 	}
 
-    if v, _, _ := GetNumber([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
-        t.Errorf("Should read numberic values in formatted json", v)
-    }
+	if v, _, _ := GetNumber([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
+		t.Errorf("Should read numberic values in formatted json", v)
+	}
 
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b", "c"); !bytes.Equal(v, []byte("d")) {
 		t.Errorf("Should read composite key", v)
@@ -58,10 +58,6 @@ func TestValidJSON(t *testing.T) {
 
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b"); !bytes.Equal(v, []byte(`{"c":"d" }`)) {
 		t.Errorf("Should read object", v)
-	}
-
-	if v, _, _, _ := Get([]byte(`, "a": { "b":{"c":"d" }}}`), "a", "b"); !bytes.Equal(v, []byte(`{"c":"d" }`)) {
-		t.Errorf("Should handle some JSON issues", v)
 	}
 
 	if v, _, _, _ := Get([]byte(`{"c":"d" }`)); !bytes.Equal(v, []byte(`{"c":"d" }`)) {

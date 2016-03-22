@@ -93,6 +93,66 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 	return i
 }
 
+func searchKeys(data []byte, keys ...string) int {
+	keyLevel := 0
+	level := 0
+	i := 0
+	ln := len(data)
+	lk := len(keys)
+
+	for true {
+		if i >= ln {
+			return -1
+		}
+
+		c := data[i]
+
+		// If inside string, skip it
+		if c == '"' {
+			i++
+
+			se := stringEnd(data[i:])
+			if se == -1 {
+				return -1
+			}
+
+			if ln > i+se &&
+				data[i+se] == ':' && // if string is a Key, and key level match
+				keyLevel == level-1 && // If key nesting level match current object nested level
+
+				// Checks to speedup key comparsion
+				len(keys[level-1]) == se-1 && // if it have same length
+				data[i] == keys[level-1][0] { // If first character same
+				if bytes.Equal([]byte(keys[level-1]), data[i:i+se-1]) {
+					keyLevel++
+
+					// If we found all keys in path
+					if keyLevel == lk {
+						// panic(string(data[i + se + 1:]))
+						return i + se + 1
+					}
+				}
+			}
+
+			i += se - 1
+		}
+
+		if c == '{' {
+			level++
+		} else if c == '}' {
+			level--
+		} else if c == '[' {
+			// Do not search for keys inside arrays
+			aOff := trailingBracket(data[i+1:], '[', ']')
+			i += aOff
+		}
+
+		i++
+	}
+
+	return -1
+}
+
 // Data types available in valid JSON data.
 const (
 	NotExist = iota
@@ -123,56 +183,20 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		}
 	}()
 
-	ln := len(data)
-
 	if len(keys) > 0 {
-		for ki, k := range keys {
-			lk := len(k)
-
-			if ki > 0 {
-				// Only objects can have nested keys
-				if data[offset] == '{' {
-					// Limiting scope for the next key search
-					endOffset := trailingBracket(data[offset:], '{', '}')
-					data = data[offset : offset+endOffset]
-					offset = 0
-				} else {
-					return []byte{}, NotExist, -1, errors.New("Key path not found")
-				}
-			}
-
-			for true {
-				if idx := bytes.Index(data[offset:], []byte(k)); idx != -1 && (ln-(offset+idx+lk+2)) > 0 {
-					offset += idx
-
-					if data[offset+lk] == '"' && data[offset-1] == '"' && data[offset+lk+1] == ':' {
-						offset += lk + 2
-						nO := nextValue(data[offset:])
-
-						if nO == -1 {
-							return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
-						}
-
-						offset += nO
-
-						break
-					} else {
-						offset++
-					}
-				} else {
-					return []byte{}, NotExist, -1, errors.New("Key path not found")
-				}
-			}
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return []byte{}, NotExist, -1, errors.New("Key path not found")
 		}
-	} else {
-		nO := nextValue(data[offset:])
-
-		if nO == -1 {
-			return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
-		}
-
-		offset = nO
 	}
+
+	// Go to closest value
+	nO := nextValue(data[offset:])
+
+	if nO == -1 {
+		return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
+	}
+
+	offset += nO
 
 	endOffset := offset
 
