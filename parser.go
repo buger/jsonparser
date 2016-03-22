@@ -207,7 +207,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	} else {
 		// Number, Boolean or None
 		end := bytes.IndexFunc(data[endOffset:], func(c rune) bool {
-			return c == ',' || c == '}' || c == ']'
+			return c == ' ' || c == '\n' || c == ',' || c == '}' || c == ']'
 		})
 
 		if data[offset] == 't' || data[offset] == 'f' { // true or false

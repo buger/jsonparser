@@ -48,6 +48,10 @@ func TestValidJSON(t *testing.T) {
 		t.Errorf("Should read numberic value as number", v)
 	}
 
+    if v, _, _ := GetNumber([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
+        t.Errorf("Should read numberic values in formatted json", v)
+    }
+
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b", "c"); !bytes.Equal(v, []byte("d")) {
 		t.Errorf("Should read composite key", v)
 	}
