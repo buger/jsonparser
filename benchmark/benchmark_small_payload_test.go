@@ -10,9 +10,9 @@ import (
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
 	"github.com/buger/jsonparser"
+	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
-    "github.com/mreiferson/go-ujson"
-    "github.com/ugorji/go/codec"
+	"github.com/ugorji/go/codec"
 	"testing"
 	// "fmt"
 )
@@ -121,31 +121,31 @@ func BenchmarkJasonSmall(b *testing.B) {
 }
 
 /*
-    github.com/mreiferson/go-ujson
+   github.com/mreiferson/go-ujson
 */
 
 func BenchmarkUjsonSmall(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        json, _ := ujson.NewFromBytes(smallFixture)
+	for i := 0; i < b.N; i++ {
+		json, _ := ujson.NewFromBytes(smallFixture)
 
-        json.Get("uuid").String()
-        json.Get("tz").Float64()
-        json.Get("ua").String()
-        json.Get("st").Float64()
+		json.Get("uuid").String()
+		json.Get("tz").Float64()
+		json.Get("ua").String()
+		json.Get("st").Float64()
 
-        nothing()
-    }
+		nothing()
+	}
 }
 
 /*
-    github.com/ugorji/go/codec
+   github.com/ugorji/go/codec
 */
 func BenchmarkUgirjiSmall(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        decoder := codec.NewDecoderBytes(smallFixture, new(codec.JsonHandle))
-        data := new(SmallPayload)
-        data.CodecDecodeSelf(decoder)
+	for i := 0; i < b.N; i++ {
+		decoder := codec.NewDecoderBytes(smallFixture, new(codec.JsonHandle))
+		data := new(SmallPayload)
+		data.CodecDecodeSelf(decoder)
 
-        nothing(data.Uuid, data.Tz, data.Ua, data.St)
-    }
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
 }

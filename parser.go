@@ -129,17 +129,17 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		for ki, k := range keys {
 			lk := len(k)
 
-            if ki > 0 {
-                // Only objects can have nested keys
-                if data[offset] == '{' {
-                    // Limiting scope for the next key search
-                    endOffset := trailingBracket(data[offset:], '{', '}')
-                    data = data[offset: offset + endOffset]
-                    offset = 0
-                } else {
-                    return []byte{}, NotExist, -1, errors.New("Key path not found")
-                }
-            }
+			if ki > 0 {
+				// Only objects can have nested keys
+				if data[offset] == '{' {
+					// Limiting scope for the next key search
+					endOffset := trailingBracket(data[offset:], '{', '}')
+					data = data[offset : offset+endOffset]
+					offset = 0
+				} else {
+					return []byte{}, NotExist, -1, errors.New("Key path not found")
+				}
+			}
 
 			for true {
 				if idx := bytes.Index(data[offset:], []byte(k)); idx != -1 && (ln-(offset+idx+lk+2)) > 0 {

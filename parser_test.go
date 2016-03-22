@@ -16,17 +16,17 @@ func toArray(data []byte) (result [][]byte) {
 }
 
 func TestValidJSON(t *testing.T) {
-    if v, _, _, err := Get([]byte(`{"a": { "b": 1}, "c": 2 }`), "a", "b", "c"); err == nil {
-        t.Errorf("Should apply scope of parent when search for nested key: %s, %v", string(v), err)
-    }
+	if v, _, _, err := Get([]byte(`{"a": { "b": 1}, "c": 2 }`), "a", "b", "c"); err == nil {
+		t.Errorf("Should apply scope of parent when search for nested key: %s, %v", string(v), err)
+	}
 
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b", "c"); !bytes.Equal(v, []byte("d")) {
 		t.Errorf("Should read composite key", v)
 	}
 
-    if v, _, _, err := Get([]byte(`{"a": { "b": 1}, "c": 2 }`), "a", "b", "c"); err == nil {
-        t.Errorf("Should apply scope of parent when search for nested key: %s, %v", string(v), err)
-    }
+	if v, _, _, err := Get([]byte(`{"a": { "b": 1}, "c": 2 }`), "a", "b", "c"); err == nil {
+		t.Errorf("Should apply scope of parent when search for nested key: %s, %v", string(v), err)
+	}
 
 	if v, _, _, e := Get([]byte(`{"a":"b"}`), "a"); !bytes.Equal(v, []byte("b")) {
 		t.Errorf("Should read basic key %s %v", string(v), e)
