@@ -13,6 +13,7 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
+    jlexer "github.com/mailru/easyjson/jlexer"
 	"testing"
 	// "fmt"
 )
@@ -187,4 +188,21 @@ func BenchmarkUgirjiMedium(b *testing.B) {
 			nothing(el.Url)
 		}
 	}
+}
+
+/*
+    github.com/mailru/easyjson
+*/
+func BenchmarkEasyJsonMedium(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        lexer := &jlexer.Lexer{Data: mediumFixture}
+        data := new(MediumPayload)
+        data.UnmarshalEasyJSON(lexer)
+
+        nothing(data.Person.Name.FullName, data.Person.Github.Followers, data.Company)
+
+        for _, el := range data.Person.Gravatar.Avatars {
+            nothing(el.Url)
+        }
+    }
 }
