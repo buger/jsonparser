@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// Find position of next character which is not ' ', ',', '}' or ']'
+// Find position of next character which is not whitespace, ',', '}' or ']'
 func nextValue(data []byte) (offset int) {
 	for true {
 		if len(data) == offset {
