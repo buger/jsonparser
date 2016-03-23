@@ -8,6 +8,19 @@ import (
 	"strconv"
 )
 
+// Find position of next character which is not whitespace
+func skipWhitespace(data []byte) int {
+	for i, b := range data {
+		switch b {
+		case ' ', '\n', '\r', '\t':
+			continue
+		default:
+			return i
+		}
+	}
+	return -1
+}
+
 // Find position of next character which is not whitespace, ',', '}' or ']'
 func nextValue(data []byte) (offset int) {
 	for true {
