@@ -52,6 +52,22 @@ func TestValidJSON(t *testing.T) {
 		t.Errorf("Should read numberic values in formatted json", v)
 	}
 
+	if v, _, _ := GetBoolean([]byte(`{"a": "b", "c": true}`), "c"); !v {
+		t.Errorf("Should read boolean true as boolean", v)
+	}
+
+	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": true \n}"), "c"); !v {
+		t.Errorf("Should read boolean true in formatted json", v)
+	}
+
+	if v, _, _ := GetBoolean([]byte(`{"a": "b", "c": false}`), "c"); v {
+		t.Errorf("Should read boolean false as boolean", v)
+	}
+
+	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": false \n}"), "c"); v {
+		t.Errorf("Should read boolean false in formatted json", v)
+	}
+
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b", "c"); !bytes.Equal(v, []byte("d")) {
 		t.Errorf("Should read composite key", v)
 	}
@@ -112,5 +128,29 @@ func TestInvalidJSON(t *testing.T) {
 
 	if _, _, _, e := Get([]byte(`{"a": `), "a"); e == nil || e.Error() != "Malformed JSON error" {
 		t.Errorf("Should raise malformed json error: ", e)
+	}
+}
+
+func TestTrickyJSON(t *testing.T) {
+	killer := []byte(`{
+          "parentkey": {
+            "childkey": {
+              "grandchildkey": 111
+            },
+            "otherchildkey": 222
+          },
+          "bad key\"good key": 333,
+        }`)
+
+	if data, jtype, _, _ := Get(killer, "childkey"); jtype != NotExist {
+		t.Errorf(`Get("childkey") should not exist, but found data %s`, string(data))
+	}
+
+	if data, jtype, _, _ := Get(killer, "parentkey", "childkey", "otherchildkey"); jtype != NotExist {
+		t.Errorf(`Get("parentkey", "childkey", "otherchildkey") should not exist, but found data %s`, string(data))
+	}
+
+	if data, jtype, _, _ := Get(killer, "good key"); jtype != NotExist {
+		t.Errorf(`Get("good key") should not exist, but found data %s`, string(data))
 	}
 }

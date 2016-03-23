@@ -315,7 +315,7 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 		return false, offset, fmt.Errorf("Value is not a boolean: %s", string(v))
 	}
 
-	if v['0'] == 't' {
+	if v[0] == 't' {
 		val = true
 	} else {
 		val = false
