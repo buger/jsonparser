@@ -145,7 +145,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 				if idx := bytes.Index(data[offset:], []byte(k)); idx != -1 && (ln-(offset+idx+lk+2)) > 0 {
 					offset += idx
 
-					if data[offset+lk] == '"' && data[offset-1] == '"' && data[offset+lk+1] == ':' {
+					if data[offset+lk] == '"' && data[offset-2] != '\\' && data[offset-1] == '"' && data[offset+lk+1] == ':' {
 						offset += lk + 2
 						nO := nextValue(data[offset:])
 
