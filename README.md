@@ -114,7 +114,7 @@ Underneath it just calls `Get` without arguments until it can't find next item.
 ## Benchmarks
 
 There are 3 benchmark types, trying to simulate real-life usage for small, medium and large JSON payloads.
-For each metric, the lower value is better. Values better than standard encoding/json marked as bold text.
+For each metric, the lower value is better. Time/op is in nanoseconds. Values better than standard encoding/json marked as bold text.
 
 Compared libraries:
 * https://golang.org/pkg/encoding/json
