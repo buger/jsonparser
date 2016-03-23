@@ -105,10 +105,8 @@ func searchKeys(data []byte, keys ...string) int {
 			return -1
 		}
 
-		c := data[i]
-
 		// If inside string, skip it
-		if c == '"' {
+		if data[i] == '"' {
 			i++
 
 			se := stringEnd(data[i:])
@@ -135,13 +133,11 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 
 			i += se - 1
-		}
-
-		if c == '{' {
+		} else if data[i] == '{' {
 			level++
-		} else if c == '}' {
+		} else if data[i] == '}' {
 			level--
-		} else if c == '[' {
+		} else if data[i] == '[' {
 			// Do not search for keys inside arrays
 			aOff := trailingBracket(data[i+1:], '[', ']')
 			i += aOff
