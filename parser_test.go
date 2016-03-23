@@ -160,6 +160,7 @@ func TestInvalidJSON(t *testing.T) {
 }
 
 func TestTrickyJSON(t *testing.T) {
+	whitespace := " \t\r\n"
 	killer := []byte(`{
           "parentkey": {
             "childkey": {
@@ -168,6 +169,7 @@ func TestTrickyJSON(t *testing.T) {
             "otherchildkey": 222
           },
           "bad key\"good key": 333,
+          `+whitespace+`
         }`)
 
 	if data, jtype, _, _ := Get(killer, "childkey"); jtype != NotExist {
