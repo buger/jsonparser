@@ -13,6 +13,7 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
+    jlexer "github.com/mailru/easyjson/jlexer"
 	"testing"
 	// "fmt"
 )
@@ -148,4 +149,17 @@ func BenchmarkUgirjiSmall(b *testing.B) {
 
 		nothing(data.Uuid, data.Tz, data.Ua, data.St)
 	}
+}
+
+/*
+    github.com/mailru/easyjson
+*/
+func BenchmarkEasyJsonSmall(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        lexer := &jlexer.Lexer{Data: smallFixture}
+        data := new(SmallPayload)
+        data.UnmarshalEasyJSON(lexer)
+
+        nothing(data.Uuid, data.Tz, data.Ua, data.St)
+    }
 }
