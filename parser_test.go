@@ -134,3 +134,27 @@ func TestInvalidJSON(t *testing.T) {
 		t.Errorf("Should raise malformed json error: ", e)
 	}
 }
+
+func TestTrickyJSON(t *testing.T) {
+	killer := []byte(`{
+          "parentkey": {
+            "childkey": {
+              "grandchildkey": 111
+            },
+            "otherchildkey": 222
+          },
+          "bad key\"good key": 333,
+        }`)
+
+	if data, jtype, _, _ := Get(killer, "childkey"); jtype != NotExist {
+		t.Errorf(`Get("childkey") should not exist, but found data %s`, string(data))
+	}
+
+	if data, jtype, _, _ := Get(killer, "parentkey", "childkey", "otherchildkey"); jtype != NotExist {
+		t.Errorf(`Get("parentkey", "childkey", "otherchildkey") should not exist, but found data %s`, string(data))
+	}
+
+	if data, jtype, _, _ := Get(killer, "good key"); jtype != NotExist {
+		t.Errorf(`Get("good key") should not exist, but found data %s`, string(data))
+	}
+}
