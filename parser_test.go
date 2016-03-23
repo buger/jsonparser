@@ -143,7 +143,8 @@ func TestTrickyJSON(t *testing.T) {
             },
             "otherchildkey": 222
           },
-          "bad key\"good key": 333,
+          "whitespace"  	 : 	   333 	    ,
+          "bad key\"good key": 444,
         }`)
 
 	if data, jtype, _, _ := Get(killer, "childkey"); jtype != NotExist {
@@ -156,5 +157,9 @@ func TestTrickyJSON(t *testing.T) {
 
 	if data, jtype, _, _ := Get(killer, "good key"); jtype != NotExist {
 		t.Errorf(`Get("good key") should not exist, but found data %s`, string(data))
+	}
+
+	if data, jtype, _, _ := Get(killer, "whitespace"); jtype == NotExist {
+		t.Errorf(`Get("whitespace") should exist, but not found`, string(data))
 	}
 }
