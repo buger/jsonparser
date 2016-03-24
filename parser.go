@@ -38,13 +38,18 @@ func nextValue(data []byte) int {
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
 func stringEnd(data []byte) int {
+	escaped := false
 	for i, c := range data {
-		if c == '"' {
-			if i >= 1 && data[i-1] == '\\' {
-				continue
-			} else {
+		switch c {
+		case '\\':
+			escaped = !escaped
+		case '"':
+			if !escaped {
 				return i + 1
 			}
+			escaped = false
+		default:
+			escaped = false
 		}
 	}
 
@@ -344,6 +349,11 @@ func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 // GetBoolean returns the value retrieved by `Get`, cast to a bool if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return error.
+var (
+	trueBytes  = []byte("true")
+	falseBytes = []byte("false")
+)
+
 func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	v, t, offset, e := Get(data, keys...)
 
@@ -356,8 +366,14 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	}
 
 	if v[0] == 't' {
+		if !bytes.Equal(v, trueBytes) {
+			return false, offset, fmt.Errorf("Value is a malformed boolean: %s", string(v))
+		}
 		val = true
 	} else {
+		if !bytes.Equal(v, falseBytes) {
+			return false, offset, fmt.Errorf("Value is a malformed boolean: %s", string(v))
+		}
 		val = false
 	}
 

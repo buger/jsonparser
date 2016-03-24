@@ -120,6 +120,20 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    "333",
 	},
+	GetTest{
+		desc:    `escaped backslash quote`,
+		json:    `{"a": "\\\""}`,
+		path:    []string{"a"},
+		isFound: true,
+		data:    `\\\"`,
+	},
+	GetTest{
+		desc:    `unicode in JSON`,
+		json:    `{"a": "15°C"}`,
+		path:    []string{"a"},
+		isFound: true,
+		data:    `15°C`,
+	},
 
 	// Not found key tests
 	GetTest{
@@ -264,6 +278,18 @@ var getBoolTests = []GetTest{
 		isFound: true,
 		data:    false,
 	},
+	GetTest{
+		desc:  `read fake boolean true`,
+		json:  `{"a": txyz}`,
+		path:  []string{"a"},
+		isErr: true,
+	},
+	GetTest{
+		desc:  `read fake boolean false`,
+		json:  `{"a": fwxyz}`,
+		path:  []string{"a"},
+		isErr: true,
+	},
 }
 
 var getSliceTests = []GetTest{
@@ -366,7 +392,7 @@ func TestGetBool(t *testing.T) {
 	for _, gnt := range getBoolTests {
 		v, _, err := GetBoolean([]byte(gnt.json), gnt.path...)
 
-		if checkFoundAndNoError(t, "GetBoolean()", gnt, Number, err) {
+		if checkFoundAndNoError(t, "GetBoolean()", gnt, Boolean, err) {
 			if gnt.data == nil {
 				t.Errorf("MALFORMED TEST: %v", gnt)
 				continue
