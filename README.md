@@ -1,5 +1,7 @@
 # Alternative JSON parser for Go
 
+[![Join the chat at https://gitter.im/buger/jsonparser](https://badges.gitter.im/buger/jsonparser.svg)](https://gitter.im/buger/jsonparser?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 It does not require you to know the structure of the payload (eg. create structs), and allows accessing fields by providing the path to them. It is up to **7 times faster** then standard `encoding/json` package (depending on payload size and usage), **allocates almost no memory**. See benchmarks below.
 
 ## Rationale
