@@ -49,7 +49,7 @@ func TestValidJSON(t *testing.T) {
 	}
 
 	if v, _, _ := GetNumber([]byte(`{"a": "b", "c": 1}`), "c"); v != 1 {
-		t.Errorf("Should read numberic value as number %s", string(v))
+		t.Errorf("Should read numberic value as number %d", v)
 	}
 
     if v, _, _, err := Get([]byte(`{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`), "c", "c"); !bytes.Equal(v, []byte(`[1,2]`)) {
@@ -57,43 +57,43 @@ func TestValidJSON(t *testing.T) {
     }
 
 	if v, _, _ := GetNumber([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
-		t.Errorf("Should read numberic values in formatted json %s", string(v))
+		t.Errorf("Should read numberic values in formatted json %d", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte(`{"a": "b", "c": true}`), "c"); !v {
-		t.Errorf("Should read boolean true as boolean %s", string(v))
+		t.Errorf("Should read boolean true as boolean %v", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": true \n}"), "c"); !v {
-		t.Errorf("Should read boolean true in formatted json %s", string(v))
+		t.Errorf("Should read boolean true in formatted json %v", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte(`{"a": "b", "c": false}`), "c"); v {
-		t.Errorf("Should read boolean false as boolean %s", string(v))
+		t.Errorf("Should read boolean false as boolean %v", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": false \n}"), "c"); v {
-		t.Errorf("Should read boolean false in formatted json %s", string(v))
+		t.Errorf("Should read boolean false in formatted json %v", v)
 	}
 
 	if v, _, _ := GetNumber([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
-		t.Errorf("Should read numberic values in formatted json %s", string(v))
+		t.Errorf("Should read numberic values in formatted json %d", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte(`{"a": "b", "c": true}`), "c"); !v {
-		t.Errorf("Should read boolean true as boolean %s", string(v))
+		t.Errorf("Should read boolean true as boolean %v", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": true \n}"), "c"); !v {
-		t.Errorf("Should read boolean true in formatted json %s", string(v))
+		t.Errorf("Should read boolean true in formatted json %v", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte(`{"a": "b", "c": false}`), "c"); v {
-		t.Errorf("Should read boolean false as boolean %s", string(v))
+		t.Errorf("Should read boolean false as boolean %v", v)
 	}
 
 	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": false \n}"), "c"); v {
-		t.Errorf("Should read boolean false in formatted json %s", string(v))
+		t.Errorf("Should read boolean false in formatted json %v", v)
 	}
 
 	if v, _, _, _ := Get([]byte(`{"a": { "b":{"c":"d" }}}`), "a", "b", "c"); !bytes.Equal(v, []byte("d")) {
