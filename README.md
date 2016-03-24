@@ -53,7 +53,7 @@ if value, _, err := jsonparser.GetNumber(data, "company", "size"); err != nil {
 }
 
 // You can use `ArrayEach` helper to iterate items
-jsonparser.ArrayEach(data, func(value []byte, dataType int, offset int, err error) {
+jsonparser.ArrayEach(data, func(value []byte, dataType int, offset int, err error) (err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
 }, "person", "gravatar", "avatars")
 ```

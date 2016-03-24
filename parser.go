@@ -256,31 +256,29 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
-// Expects to receive array data structure (you need to `Get` it first). See example above.
-// Underneath it just calls `Get` without arguments until it can't find next item.
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) {
+func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) (err error) {
 	if len(data) == 0 {
-		return
+		return errors.New("Object is empty")
 	}
 
 	offset := 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
-			return
+			return errors.New("Key path not found")
 		}
 
 		// Go to closest value
 		nO := nextValue(data[offset:])
 
 		if nO == -1 {
-			return
+			return errors.New("Malformed JSON")
 		}
 
 		offset += nO
 
 		if data[offset] != '[' {
-			return
+			return errors.New("Value is not array")
 		}
 
 		offset++
@@ -303,6 +301,8 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 
 		offset += o
 	}
+
+	return nil
 }
 
 // GetNumber returns the value retrieved by `Get`, cast to a float64 if possible.
