@@ -36,15 +36,11 @@ data := []byte(`{
   }
 }`)
 
-// Extracting person variable for caching reasons
-// Since we have to fetch more keys from it, and do not want parser to analyze whole record each time
-person, _, _, _ := jsonparser.Get(data, "person")
-
 // You can specify key path by providing arguments to Get function
-jsonparser.Get(person, "name", "fullName")
+jsonparser.Get(data, "person", "name", "fullName")
 
 // There is `GetNumber` and `GetBoolean` helpers if you exactly know key data type
-jsonparser.GetNumber(person, "github", "followers")
+jsonparser.GetNumber(data, "person", "github", "followers")
 
 // When you try to get object, it will return you []byte slice pointer to data containing it
 // In `company` it will be `{"name": "Acme"}`
@@ -56,13 +52,10 @@ if value, _, err := jsonparser.GetNumber(data, "company", "size"); err != nil {
   size = value
 }
 
-// Get always returns a byte sequence containing key value, if it is array, object or simple value
 // You can use `ArrayEach` helper to iterate items
-// Underneath it just calls `Get` until it can't find the next item
-arr, _, _, _ := jsonparser.Get(person, "gravatar", "avatars")
 jsonparser.ArrayEach(arr, func(value []byte, dataType int, offset int, err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
-})
+}, "person", "gravatar", "avatars")
 ```
 
 ## Reference
@@ -98,18 +91,16 @@ If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
 ```
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error))
+func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string)
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
-Expects to receive array data structure (you need to `Get` it first). See example above.
-Underneath it just calls `Get` without arguments until it can't find next item.
 
 
 ## What makes it so fast?
 * It does not rely on `encoding/json`, `reflection` or `interface{}`, the only real package dependency is `bytes`.
 * Operates with JSON payload on byte level, providing you pointers to the original data structure: no memory allocation.
 * No automatic type conversions, by default everything is a []byte, but it provides you value type, so you can convert by yourself (there is few helpers included).
-* Does not process full record, only keys you specified
+* Does not parse full record, only keys you specified
 
 
 ## Benchmarks
