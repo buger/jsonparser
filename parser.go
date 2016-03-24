@@ -8,18 +8,28 @@ import (
 	"strconv"
 )
 
-// Find position of next character which is not ' ', ',', '}' or ']'
-func nextValue(data []byte) (offset int) {
-	for true {
-		if len(data) == offset {
-			return -1
+// Find position of next character which is not whitespace
+func skipWhitespace(data []byte) int {
+	for i, b := range data {
+		switch b {
+		case ' ', '\n', '\r', '\t':
+			continue
+		default:
+			return i
 		}
+	}
+	return -1
+}
 
-		if data[offset] != ' ' && data[offset] != '\n' && data[offset] != ',' {
-			return
+// Find position of next character which is not whitespace, ',', '}' or ']'
+func nextValue(data []byte) int {
+	for i, b := range data {
+		switch b {
+		case ' ', '\n', '\r', '\t', ',', '}', ']':
+			continue
+		default:
+			return i
 		}
-
-		offset++
 	}
 
 	return -1
@@ -28,20 +38,18 @@ func nextValue(data []byte) (offset int) {
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
 func stringEnd(data []byte) int {
-	i := 0
-
-	for len(data) > i {
-		if data[i] != '"' {
-			i++
-			continue
-		}
-
-		// If it just escaped \", continue
-		if i >= 1 && data[i-1] == '\\' {
-			i++
-			continue
-		} else {
-			return i + 1
+	escaped := false
+	for i, c := range data {
+		switch c {
+		case '\\':
+			escaped = !escaped
+		case '"':
+			if !escaped {
+				return i + 1
+			}
+			escaped = false
+		default:
+			escaped = false
 		}
 	}
 
@@ -56,93 +64,108 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 	i := 0
 	ln := len(data)
 
-	for true {
-		if i >= ln {
-			return -1
-		}
-
+	for i < ln {
 		c := data[i]
 
-		// If inside string, skip it
-		if c == '"' {
-			//sFrom := i
-			i++
-
-			se := stringEnd(data[i:])
+		// If a string is encountered, skip everything in it
+		switch c {
+		case '"':
+			se := stringEnd(data[i+1:])
 			if se == -1 {
 				return -1
 			}
-			i += se - 1
-		}
 
-		if c == openSym {
+			i += 1 + se // skip the initial quote plus the rest of the string
+		case openSym:
 			level++
-		} else if c == closeSym {
+			i++
+		case closeSym:
 			level--
+			i++
+		default:
+			i++
 		}
-
-		i++
 
 		if level == 0 {
-			break
+			return i
 		}
 	}
 
-	return i
+	return -1
 }
 
-func searchKeys(data []byte, keys ...string) int {
+func fastStringBytesEqual(a string, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i, c := range b {
+		if a[i] != c {
+			return false
+		}
+	}
+
+	return true
+}
+
+func searchKeys(data []byte, keys ...string) (int, error) {
+	curKey := keys[0]
 	keyLevel := 0
 	level := 0
 	i := 0
 	ln := len(data)
 	lk := len(keys)
 
-	for true {
-		if i >= ln {
-			return -1
-		}
-
-		// If inside string, skip it
-		if data[i] == '"' {
+	for i < ln {
+		switch data[i] {
+		// If a key string is encountered, check if it matches our key; if so, increase our key level.
+		// In any case, also skip it.
+		case '"':
 			i++
 
 			se := stringEnd(data[i:])
 			if se == -1 {
-				return -1
+				return -1, errors.New("unterminated key string")
 			}
 
-			if ln > i+se &&
-				data[i+se] == ':' && // if string is a Key, and key level match
-				keyLevel == level-1 && // If key nesting level match current object nested level
+			wsSkip := skipWhitespace(data[i+se:])
+			if wsSkip == -1 {
+				return -1, errors.New("key string with no following colon")
+			}
 
-				// Checks to speedup key comparsion
-				len(keys[level-1]) == se-1 && // if it have same length
-				data[i] == keys[level-1][0] { // If first character same
-				if bytes.Equal([]byte(keys[level-1]), data[i:i+se-1]) {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + se + 1
-					}
+			if data[i+se+wsSkip] == ':' && // if string is a key, and key level match
+				keyLevel == level-1 && // If key nesting level match current object nested level
+				fastStringBytesEqual(curKey, data[i:i+se-1]) {
+				keyLevel++
+				// If we found all keys in path
+				if keyLevel == lk {
+					return i + se + wsSkip + 1, nil
+				} else {
+					curKey = keys[keyLevel]
 				}
 			}
 
-			i += se - 1
-		} else if data[i] == '{' {
+			i += se + wsSkip
+		case '{':
 			level++
-		} else if data[i] == '}' {
+			i++
+		case '}':
 			level--
-		} else if data[i] == '[' {
+			i++
+		case '[':
 			// Do not search for keys inside arrays
 			aOff := trailingBracket(data[i:], '[', ']')
-			i += aOff
-		}
+			if aOff == -1 {
+				return -1, errors.New("unterminated array")
+			}
 
-		i++
+			i += aOff + 1
+		default:
+			i++
+		}
 	}
 
-	return -1
+	return -1, nil // not found
 }
 
 // Data types available in valid JSON data.
@@ -176,8 +199,8 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	}()
 
 	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
-			return []byte{}, NotExist, -1, errors.New("Key path not found")
+		if offset, err = searchKeys(data, keys...); offset == -1 {
+			return nil, NotExist, -1, err
 		}
 	}
 
@@ -185,7 +208,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	nO := nextValue(data[offset:])
 
 	if nO == -1 {
-		return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
+		return nil, NotExist, -1, errors.New("Malformed JSON error")
 	}
 
 	offset += nO
@@ -198,7 +221,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		if idx := stringEnd(data[offset+1:]); idx != -1 {
 			endOffset += idx + 1
 		} else {
-			return []byte{}, dataType, offset, errors.New("Value is string, but can't find closing '\"' symbol")
+			return nil, dataType, offset, errors.New("Value is string, but can't find closing '\"' symbol")
 		}
 	} else if data[offset] == '[' { // if array value
 		dataType = Array
@@ -206,7 +229,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		endOffset = trailingBracket(data[offset:], '[', ']')
 
 		if endOffset == -1 {
-			return []byte{}, dataType, offset, errors.New("Value is array, but can't find closing ']' symbol")
+			return nil, dataType, offset, errors.New("Value is array, but can't find closing ']' symbol")
 		}
 
 		endOffset += offset
@@ -216,7 +239,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		endOffset = trailingBracket(data[offset:], '{', '}')
 
 		if endOffset == -1 {
-			return []byte{}, dataType, offset, errors.New("Value looks like object, but can't find closing '}' symbol")
+			return nil, dataType, offset, errors.New("Value looks like object, but can't find closing '}' symbol")
 		}
 
 		endOffset += offset
@@ -235,7 +258,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		}
 
 		if end == -1 {
-			return []byte{}, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 		}
 
 		endOffset += end
@@ -249,7 +272,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	}
 
 	if dataType == Null {
-		value = []byte{}
+		value = nil
 	}
 
 	return value, dataType, endOffset, nil
@@ -264,8 +287,8 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	offset := 1
 
 	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
-			return errors.New("Key path not found")
+		if offset, err = searchKeys(data, keys...); offset == -1 {
+			return errors.New("Key path not found: " + err.Error())
 		}
 
 		// Go to closest value
@@ -326,6 +349,11 @@ func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 // GetBoolean returns the value retrieved by `Get`, cast to a bool if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return error.
+var (
+	trueBytes  = []byte("true")
+	falseBytes = []byte("false")
+)
+
 func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	v, t, offset, e := Get(data, keys...)
 
@@ -338,8 +366,14 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	}
 
 	if v[0] == 't' {
+		if !bytes.Equal(v, trueBytes) {
+			return false, offset, fmt.Errorf("Value is a malformed boolean: %s", string(v))
+		}
 		val = true
 	} else {
+		if !bytes.Equal(v, falseBytes) {
+			return false, offset, fmt.Errorf("Value is a malformed boolean: %s", string(v))
+		}
 		val = false
 	}
 
