@@ -10,10 +10,10 @@ import (
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
 	"github.com/buger/jsonparser"
+	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
-    jlexer "github.com/mailru/easyjson/jlexer"
 	"testing"
 	// "fmt"
 )
@@ -152,14 +152,14 @@ func BenchmarkUgirjiSmall(b *testing.B) {
 }
 
 /*
-    github.com/mailru/easyjson
+   github.com/mailru/easyjson
 */
 func BenchmarkEasyJsonSmall(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        lexer := &jlexer.Lexer{Data: smallFixture}
-        data := new(SmallPayload)
-        data.UnmarshalEasyJSON(lexer)
+	for i := 0; i < b.N; i++ {
+		lexer := &jlexer.Lexer{Data: smallFixture}
+		data := new(SmallPayload)
+		data.UnmarshalEasyJSON(lexer)
 
-        nothing(data.Uuid, data.Tz, data.Ua, data.St)
-    }
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
 }

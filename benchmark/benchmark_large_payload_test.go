@@ -11,8 +11,8 @@ import (
 	// "github.com/Jeffail/gabs"
 	// "github.com/bitly/go-simplejson"
 	"encoding/json"
-	"github.com/pquerna/ffjson/ffjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
+	"github.com/pquerna/ffjson/ffjson"
 	// "github.com/antonholmquist/jason"
 	// "fmt"
 )
@@ -91,15 +91,14 @@ func BenchmarkFFJsonLarge(b *testing.B) {
 	}
 }
 
-
 /*
-    github.com/mailru/easyjson
+   github.com/mailru/easyjson
 */
 func BenchmarkEasyJsonLarge(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        lexer := &jlexer.Lexer{Data: largeFixture}
-        data := new(LargePayload)
-        data.UnmarshalEasyJSON(lexer)
+	for i := 0; i < b.N; i++ {
+		lexer := &jlexer.Lexer{Data: largeFixture}
+		data := new(LargePayload)
+		data.UnmarshalEasyJSON(lexer)
 
 		for _, u := range data.Users {
 			nothing(u.Username)
@@ -108,6 +107,5 @@ func BenchmarkEasyJsonLarge(b *testing.B) {
 		for _, t := range data.Topics.Topics {
 			nothing(t.Id, t.Slug)
 		}
-    }
+	}
 }
-
