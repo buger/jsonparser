@@ -15,7 +15,7 @@ func nextValue(data []byte) (offset int) {
 			return -1
 		}
 
-		if data[offset] != ' ' && data[offset] != '\n' && data[offset] != ',' && data[offset] != '}' && data[offset] != ']' {
+		if data[offset] != ' ' && data[offset] != '\n' && data[offset] != ',' {
 			return
 		}
 
@@ -30,24 +30,22 @@ func nextValue(data []byte) (offset int) {
 func stringEnd(data []byte) int {
 	i := 0
 
-	for true {
-		sIdx := bytes.IndexByte(data[i:], '"')
-
-		if sIdx == -1 {
-			return -1
-		}
-
-		i += sIdx + 1
-
-		// If it just escaped \", continue
-		if i > 2 && data[i-2] == '\\' {
+	for len(data) > i {
+		if data[i] != '"' {
+			i++
 			continue
 		}
 
-		break
+		// If it just escaped \", continue
+		if i >= 1 && data[i-1] == '\\' {
+			i++
+			continue
+		} else {
+			return i + 1
+		}
 	}
 
-	return i
+	return -1
 }
 
 // Find end of the data structure, array or object.
@@ -123,10 +121,8 @@ func searchKeys(data []byte, keys ...string) int {
 				data[i] == keys[level-1][0] { // If first character same
 				if bytes.Equal([]byte(keys[level-1]), data[i:i+se-1]) {
 					keyLevel++
-
 					// If we found all keys in path
 					if keyLevel == lk {
-						// panic(string(data[i + se + 1:]))
 						return i + se + 1
 					}
 				}
@@ -139,7 +135,7 @@ func searchKeys(data []byte, keys ...string) int {
 			level--
 		} else if data[i] == '[' {
 			// Do not search for keys inside arrays
-			aOff := trailingBracket(data[i+1:], '[', ']')
+			aOff := trailingBracket(data[i:], '[', ']')
 			i += aOff
 		}
 
@@ -262,14 +258,40 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 // Expects to receive array data structure (you need to `Get` it first). See example above.
 // Underneath it just calls `Get` without arguments until it can't find next item.
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error)) {
+func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) {
 	if len(data) == 0 {
 		return
 	}
 
 	offset := 1
+
+	if len(keys) > 0 {
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return
+		}
+
+		// Go to closest value
+		nO := nextValue(data[offset:])
+
+		if nO == -1 {
+			return
+		}
+
+		offset += nO
+
+		if data[offset] != '[' {
+			return
+		}
+
+		offset++
+	}
+
 	for true {
 		v, t, o, e := Get(data[offset:])
+
+		if o == 0 {
+			break
+		}
 
 		if t != NotExist {
 			cb(v, t, o, e)

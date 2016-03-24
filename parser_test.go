@@ -16,6 +16,10 @@ func toArray(data []byte) (result [][]byte) {
 }
 
 func TestValidJSON(t *testing.T) {
+    if v, _, _, err := Get([]byte(`{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`), "c", "c"); !bytes.Equal(v, []byte(`[1,2]`)) {
+        t.Errorf("Should handle multiple nested keys with same name: %s, %v", string(v), err)
+    }
+
 	if v, _, _, e := Get([]byte(`{"a":"b"}`), "a"); !bytes.Equal(v, []byte("b")) {
 		t.Errorf("Should read basic key %s %v", string(v), e)
 	}
@@ -47,6 +51,10 @@ func TestValidJSON(t *testing.T) {
 	if v, _, _ := GetNumber([]byte(`{"a": "b", "c": 1}`), "c"); v != 1 {
 		t.Errorf("Should read numberic value as number", v)
 	}
+
+    if v, _, _, err := Get([]byte(`{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`), "c", "c"); !bytes.Equal(v, []byte(`[1,2]`)) {
+        t.Errorf("Should handle multiple nested keys with same name: %s, %v", string(v), err)
+    }
 
 	if v, _, _ := GetNumber([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
 		t.Errorf("Should read numberic values in formatted json", v)
