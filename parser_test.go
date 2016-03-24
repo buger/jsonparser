@@ -169,7 +169,7 @@ func TestTrickyJSON(t *testing.T) {
             "otherchildkey": 222
           },
           "bad key\"good key": 333,
-          "whitespace"`+ ws +`:`+ ws +`333`+ ws +`,`+ ws +`
+          "whitespace"` + ws + `:` + ws + `333` + ws + `,` + ws + `
         }`)
 
 	if data, jtype, _, _ := Get(killer, "childkey"); jtype != NotExist {
