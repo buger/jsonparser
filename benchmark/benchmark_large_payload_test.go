@@ -12,6 +12,7 @@ import (
 	// "github.com/bitly/go-simplejson"
 	"encoding/json"
 	"github.com/pquerna/ffjson/ffjson"
+	jlexer "github.com/mailru/easyjson/jlexer"
 	// "github.com/antonholmquist/jason"
 	// "fmt"
 )
@@ -21,18 +22,16 @@ import (
 */
 func BenchmarkJsonParserLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		users, _, _, _ := jsonparser.Get(largeFixture, "users")
-		jsonparser.ArrayEach(users, func(value []byte, dataType int, offset int, err error) {
+		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType int, offset int, err error) {
 			jsonparser.Get(value, "username")
 			nothing()
-		})
+		}, "users")
 
-		topics, _, _, _ := jsonparser.Get(largeFixture, "topics", "topics")
-		jsonparser.ArrayEach(topics, func(value []byte, dataType int, offset int, err error) {
+		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType int, offset int, err error) {
 			jsonparser.GetNumber(value, "id")
 			jsonparser.Get(value, "slug")
 			nothing()
-		})
+		}, "topics", "topics")
 	}
 }
 
@@ -91,3 +90,24 @@ func BenchmarkFFJsonLarge(b *testing.B) {
 		}
 	}
 }
+
+
+/*
+    github.com/mailru/easyjson
+*/
+func BenchmarkEasyJsonLarge(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        lexer := &jlexer.Lexer{Data: largeFixture}
+        data := new(LargePayload)
+        data.UnmarshalEasyJSON(lexer)
+
+		for _, u := range data.Users {
+			nothing(u.Username)
+		}
+
+		for _, t := range data.Topics.Topics {
+			nothing(t.Id, t.Slug)
+		}
+    }
+}
+

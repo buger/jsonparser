@@ -15,7 +15,7 @@ func nextValue(data []byte) (offset int) {
 			return -1
 		}
 
-		if data[offset] != ' ' && data[offset] != '\n' && data[offset] != ',' && data[offset] != '}' && data[offset] != ']' {
+		if data[offset] != ' ' && data[offset] != '\n' && data[offset] != ',' {
 			return
 		}
 
@@ -30,24 +30,22 @@ func nextValue(data []byte) (offset int) {
 func stringEnd(data []byte) int {
 	i := 0
 
-	for true {
-		sIdx := bytes.IndexByte(data[i:], '"')
-
-		if sIdx == -1 {
-			return -1
-		}
-
-		i += sIdx + 1
-
-		// If it just escaped \", continue
-		if i > 2 && data[i-2] == '\\' {
+	for len(data) > i {
+		if data[i] != '"' {
+			i++
 			continue
 		}
 
-		break
+		// If it just escaped \", continue
+		if i >= 1 && data[i-1] == '\\' {
+			i++
+			continue
+		} else {
+			return i + 1
+		}
 	}
 
-	return i
+	return -1
 }
 
 // Find end of the data structure, array or object.
@@ -93,6 +91,60 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 	return i
 }
 
+func searchKeys(data []byte, keys ...string) int {
+	keyLevel := 0
+	level := 0
+	i := 0
+	ln := len(data)
+	lk := len(keys)
+
+	for true {
+		if i >= ln {
+			return -1
+		}
+
+		// If inside string, skip it
+		if data[i] == '"' {
+			i++
+
+			se := stringEnd(data[i:])
+			if se == -1 {
+				return -1
+			}
+
+			if ln > i+se &&
+				data[i+se] == ':' && // if string is a Key, and key level match
+				keyLevel == level-1 && // If key nesting level match current object nested level
+
+				// Checks to speedup key comparsion
+				len(keys[level-1]) == se-1 && // if it have same length
+				data[i] == keys[level-1][0] { // If first character same
+				if bytes.Equal([]byte(keys[level-1]), data[i:i+se-1]) {
+					keyLevel++
+					// If we found all keys in path
+					if keyLevel == lk {
+						return i + se + 1
+					}
+				}
+			}
+
+			i += se - 1
+		} else if data[i] == '{' {
+			level++
+		} else if data[i] == '}' {
+			level--
+		} else if data[i] == '[' {
+			// Do not search for keys inside arrays
+			aOff := trailingBracket(data[i:], '[', ']')
+			i += aOff
+		}
+
+		i++
+	}
+
+	return -1
+}
+
 // Data types available in valid JSON data.
 const (
 	NotExist = iota
@@ -123,56 +175,20 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		}
 	}()
 
-	ln := len(data)
-
 	if len(keys) > 0 {
-		for ki, k := range keys {
-			lk := len(k)
-
-			if ki > 0 {
-				// Only objects can have nested keys
-				if data[offset] == '{' {
-					// Limiting scope for the next key search
-					endOffset := trailingBracket(data[offset:], '{', '}')
-					data = data[offset : offset+endOffset]
-					offset = 0
-				} else {
-					return []byte{}, NotExist, -1, errors.New("Key path not found")
-				}
-			}
-
-			for true {
-				if idx := bytes.Index(data[offset:], []byte(k)); idx != -1 && (ln-(offset+idx+lk+2)) > 0 {
-					offset += idx
-
-					if data[offset+lk] == '"' && data[offset-2] != '\\' && data[offset-1] == '"' && data[offset+lk+1] == ':' {
-						offset += lk + 2
-						nO := nextValue(data[offset:])
-
-						if nO == -1 {
-							return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
-						}
-
-						offset += nO
-
-						break
-					} else {
-						offset++
-					}
-				} else {
-					return []byte{}, NotExist, -1, errors.New("Key path not found")
-				}
-			}
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return []byte{}, NotExist, -1, errors.New("Key path not found")
 		}
-	} else {
-		nO := nextValue(data[offset:])
-
-		if nO == -1 {
-			return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
-		}
-
-		offset = nO
 	}
+
+	// Go to closest value
+	nO := nextValue(data[offset:])
+
+	if nO == -1 {
+		return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
+	}
+
+	offset += nO
 
 	endOffset := offset
 
@@ -242,14 +258,40 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 // Expects to receive array data structure (you need to `Get` it first). See example above.
 // Underneath it just calls `Get` without arguments until it can't find next item.
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error)) {
+func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) {
 	if len(data) == 0 {
 		return
 	}
 
 	offset := 1
+
+	if len(keys) > 0 {
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return
+		}
+
+		// Go to closest value
+		nO := nextValue(data[offset:])
+
+		if nO == -1 {
+			return
+		}
+
+		offset += nO
+
+		if data[offset] != '[' {
+			return
+		}
+
+		offset++
+	}
+
 	for true {
 		v, t, o, e := Get(data[offset:])
+
+		if o == 0 {
+			break
+		}
 
 		if t != NotExist {
 			cb(v, t, o, e)

@@ -2,6 +2,7 @@ SOURCE = parser.go
 CONTAINER = jsonparser
 SOURCE_PATH = /go/src/github.com/buger/jsonparser
 BENCHMARK = .
+TEST = .
 
 build:
 	docker build -t $(CONTAINER) .
@@ -18,7 +19,7 @@ profile:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -c
 
 test:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) ./ -timeout 10s $(ARGS) -v
+	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) ./ -run $(TEST) -timeout 10s $(ARGS) -v
 
 fmt:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go fmt ./...
