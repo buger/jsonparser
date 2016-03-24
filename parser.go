@@ -89,7 +89,7 @@ func trailingBracket(data []byte, openSym byte, closeSym byte) int {
 	return -1
 }
 
-func searchKeys(data []byte, keys ...string) int {
+func searchKeys(data []byte, keys ...string) (int, error) {
 	curKey := keys[0]
 	keyLevel := 0
 	level := 0
@@ -106,12 +106,12 @@ func searchKeys(data []byte, keys ...string) int {
 
 			se := stringEnd(data[i:])
 			if se == -1 {
-				return -1
+				return -1, errors.New("unterminated key string")
 			}
 
 			wsSkip := skipWhitespace(data[i+se:])
 			if wsSkip == -1 {
-				return -1
+				return -1, errors.New("key string with no following colon")
 			}
 
 			if data[i+se+wsSkip] == ':' && // if string is a key, and key level match
@@ -120,9 +120,9 @@ func searchKeys(data []byte, keys ...string) int {
 				keyLevel++
 				// If we found all keys in path
 				if keyLevel == lk {
-					return i + se + wsSkip + 1
+					return i + se + wsSkip + 1, nil
 				} else {
-					curKey = keys[level-1]
+					curKey = keys[keyLevel]
 				}
 			}
 
@@ -137,7 +137,7 @@ func searchKeys(data []byte, keys ...string) int {
 			// Do not search for keys inside arrays
 			aOff := trailingBracket(data[i:], '[', ']')
 			if aOff == -1 {
-				return -1
+				return -1, errors.New("unterminated array")
 			}
 
 			i += aOff + 1
@@ -146,7 +146,7 @@ func searchKeys(data []byte, keys ...string) int {
 		}
 	}
 
-	return -1
+	return -1, nil // not found
 }
 
 // Data types available in valid JSON data.
@@ -180,8 +180,8 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	}()
 
 	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
-			return nil, NotExist, -1, errors.New("Key path not found")
+		if offset, err = searchKeys(data, keys...); offset == -1 {
+			return nil, NotExist, -1, err
 		}
 	}
 
@@ -268,8 +268,8 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	offset := 1
 
 	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
-			return errors.New("Key path not found")
+		if offset, err = searchKeys(data, keys...); offset == -1 {
+			return errors.New("Key path not found: " + err.Error())
 		}
 
 		// Go to closest value
