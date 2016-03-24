@@ -24,5 +24,9 @@ test:
 fmt:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go fmt ./...
 
+vet:
+	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go vet ./.
+
+
 bash:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) /bin/bash
