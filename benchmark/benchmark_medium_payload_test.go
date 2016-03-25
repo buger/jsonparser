@@ -24,7 +24,7 @@ import (
 func BenchmarkJsonParserMedium(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		jsonparser.Get(mediumFixture, "person", "name", "fullName")
-		jsonparser.GetNumber(mediumFixture, "person", "github", "followers")
+		jsonparser.GetInt(mediumFixture, "person", "github", "followers")
 		jsonparser.Get(mediumFixture, "company")
 
 		jsonparser.ArrayEach(mediumFixture, func(value []byte, dataType int, offset int, err error) {

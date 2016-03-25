@@ -348,6 +348,26 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	return
 }
 
+// GetInt returns the value retrieved by `Get`, cast to an int if possible.
+// The offset is the same as in `Get`.
+// If key data type do not match, it will return an error.
+func GetInt(data []byte, keys ...string) (val int, offset int, err error) {
+	v, t, offset, e := Get(data, keys...)
+
+	if e != nil {
+		return 0, offset, e
+	}
+
+	if t != Number {
+		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
+	}
+
+	n, err := strconv.ParseInt(toString(v), 10, 0)
+	val = int(n)
+
+	return
+}
+
 // A hack until issue golang/go#2632 is fixed.
 // See: https://github.com/golang/go/issues/2632
 func toString(data []byte) string {
