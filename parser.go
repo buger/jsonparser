@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
 	d "runtime/debug"
 	"strconv"
+	"unsafe"
 )
 
 // Find position of next character which is not ' ', ',', '}' or ']'
@@ -319,7 +321,7 @@ func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(string(v), 64)
+	val, err = strconv.ParseFloat(toString(v), 64)
 	return
 }
 
@@ -344,4 +346,12 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	}
 
 	return
+}
+
+// A hack until issue golang/go#2632 is fixed.
+// See: https://github.com/golang/go/issues/2632
+func toString(data []byte) string {
+	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
+	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
+	return *(*string)(unsafe.Pointer(&sh))
 }
