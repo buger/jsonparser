@@ -10,17 +10,11 @@ import (
 )
 
 // Find position of next character which is not ' ', ',', '}' or ']'
-func nextValue(data []byte) (offset int) {
-	for true {
-		if len(data) == offset {
-			return -1
+func nextValue(data []byte) int {
+	for i, c := range data {
+		if c != ' ' && c != '\n' && c != '\r' && c != '\t' && c != ',' {
+			return i
 		}
-
-		if data[offset] != ' ' && data[offset] != '\n' && data[offset] != ',' {
-			return
-		}
-
-		offset++
 	}
 
 	return -1
@@ -106,8 +100,8 @@ func searchKeys(data []byte, keys ...string) int {
 
 		c := data[i]
 
-		// If inside string, skip it
-		if c == '"' {
+		switch data[i] {
+		case '"':
 			i++
 
 			se := stringEnd(data[i:])
@@ -115,8 +109,14 @@ func searchKeys(data []byte, keys ...string) int {
 				return -1
 			}
 
-			if ln > i+se &&
-				data[i+se] == ':' && // if string is a Key, and key level match
+			nO := nextValue(data[i+se:])
+
+			if nO == -1 {
+				return -1
+			}
+
+			if ln > i+se+nO &&
+				data[i+se+nO] == ':' && // if string is a Key, and key level match
 				keyLevel == level-1 && // If key nesting level match current object nested level
 
 				// Checks to speedup key comparsion
@@ -126,17 +126,17 @@ func searchKeys(data []byte, keys ...string) int {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
-						return i + se + 1
+						return i + se + nO + 1
 					}
 				}
 			}
 
-			i += se - 1
-		} else if c == '{' {
+			i += se + nO - 1
+		case '{':
 			level++
-		} else if c == '}' {
+		case '}':
 			level--
-		} else if c == '[' {
+		case '[':
 			// Do not search for keys inside arrays
 			aOff := trailingBracket(data[i:], '[', ']')
 			i += aOff
@@ -157,6 +157,7 @@ const (
 	Array
 	Boolean
 	Null
+	Unknown
 )
 
 /*
@@ -224,16 +225,29 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 			return c == ' ' || c == '\n' || c == ',' || c == '}' || c == ']'
 		})
 
-		if data[offset] == 't' || data[offset] == 'f' { // true or false
-			dataType = Boolean
-		} else if data[offset] == 'u' || data[offset] == 'n' { // undefined or null
-			dataType = Null
-		} else {
-			dataType = Number
+		if end == -1 {
+			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 		}
 
-		if end == -1 {
-			return []byte{}, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+		value := bytesToString(data[offset : endOffset+end])
+
+		switch data[offset] {
+		case 't', 'f': // true or false
+			if (len(value) == 4 && value == "true") || (len(value) == 5 && value == "false") {
+				dataType = Boolean
+			} else {
+				return nil, Unknown, offset, errors.New("Unknown value type")
+			}
+		case 'u', 'n': // undefined or null
+			if len(value) == 4 && value == "null" {
+				dataType = Null
+			} else {
+				return nil, Unknown, offset, errors.New("Unknown value type")
+			}
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
+			dataType = Number
+		default:
+			return nil, Unknown, offset, errors.New("Unknown value type")
 		}
 
 		endOffset += end
