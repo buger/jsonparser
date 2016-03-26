@@ -266,6 +266,30 @@ var getFloatTests = []Test{
 	},
 }
 
+var getStringTests = []Test{
+	Test{
+		desc:    `Translate unicode symbols`,
+		json:    `{"c": "test"}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `test`,
+	},
+	Test{
+		desc:    `Translate unicode symbols`,
+		json:    `{"c": "15\u00b0C"}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `15°C`,
+	},
+	Test{
+		desc:    `Translate escape symbols`,
+		json:    `{"c": "\\\""}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `\"`,
+	},
+}
+
 var getBoolTests = []Test{
 	Test{
 		desc:    `read boolean true as boolean`,
@@ -368,10 +392,6 @@ func checkFoundAndNoError(t *testing.T, testKind string, test Test, jtype int, v
 
 func runTests(t *testing.T, tests []Test, runner func(Test) (interface{}, int, error), typeChecker func(Test, interface{}) (bool, interface{})) {
 	for _, test := range tests {
-		if test.desc != "whitespace" {
-			continue
-		}
-
 		value, dataType, err := runner(test)
 
 		if checkFoundAndNoError(t, "Get()", test, dataType, value, err) {
@@ -400,11 +420,24 @@ func TestGet(t *testing.T) {
 	)
 }
 
+func TestGetString(t *testing.T) {
+	runTests(t, getStringTests,
+		func(test Test) (value interface{}, dataType int, err error) {
+			value, err = GetString([]byte(test.json), test.path...)
+			return value, String, err
+		},
+		func(test Test, value interface{}) (bool, interface{}) {
+			expected := test.data.(string)
+			return expected == value.(string), expected
+		},
+	)
+}
+
 func TestGetInt(t *testing.T) {
 	runTests(t, getIntTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, dataType, err = GetInt([]byte(test.json), test.path...)
-			return
+			value, err = GetInt([]byte(test.json), test.path...)
+			return value, Number, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(int64)
@@ -416,8 +449,8 @@ func TestGetInt(t *testing.T) {
 func TestGetFloat(t *testing.T) {
 	runTests(t, getFloatTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, dataType, err = GetFloat([]byte(test.json), test.path...)
-			return
+			value, err = GetFloat([]byte(test.json), test.path...)
+			return value, Number, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(float64)
@@ -429,8 +462,8 @@ func TestGetFloat(t *testing.T) {
 func TestGetBoolean(t *testing.T) {
 	runTests(t, getBoolTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, dataType, err = GetBoolean([]byte(test.json), test.path...)
-			return
+			value, err = GetBoolean([]byte(test.json), test.path...)
+			return value, Boolean, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(bool)

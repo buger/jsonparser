@@ -98,8 +98,6 @@ func searchKeys(data []byte, keys ...string) int {
 			return -1
 		}
 
-		c := data[i]
-
 		switch data[i] {
 		case '"':
 			i++
@@ -122,7 +120,7 @@ func searchKeys(data []byte, keys ...string) int {
 				// Checks to speedup key comparsion
 				len(keys[level-1]) == se-1 && // if it have same length
 				data[i] == keys[level-1][0] { // If first character same
-				if keys[level-1] == bytesToString(data[i:i+se-1]) {
+				if keys[level-1] == UnsafeBytesToString(data[i:i+se-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -229,7 +227,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 		}
 
-		value := bytesToString(data[offset : endOffset+end])
+		value := UnsafeBytesToString(data[offset : endOffset+end])
 
 		switch data[offset] {
 		case 't', 'f': // true or false
@@ -317,54 +315,76 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	return nil
 }
 
+// GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
+// If key data type do not match, it will return an error.
+func GetString(data []byte, keys ...string) (val string, err error) {
+	v, t, _, e := Get(data, keys...)
+
+	if e != nil {
+		return "", e
+	}
+
+	if t != String {
+		return "", fmt.Errorf("Value is not a number: %s", string(v))
+	}
+
+	// If no escapes return raw conten
+	if bytes.IndexByte(v, '\\') == -1 {
+		return string(v), nil
+	}
+
+	s, err := strconv.Unquote(`"` + UnsafeBytesToString(v) + `"`)
+
+	return s, err
+}
+
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return an error.
-func GetFloat(data []byte, keys ...string) (val float64, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetFloat(data []byte, keys ...string) (val float64, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return 0, offset, e
+		return 0, e
 	}
 
 	if t != Number {
-		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
+		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(bytesToString(v), 64)
+	val, err = strconv.ParseFloat(UnsafeBytesToString(v), 64)
 	return
 }
 
 // GetInt returns the value retrieved by `Get`, cast to a float64 if possible.
-// The offset is the same as in `Get`.
 // If key data type do not match, it will return an error.
-func GetInt(data []byte, keys ...string) (val int64, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetInt(data []byte, keys ...string) (val int64, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return 0, offset, e
+		return 0, e
 	}
 
 	if t != Number {
-		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
+		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseInt(bytesToString(v), 10, 64)
+	val, err = strconv.ParseInt(UnsafeBytesToString(v), 10, 64)
 	return
 }
 
 // GetBoolean returns the value retrieved by `Get`, cast to a bool if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return error.
-func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetBoolean(data []byte, keys ...string) (val bool, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return false, offset, e
+		return false, e
 	}
 
 	if t != Boolean {
-		return false, offset, fmt.Errorf("Value is not a boolean: %s", string(v))
+		return false, fmt.Errorf("Value is not a boolean: %s", string(v))
 	}
 
 	if v[0] == 't' {
@@ -378,7 +398,7 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 
 // A hack until issue golang/go#2632 is fixed.
 // See: https://github.com/golang/go/issues/2632
-func bytesToString(data []byte) string {
+func UnsafeBytesToString(data []byte) string {
 	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
 	return *(*string)(unsafe.Pointer(&sh))
