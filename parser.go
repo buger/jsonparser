@@ -317,39 +317,39 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 
 // GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
 // If key data type do not match, it will return an error.
-func GetString(data []byte, keys ...string) (val string, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetString(data []byte, keys ...string) (val string, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return "", offset, e
+		return "", e
 	}
 
 	if t != String {
-		return "", offset, fmt.Errorf("Value is not a number: %s", string(v))
+		return "", fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
 	// If no escapes return raw conten
 	if bytes.IndexByte(v, '\\') == -1 {
-		return string(v), offset, nil
+		return string(v), nil
 	}
 
 	s, err := strconv.Unquote(`"` + bytesToString(v) + `"`)
 
-	return s, offset, err
+	return s, err
 }
 
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return an error.
-func GetFloat(data []byte, keys ...string) (val float64, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetFloat(data []byte, keys ...string) (val float64, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return 0, offset, e
+		return 0, e
 	}
 
 	if t != Number {
-		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
+		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
 	val, err = strconv.ParseFloat(bytesToString(v), 64)
@@ -357,17 +357,16 @@ func GetFloat(data []byte, keys ...string) (val float64, offset int, err error) 
 }
 
 // GetInt returns the value retrieved by `Get`, cast to a float64 if possible.
-// The offset is the same as in `Get`.
 // If key data type do not match, it will return an error.
-func GetInt(data []byte, keys ...string) (val int64, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetInt(data []byte, keys ...string) (val int64, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return 0, offset, e
+		return 0, e
 	}
 
 	if t != Number {
-		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
+		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
 	val, err = strconv.ParseInt(bytesToString(v), 10, 64)
@@ -377,15 +376,15 @@ func GetInt(data []byte, keys ...string) (val int64, offset int, err error) {
 // GetBoolean returns the value retrieved by `Get`, cast to a bool if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return error.
-func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
-	v, t, offset, e := Get(data, keys...)
+func GetBoolean(data []byte, keys ...string) (val bool, err error) {
+	v, t, _, e := Get(data, keys...)
 
 	if e != nil {
-		return false, offset, e
+		return false, e
 	}
 
 	if t != Boolean {
-		return false, offset, fmt.Errorf("Value is not a boolean: %s", string(v))
+		return false, fmt.Errorf("Value is not a boolean: %s", string(v))
 	}
 
 	if v[0] == 't' {

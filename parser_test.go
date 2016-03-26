@@ -423,7 +423,7 @@ func TestGet(t *testing.T) {
 func TestGetString(t *testing.T) {
 	runTests(t, getStringTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, _, err = GetString([]byte(test.json), test.path...)
+			value, err = GetString([]byte(test.json), test.path...)
 			return value, String, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {
@@ -436,7 +436,7 @@ func TestGetString(t *testing.T) {
 func TestGetInt(t *testing.T) {
 	runTests(t, getIntTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, _, err = GetInt([]byte(test.json), test.path...)
+			value, err = GetInt([]byte(test.json), test.path...)
 			return value, Number, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {
@@ -449,7 +449,7 @@ func TestGetInt(t *testing.T) {
 func TestGetFloat(t *testing.T) {
 	runTests(t, getFloatTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, _, err = GetFloat([]byte(test.json), test.path...)
+			value, err = GetFloat([]byte(test.json), test.path...)
 			return value, Number, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {
@@ -462,7 +462,7 @@ func TestGetFloat(t *testing.T) {
 func TestGetBoolean(t *testing.T) {
 	runTests(t, getBoolTests,
 		func(test Test) (value interface{}, dataType int, err error) {
-			value, _, err = GetBoolean([]byte(test.json), test.path...)
+			value, err = GetBoolean([]byte(test.json), test.path...)
 			return value, Boolean, err
 		},
 		func(test Test, value interface{}) (bool, interface{}) {

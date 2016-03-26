@@ -80,15 +80,21 @@ Returns:
 Accepts multiple keys to specify path to JSON value (in case of quering nested structures).
 If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 
+### **`GetString`**
+```
+func GetString(data []byte, keys ...string) (val string, err error)
+```
+Returns strings properly handing escaped and unicode characters. Note that this will cause additioal memory allocations.
+
 ### **`GetBoolean`**, **`GetInt`** and **`GetFloat`**
 ```
-func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error)
+func GetBoolean(data []byte, keys ...string) (val bool, err error)
 
-func GetFloat(data []byte, keys ...string) (val float64, offset int, err error)
+func GetFloat(data []byte, keys ...string) (val float64, err error)
 
-func GetInt(data []byte, keys ...string) (val float64, offset int, err error)
+func GetInt(data []byte, keys ...string) (val float64, err error)
 ```
-If you know the key type, you can use the helpers above. Returns same arguments as `Get` except `dataType`.
+If you know the key type, you can use the helpers above.
 If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
