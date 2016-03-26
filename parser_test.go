@@ -52,11 +52,19 @@ func TestValidJSON(t *testing.T) {
 		t.Errorf("Should read numberic value as number %d", v)
 	}
 
+	if v, _, _ := GetInt([]byte(`{"a": "b", "c": 1}`), "c"); v != 1 {
+		t.Errorf("Should read numberic value as number %d", v)
+	}
+
 	if v, _, _, err := Get([]byte(`{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`), "c", "c"); !bytes.Equal(v, []byte(`[1,2]`)) {
 		t.Errorf("Should handle multiple nested keys with same name: %s, %v", string(v), err)
 	}
 
 	if v, _, _ := GetFloat([]byte("{\"a\": \"b\", \"c\": 1.1 \n}"), "c"); v != 1.1 {
+		t.Errorf("Should read numberic values in formatted json %d", v)
+	}
+
+	if v, _, _ := GetInt([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
 		t.Errorf("Should read numberic values in formatted json %d", v)
 	}
 
@@ -74,6 +82,10 @@ func TestValidJSON(t *testing.T) {
 
 	if v, _, _ := GetBoolean([]byte("{\"a\": \"b\", \"c\": false \n}"), "c"); v {
 		t.Errorf("Should read boolean false in formatted json %v", v)
+	}
+
+	if v, _, _ := GetInt([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
+		t.Errorf("Should read numberic values in formatted json %d", v)
 	}
 
 	if v, _, _ := GetInt([]byte("{\"a\": \"b\", \"c\": 1 \n}"), "c"); v != 1 {
