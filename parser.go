@@ -120,7 +120,7 @@ func searchKeys(data []byte, keys ...string) int {
 				// Checks to speedup key comparsion
 				len(keys[level-1]) == se-1 && // if it have same length
 				data[i] == keys[level-1][0] { // If first character same
-				if keys[level-1] == bytesToString(data[i:i+se-1]) {
+				if keys[level-1] == UnsafeBytesToString(data[i:i+se-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -227,7 +227,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 		}
 
-		value := bytesToString(data[offset : endOffset+end])
+		value := UnsafeBytesToString(data[offset : endOffset+end])
 
 		switch data[offset] {
 		case 't', 'f': // true or false
@@ -333,7 +333,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	s, err := strconv.Unquote(`"` + bytesToString(v) + `"`)
+	s, err := strconv.Unquote(`"` + UnsafeBytesToString(v) + `"`)
 
 	return s, err
 }
@@ -352,7 +352,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(bytesToString(v), 64)
+	val, err = strconv.ParseFloat(UnsafeBytesToString(v), 64)
 	return
 }
 
@@ -369,7 +369,7 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseInt(bytesToString(v), 10, 64)
+	val, err = strconv.ParseInt(UnsafeBytesToString(v), 10, 64)
 	return
 }
 
@@ -398,7 +398,7 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 
 // A hack until issue golang/go#2632 is fixed.
 // See: https://github.com/golang/go/issues/2632
-func bytesToString(data []byte) string {
+func UnsafeBytesToString(data []byte) string {
 	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
 	return *(*string)(unsafe.Pointer(&sh))
