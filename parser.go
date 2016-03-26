@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	d "runtime/debug"
+	"reflect"
 	"strconv"
+	"unsafe"
 )
 
 // Find position of next character which is not ' ', ',', '}' or ']'
@@ -103,8 +104,10 @@ func searchKeys(data []byte, keys ...string) int {
 			return -1
 		}
 
+		c := data[i]
+
 		// If inside string, skip it
-		if data[i] == '"' {
+		if c == '"' {
 			i++
 
 			se := stringEnd(data[i:])
@@ -119,7 +122,7 @@ func searchKeys(data []byte, keys ...string) int {
 				// Checks to speedup key comparsion
 				len(keys[level-1]) == se-1 && // if it have same length
 				data[i] == keys[level-1][0] { // If first character same
-				if bytes.Equal([]byte(keys[level-1]), data[i:i+se-1]) {
+				if keys[level-1] == bytesToString(data[i:i+se-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -129,11 +132,11 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 
 			i += se - 1
-		} else if data[i] == '{' {
+		} else if c == '{' {
 			level++
-		} else if data[i] == '}' {
+		} else if c == '}' {
 			level--
-		} else if data[i] == '[' {
+		} else if c == '[' {
 			// Do not search for keys inside arrays
 			aOff := trailingBracket(data[i:], '[', ']')
 			i += aOff
@@ -169,11 +172,6 @@ Accept multiple keys to specify path to JSON value (in case of quering nested st
 If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 */
 func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("Unhandler JSON parsing error: %v, %s", r, string(d.Stack()))
-		}
-	}()
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
@@ -319,7 +317,7 @@ func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(string(v), 64)
+	val, err = strconv.ParseFloat(bytesToString(v), 64)
 	return
 }
 
@@ -344,4 +342,12 @@ func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error) {
 	}
 
 	return
+}
+
+// A hack until issue golang/go#2632 is fixed.
+// See: https://github.com/golang/go/issues/2632
+func bytesToString(data []byte) string {
+	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
+	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
+	return *(*string)(unsafe.Pointer(&sh))
 }
