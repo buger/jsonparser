@@ -174,7 +174,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | mreiferson/go-ujson | **7185** | **1409** | 37 |
 | pquerna/ffjson | **3816** | **624** | **15** |
 | mailru/easyjson | **1965** | **192** | **9** |
-| buger/jsonparser | **1385** | **0** | **0** |
+| buger/jsonparser | **1242** | **0** | **0** |
 
 Winners are ffjson, easyjson and jsonparser, where jsonparser is 5.5x faster then encoding/json and 2.8x faster then ffjson, and slightly faster then easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
@@ -197,7 +197,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | mreiferson/go-ujson | **57038** | 11547 | 270 |
 | pquerna/ffjson | **20433** | **856** | **20** |
 | mailru/easyjson | **10642** | **336** | **12** |
-| buger/jsonparser | **14843** | **16** | **1** |
+| buger/jsonparser | **12950** | **16** | **1** |
 
 The difference between ffjson and jsonparser in CPU usage is smaller, while the memory consumption difference is growing. On the other hand `easyjson` shows remarkable performance for medium payload.
 
