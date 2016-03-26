@@ -303,10 +303,10 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	return nil
 }
 
-// GetNumber returns the value retrieved by `Get`, cast to a float64 if possible.
+// GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return an error.
-func GetNumber(data []byte, keys ...string) (val float64, offset int, err error) {
+func GetFloat(data []byte, keys ...string) (val float64, offset int, err error) {
 	v, t, offset, e := Get(data, keys...)
 
 	if e != nil {
@@ -318,6 +318,24 @@ func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
 	}
 
 	val, err = strconv.ParseFloat(bytesToString(v), 64)
+	return
+}
+
+// GetInt returns the value retrieved by `Get`, cast to a float64 if possible.
+// The offset is the same as in `Get`.
+// If key data type do not match, it will return an error.
+func GetInt(data []byte, keys ...string) (val int64, offset int, err error) {
+	v, t, offset, e := Get(data, keys...)
+
+	if e != nil {
+		return 0, offset, e
+	}
+
+	if t != Number {
+		return 0, offset, fmt.Errorf("Value is not a number: %s", string(v))
+	}
+
+	val, err = strconv.ParseInt(bytesToString(v), 10, 64)
 	return
 }
 

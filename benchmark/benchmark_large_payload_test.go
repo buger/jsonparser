@@ -28,7 +28,7 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 		}, "users")
 
 		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType int, offset int, err error) {
-			jsonparser.GetNumber(value, "id")
+			jsonparser.GetInt(value, "id")
 			jsonparser.Get(value, "slug")
 			nothing()
 		}, "topics", "topics")

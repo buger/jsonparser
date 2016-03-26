@@ -47,8 +47,8 @@ jsonparser.GetNumber(data, "person", "github", "followers")
 jsonparser.Get(data, "company")
 
 // If the key doesn't exist it will throw an error
-var size float64
-if value, _, err := jsonparser.GetNumber(data, "company", "size"); err != nil {
+var size int64
+if value, _, err := jsonparser.GetInt(data, "company", "size"); err != nil {
   size = value
 }
 
@@ -80,11 +80,13 @@ Returns:
 Accepts multiple keys to specify path to JSON value (in case of quering nested structures).
 If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 
-### **`GetBoolean`** and **`GetNumber`**
+### **`GetBoolean`**, **`GetInt`** and **`GetFloat`**
 ```
 func GetBoolean(data []byte, keys ...string) (val bool, offset int, err error)
 
-func GetNumber(data []byte, keys ...string) (val float64, offset int, err error)
+func GetFloat(data []byte, keys ...string) (val float64, offset int, err error)
+
+func GetInt(data []byte, keys ...string) (val float64, offset int, err error)
 ```
 If you know the key type, you can use the helpers above. Returns same arguments as `Get` except `dataType`.
 If key data type do not match, it will return error.

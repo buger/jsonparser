@@ -27,9 +27,9 @@ func nothing(_ ...interface{}) {}
 func BenchmarkJsonParserSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		jsonparser.Get(smallFixture, "uuid")
-		jsonparser.GetNumber(smallFixture, "tz")
+		jsonparser.GetInt(smallFixture, "tz")
 		jsonparser.Get(smallFixture, "ua")
-		jsonparser.GetNumber(smallFixture, "st")
+		jsonparser.GetInt(smallFixture, "st")
 
 		nothing()
 	}
