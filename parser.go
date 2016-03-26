@@ -98,8 +98,6 @@ func searchKeys(data []byte, keys ...string) int {
 			return -1
 		}
 
-		c := data[i]
-
 		switch data[i] {
 		case '"':
 			i++
@@ -315,6 +313,29 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	}
 
 	return nil
+}
+
+// GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
+// If key data type do not match, it will return an error.
+func GetString(data []byte, keys ...string) (val string, offset int, err error) {
+	v, t, offset, e := Get(data, keys...)
+
+	if e != nil {
+		return "", offset, e
+	}
+
+	if t != String {
+		return "", offset, fmt.Errorf("Value is not a number: %s", string(v))
+	}
+
+	// If no escapes return raw conten
+	if bytes.IndexByte(v, '\\') == -1 {
+		return string(v), offset, nil
+	}
+
+	s, err := strconv.Unquote(`"` + bytesToString(v) + `"`)
+
+	return s, offset, err
 }
 
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
