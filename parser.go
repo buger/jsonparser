@@ -23,20 +23,18 @@ func nextValue(data []byte) int {
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
 func stringEnd(data []byte) int {
-	i := 0
-
-	for len(data) > i {
-		if data[i] != '"' {
-			i++
-			continue
-		}
-
-		// If it just escaped \", continue
-		if i >= 1 && data[i-1] == '\\' {
-			i++
-			continue
-		} else {
-			return i + 1
+	escaped := false
+	for i, c := range data {
+		switch c {
+		case '\\':
+			escaped = !escaped
+		case '"':
+			if !escaped {
+				return i + 1
+			}
+			escaped = false
+		default:
+			escaped = false
 		}
 	}
 

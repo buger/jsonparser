@@ -128,6 +128,13 @@ var getTests = []Test{
 		data:    `\\\"`,
 	},
 	Test{
+		desc:    `unescaped backslash quote`,
+		json:    `{"a": "\\"}`,
+		path:    []string{"a"},
+		isFound: true,
+		data:    `\\`,
+	},
+	Test{
 		desc:    `unicode in JSON`,
 		json:    `{"a": "15°C"}`,
 		path:    []string{"a"},
