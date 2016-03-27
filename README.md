@@ -86,11 +86,11 @@ func GetString(data []byte, keys ...string) (val string, err error)
 ```
 Returns strings properly handing escaped and unicode characters. Note that this will cause additioal memory allocations.
 
-### **`UnsafeBytesToString`**
-If you need string in your app, and ready to sacrifice with support of escaped symbols in favor of speed, you may use `UnsafeBytesToString` method, which returns string mapped to exsting byte slice memory, without any allocations:
+### **`GetUnsafeString`**
+If you need string in your app, and ready to sacrifice with support of escaped symbols in favor of speed. It returns string mapped to exsting byte slice memory, without any allocations:
 ```go
-v, _, _, _ := jsonparser.Get(data, "person", "name", "title")
-switch jsonparser.UnsafeBytesToString(v) {
+s, _, := jsonparser.GetUnsafeString(data, "person", "name", "title")
+switch s {
   case 'CEO':
     ...
   case 'Engineer'

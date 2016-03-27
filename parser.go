@@ -109,7 +109,7 @@ func searchKeys(data []byte, keys ...string) int {
 				// Checks to speedup key comparsion
 				len(keys[level-1]) == se-1 && // if it have same length
 				data[i] == keys[level-1][0] { // If first character same
-				if keys[level-1] == UnsafeBytesToString(data[i:i+se-1]) {
+				if keys[level-1] == unsafeBytesToString(data[i:i+se-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -215,7 +215,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 		}
 
-		value := UnsafeBytesToString(data[offset : endOffset+end])
+		value := unsafeBytesToString(data[offset : endOffset+end])
 
 		switch data[offset] {
 		case 't', 'f': // true or false
@@ -303,6 +303,17 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	return nil
 }
 
+// GetUnsafeString returns the value retrieved by `Get`, use creates string without memory allocation by mapping string to slice memory. It does not handle escape symbols.
+func GetUnsafeString(data []byte, keys ...string) (val string, err error) {
+	v, _, _, e := Get(data, keys...)
+
+	if e != nil {
+		return "", e
+	}
+
+	return unsafeBytesToString(v), nil
+}
+
 // GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
 // If key data type do not match, it will return an error.
 func GetString(data []byte, keys ...string) (val string, err error) {
@@ -321,7 +332,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	s, err := strconv.Unquote(`"` + UnsafeBytesToString(v) + `"`)
+	s, err := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
 
 	return s, err
 }
@@ -340,7 +351,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(UnsafeBytesToString(v), 64)
+	val, err = strconv.ParseFloat(unsafeBytesToString(v), 64)
 	return
 }
 
@@ -357,7 +368,7 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseInt(UnsafeBytesToString(v), 10, 64)
+	val, err = strconv.ParseInt(unsafeBytesToString(v), 10, 64)
 	return
 }
 
@@ -386,7 +397,7 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 
 // A hack until issue golang/go#2632 is fixed.
 // See: https://github.com/golang/go/issues/2632
-func UnsafeBytesToString(data []byte) string {
+func unsafeBytesToString(data []byte) string {
 	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
 	return *(*string)(unsafe.Pointer(&sh))
