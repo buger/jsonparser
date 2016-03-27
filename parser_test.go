@@ -327,6 +327,13 @@ var getBoolTests = []Test{
 		data:    false,
 	},
 	Test{
+		desc:    `read boolean true with whitespace and another key`,
+		json:    "{\r\t\n \"a\"\r\t\n :\r\t\n true\r\t\n ,\r\t\n \"b\": 1}",
+		path:    []string{"a"},
+		isFound: true,
+		data:    true,
+	},
+	Test{
 		desc:  `read fake boolean true`,
 		json:  `{"a": txyz}`,
 		path:  []string{"a"},

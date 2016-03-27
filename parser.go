@@ -41,6 +41,19 @@ func stringEnd(data []byte) int {
 	return -1
 }
 
+// Tries to find the end of a non-string value
+// A non-string value is terminated by whitespace, a comma, a closing brace, or closing bracket
+func nonstringValueEnd(data []byte) int {
+	for i, c := range data {
+		switch c {
+		case ' ', '\n', '\r', '\t', ',', '}', ']':
+			return i
+		}
+	}
+
+	return -1
+}
+
 // Find end of the data structure, array or object.
 // For array openSym and closeSym will be '[' and ']', for object '{' and '}'
 // Know about nested structures
@@ -217,15 +230,12 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		endOffset += offset
 	} else {
 		// Number, Boolean or None
-		end := bytes.IndexFunc(data[endOffset:], func(c rune) bool {
-			return c == ' ' || c == '\n' || c == ',' || c == '}' || c == ']'
-		})
-
-		if end == -1 {
-			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+		valueLen := nonstringValueEnd(data[endOffset:])
+		if valueLen == -1 {
+			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' or ']' or whitespace")
 		}
 
-		value := UnsafeBytesToString(data[offset : endOffset+end])
+		value := UnsafeBytesToString(data[offset : endOffset+valueLen])
 
 		switch data[offset] {
 		case 't', 'f': // true or false
@@ -246,7 +256,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 			return nil, Unknown, offset, errors.New("Unknown value type")
 		}
 
-		endOffset += end
+		endOffset += valueLen
 	}
 
 	value = data[offset:endOffset]
