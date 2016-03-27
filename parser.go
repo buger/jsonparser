@@ -10,11 +10,17 @@ import (
 )
 
 // Find position of next character which is not ' ', ',', '}' or ']'
-func nextValue(data []byte) int {
+func nextValue(data []byte, skipComma bool) int {
 	for i, c := range data {
 		switch c {
-		case ' ', '\n', '\r', '\t', ',':
+		case ' ', '\n', '\r', '\t':
 			continue
+		case ',':
+			if !skipComma {
+				continue
+			} else {
+				return i
+			}
 		default:
 			return i
 		}
@@ -82,43 +88,35 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
-	for true {
-		if i >= ln {
-			return -1
-		}
-
+	for i < ln {
 		switch data[i] {
 		case '"':
 			i++
+			keyBegin := i
 
-			se := stringEnd(data[i:])
-			if se == -1 {
+			strEnd := stringEnd(data[i:])
+			if strEnd == -1 {
 				return -1
 			}
+			i += strEnd
+			keyEnd := i - 1
 
-			nO := nextValue(data[i+se:])
-
-			if nO == -1 {
+			valueOffset := nextValue(data[i:], true)
+			if valueOffset == -1 {
 				return -1
 			}
+			i += valueOffset
 
-			if ln > i+se+nO &&
-				data[i+se+nO] == ':' && // if string is a Key, and key level match
+			if i < ln &&
+				data[i] == ':' && // if string is a Key, and key level match
 				keyLevel == level-1 && // If key nesting level match current object nested level
-
-				// Checks to speedup key comparsion
-				len(keys[level-1]) == se-1 && // if it have same length
-				data[i] == keys[level-1][0] { // If first character same
-				if keys[level-1] == unsafeBytesToString(data[i:i+se-1]) {
+				keys[level-1] == unsafeBytesToString(data[keyBegin:keyEnd]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
-						return i + se + nO + 1
+						return i + 1
 					}
-				}
 			}
-
-			i += se + nO - 1
 		case '{':
 			level++
 		case '}':
@@ -167,7 +165,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	}
 
 	// Go to closest value
-	nO := nextValue(data[offset:])
+	nO := nextValue(data[offset:], false)
 
 	if nO == -1 {
 		return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
@@ -176,7 +174,6 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	offset += nO
 
 	endOffset := offset
-
 	// if string value
 	if data[offset] == '"' {
 		dataType = String
@@ -267,7 +264,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 		}
 
 		// Go to closest value
-		nO := nextValue(data[offset:])
+		nO := nextValue(data[offset:], false)
 
 		if nO == -1 {
 			return errors.New("Malformed JSON")

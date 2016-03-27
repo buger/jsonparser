@@ -7,6 +7,9 @@ import (
 	"testing"
 )
 
+// Set it to non-empty value if want to run only specific test
+var activeTest = ""
+
 func toArray(data []byte) (result [][]byte) {
 	ArrayEach(data, func(value []byte, dataType int, offset int, err error) {
 		result = append(result, value)
@@ -237,6 +240,12 @@ var getTests = []Test{
 		path:  []string{"a"},
 		isErr: true,
 	},
+	Test{
+		desc:  "malformed key (followed by comma followed by colon)",
+		json:  `{"a",:1}`,
+		path:  []string{"a"},
+		isErr: true,
+	},
 }
 
 var getIntTests = []Test{
@@ -399,6 +408,12 @@ func checkFoundAndNoError(t *testing.T, testKind string, test Test, jtype int, v
 
 func runTests(t *testing.T, tests []Test, runner func(Test) (interface{}, int, error), typeChecker func(Test, interface{}) (bool, interface{})) {
 	for _, test := range tests {
+		if activeTest != "" && test.desc != activeTest {
+			continue
+		}
+
+		// fmt.Println("Running:", test.desc)
+
 		value, dataType, err := runner(test)
 
 		if checkFoundAndNoError(t, "Get()", test, dataType, value, err) {
