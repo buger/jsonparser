@@ -32,18 +32,19 @@ func nextValue(data []byte, skipComma bool) int {
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
 func stringEnd(data []byte) int {
-	escaped := false
 	for i, c := range data {
-		switch c {
-		case '\\':
-			escaped = !escaped
-		case '"':
-			if !escaped {
-				return i + 1
+		if c == '"' {
+			j := i - 1
+			for {
+				if j < 0 || data[j] != '\\' {
+					return i + 1 // even number of backslashes
+				}
+				j--
+				if j < 0 || data[j] != '\\' {
+					break // odd number of backslashes
+				}
+				j--
 			}
-			escaped = false
-		default:
-			escaped = false
 		}
 	}
 
