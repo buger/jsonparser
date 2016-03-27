@@ -237,6 +237,12 @@ var getTests = []Test{
 		path:  []string{"a"},
 		isErr: true,
 	},
+	Test{
+		desc:  "malformed key (followed by comma followed by colon)",
+		json:  `{"a",:1}`,
+		path:  []string{"a"},
+		isErr: true,
+	},
 }
 
 var getIntTests = []Test{
