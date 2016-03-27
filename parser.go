@@ -46,7 +46,7 @@ func stringEnd(data []byte) int {
 
 // Find end of the data structure, array or object.
 // For array openSym and closeSym will be '[' and ']', for object '{' and '}'
-func nestedStructureEnd(data []byte, openSym byte, closeSym byte) int {
+func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	level := 0
 	i := 0
 	ln := len(data)
@@ -125,7 +125,7 @@ func searchKeys(data []byte, keys ...string) int {
 			level--
 		case '[':
 			// Do not search for keys inside arrays
-			arraySkip := nestedStructureEnd(data[i:], '[', ']')
+			arraySkip := blockEnd(data[i:], '[', ']')
 			i += arraySkip
 		}
 
@@ -188,7 +188,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	} else if data[offset] == '[' { // if array value
 		dataType = Array
 		// break label, for stopping nested loops
-		endOffset = nestedStructureEnd(data[offset:], '[', ']')
+		endOffset = blockEnd(data[offset:], '[', ']')
 
 		if endOffset == -1 {
 			return []byte{}, dataType, offset, errors.New("Value is array, but can't find closing ']' symbol")
@@ -198,7 +198,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	} else if data[offset] == '{' { // if object value
 		dataType = Object
 		// break label, for stopping nested loops
-		endOffset = nestedStructureEnd(data[offset:], '{', '}')
+		endOffset = blockEnd(data[offset:], '{', '}')
 
 		if endOffset == -1 {
 			return []byte{}, dataType, offset, errors.New("Value looks like object, but can't find closing '}' symbol")
