@@ -20,6 +20,19 @@ func nextValue(data []byte) int {
 	return -1
 }
 
+// Find position of next character which is not whitespace
+func whitespaceEnd(data []byte) int {
+	for i, b := range data {
+		switch b {
+		case ' ', '\n', '\r', '\t':
+			continue
+		default:
+			return i
+		}
+	}
+	return -1
+}
+
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
 func stringEnd(data []byte) int {
@@ -93,43 +106,37 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
-	for true {
-		if i >= ln {
-			return -1
-		}
-
+	for i < ln {
 		switch data[i] {
 		case '"':
-			i++
+			i++ // skip opening quote
+			keyBegin := i
 
-			se := stringEnd(data[i:])
-			if se == -1 {
+			strSkip := stringEnd(data[keyBegin:]) // skip just past the closing quote
+			if strSkip == -1 {
 				return -1
 			}
 
-			nO := nextValue(data[i+se:])
+			i += strSkip
+			keyEnd := i - 1
 
-			if nO == -1 {
+			wsSkip := whitespaceEnd(data[i:]) // skip any whitespace after the string
+			if wsSkip == -1 {
 				return -1
 			}
 
-			if ln > i+se+nO &&
-				data[i+se+nO] == ':' && // if string is a Key, and key level match
+			i += wsSkip
+
+			if i < ln && // make sure checking data[i] is safe
+				data[i] == ':' && // if string is a Key, and key level match
 				keyLevel == level-1 && // If key nesting level match current object nested level
-
-				// Checks to speedup key comparsion
-				len(keys[level-1]) == se-1 && // if it have same length
-				data[i] == keys[level-1][0] { // If first character same
-				if keys[level-1] == UnsafeBytesToString(data[i:i+se-1]) {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + se + nO + 1
-					}
+				keys[level-1] == UnsafeBytesToString(data[keyBegin:keyEnd]) {
+				keyLevel++
+				// If we found all keys in path
+				if keyLevel == lk {
+					return i + 1
 				}
 			}
-
-			i += se + nO - 1
 		case '{':
 			level++
 		case '}':
