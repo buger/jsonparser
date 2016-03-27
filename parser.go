@@ -9,8 +9,19 @@ import (
 	"unsafe"
 )
 
+func tokenEnd(data []byte) int {
+	for i, c := range data {
+		switch c {
+		case ' ', '\n', '\r', '\t', ',', '}', ']':
+			return i
+		}
+	}
+
+	return -1
+}
+
 // Find position of next character which is not ' ', ',', '}' or ']'
-func nextValue(data []byte, skipComma bool) int {
+func nextToken(data []byte, skipComma bool) int {
 	for i, c := range data {
 		switch c {
 		case ' ', '\n', '\r', '\t':
@@ -102,7 +113,7 @@ func searchKeys(data []byte, keys ...string) int {
 			i += strEnd
 			keyEnd := i - 1
 
-			valueOffset := nextValue(data[i:], true)
+			valueOffset := nextToken(data[i:], true)
 			if valueOffset == -1 {
 				return -1
 			}
@@ -166,7 +177,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	}
 
 	// Go to closest value
-	nO := nextValue(data[offset:], false)
+	nO := nextToken(data[offset:], false)
 
 	if nO == -1 {
 		return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
@@ -205,9 +216,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		endOffset += offset
 	} else {
 		// Number, Boolean or None
-		end := bytes.IndexFunc(data[endOffset:], func(c rune) bool {
-			return c == ' ' || c == '\n' || c == ',' || c == '}' || c == ']'
-		})
+		end := tokenEnd(data[endOffset:])
 
 		if end == -1 {
 			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
@@ -265,7 +274,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 		}
 
 		// Go to closest value
-		nO := nextValue(data[offset:], false)
+		nO := nextToken(data[offset:], false)
 
 		if nO == -1 {
 			return errors.New("Malformed JSON")
