@@ -12,7 +12,10 @@ import (
 // Find position of next character which is not ' ', ',', '}' or ']'
 func nextValue(data []byte) int {
 	for i, c := range data {
-		if c != ' ' && c != '\n' && c != '\r' && c != '\t' && c != ',' {
+		switch c {
+		case ' ', '\n', '\r', '\t', ',':
+			continue
+		default:
 			return i
 		}
 	}
@@ -43,45 +46,33 @@ func stringEnd(data []byte) int {
 
 // Find end of the data structure, array or object.
 // For array openSym and closeSym will be '[' and ']', for object '{' and '}'
-// Know about nested structures
-func trailingBracket(data []byte, openSym byte, closeSym byte) int {
+func nestedStructureEnd(data []byte, openSym byte, closeSym byte) int {
 	level := 0
 	i := 0
 	ln := len(data)
 
-	for true {
-		if i >= ln {
-			return -1
-		}
-
-		c := data[i]
-
-		// If inside string, skip it
-		if c == '"' {
-			//sFrom := i
-			i++
-
-			se := stringEnd(data[i:])
+	for i < ln {
+		switch data[i] {
+		case '"': // If inside string, skip it
+			se := stringEnd(data[i+1:])
 			if se == -1 {
 				return -1
 			}
-			i += se - 1
-		}
-
-		if c == openSym {
+			i += se
+		case openSym: // If open symbol, increase level
 			level++
-		} else if c == closeSym {
+		case closeSym: // If close symbol, increase level
 			level--
-		}
 
+			// If we have returned to the original level, we're done
+			if level == 0 {
+				return i + 1
+			}
+		}
 		i++
-
-		if level == 0 {
-			break
-		}
 	}
 
-	return i
+	return -1
 }
 
 func searchKeys(data []byte, keys ...string) int {
@@ -134,8 +125,8 @@ func searchKeys(data []byte, keys ...string) int {
 			level--
 		case '[':
 			// Do not search for keys inside arrays
-			aOff := trailingBracket(data[i:], '[', ']')
-			i += aOff
+			arraySkip := nestedStructureEnd(data[i:], '[', ']')
+			i += arraySkip
 		}
 
 		i++
@@ -169,7 +160,6 @@ Accept multiple keys to specify path to JSON value (in case of quering nested st
 If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 */
 func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error) {
-
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
 			return []byte{}, NotExist, -1, errors.New("Key path not found")
@@ -198,7 +188,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	} else if data[offset] == '[' { // if array value
 		dataType = Array
 		// break label, for stopping nested loops
-		endOffset = trailingBracket(data[offset:], '[', ']')
+		endOffset = nestedStructureEnd(data[offset:], '[', ']')
 
 		if endOffset == -1 {
 			return []byte{}, dataType, offset, errors.New("Value is array, but can't find closing ']' symbol")
@@ -208,7 +198,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 	} else if data[offset] == '{' { // if object value
 		dataType = Object
 		// break label, for stopping nested loops
-		endOffset = trailingBracket(data[offset:], '{', '}')
+		endOffset = nestedStructureEnd(data[offset:], '{', '}')
 
 		if endOffset == -1 {
 			return []byte{}, dataType, offset, errors.New("Value looks like object, but can't find closing '}' symbol")
