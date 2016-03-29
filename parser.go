@@ -93,17 +93,64 @@ func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	return -1
 }
 
-func searchPaths(data []byte, paths ...[]string) int {
+func searchKeys(data []byte, keys ...string) int {
 	keyLevel := 0
 	level := 0
 	i := 0
 	ln := len(data)
-	var pathOffsets []int
+	lk := len(keys)
 
-	pathsMatched := 0
-	if len(paths) > 1 {
-		pathOffsets = make([]int, len(paths))
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd := stringEnd(data[i:])
+			if strEnd == -1 {
+				return -1
+			}
+			i += strEnd
+			keyEnd := i - 1
+
+			valueOffset := nextToken(data[i:], true)
+			if valueOffset == -1 {
+				return -1
+			}
+			i += valueOffset
+
+			if i < ln &&
+				data[i] == ':' && // if string is a Key, and key level match
+				keyLevel == level-1 && // If key nesting level match current object nested level
+				keys[level-1] == unsafeBytesToString(data[keyBegin:keyEnd]) {
+					keyLevel++
+					// If we found all keys in path
+					if keyLevel == lk {
+						return i + 1
+					}
+			}
+		case '{':
+			level++
+		case '}':
+			level--
+		case '[':
+			// Do not search for keys inside arrays
+			arraySkip := blockEnd(data[i:], '[', ']')
+			i += arraySkip
+		}
+
+		i++
 	}
+
+	return -1
+}
+
+func KeyOffsets(data []byte, paths ...[]string) (keyOffsets []int) {
+	level := 0
+	i := 0
+	ln := len(data)
+	pathsMatched := 0
+	keyOffsets = make([]int, len(paths))
 	maxLen := len(paths[0])
 	for _, p := range paths {
 		if len(p) > maxLen {
@@ -119,7 +166,7 @@ func searchPaths(data []byte, paths ...[]string) int {
 
 			strEnd := stringEnd(data[i:])
 			if strEnd == -1 {
-				return -1
+				return
 			}
 			i += strEnd
 			keyEnd := i - 1
@@ -127,7 +174,7 @@ func searchPaths(data []byte, paths ...[]string) int {
 
 			colonOffset := nextToken(data[i:], true)
 			if colonOffset == -1 {
-				return -1
+				return
 			}
 			i += colonOffset
 
@@ -135,47 +182,34 @@ func searchPaths(data []byte, paths ...[]string) int {
 			if i < ln && data[i] == ':' && level <= maxLen {
 				match := false
 
-				if len(paths) > 1 {
-					// searchMade := false
-					for pi, p := range paths {
-						if pathOffsets[pi] != 0 {
-							continue
-						}
-						// searchMade = true
+				// searchMade := false
+				for pi, p := range paths {
+					if keyOffsets[pi] != 0 || len(p) < level {
+						continue
+					}
+					// searchMade = true
 
-						if p[level-1] == unsafeBytesToString(key) {
-							match = true
+					if p[level-1] == unsafeBytesToString(key) {
+						match = true
 
-							if len(p) == level {
-								pathOffsets[pi] = i + 1
-								pathsMatched++
+						if len(p) == level {
+							keyOffsets[pi] = i + 1
+							pathsMatched++
 
-								if pathsMatched == len(paths) {
-									return i + 1
-								}
+							if pathsMatched == len(paths) {
+								return
 							}
 						}
 					}
+				}
 
-					if !match {
-						tokenOffset := nextToken(data[i+1:], false)
-						i += tokenOffset + 1
+				if !match {
+					tokenOffset := nextToken(data[i+1:], false)
+					i += tokenOffset + 1
 
-						if data[i] == '{' {
-							blockSkip := blockEnd(data[i:], '{', '}')
-							i += blockSkip + 1
-						}
-					}
-				} else {
-					keys := paths[0]
-
-					if keyLevel == level-1 &&
-					   keys[level-1] == unsafeBytesToString(key) {
-						keyLevel++
-						// If we found all keys in path
-						if keyLevel == len(keys) {
-							return i + 1
-						}
+					if data[i] == '{' {
+						blockSkip := blockEnd(data[i:], '{', '}')
+						i += blockSkip + 1
 					}
 				}
 			}
@@ -194,7 +228,7 @@ func searchPaths(data []byte, paths ...[]string) int {
 			// Do not search for keys inside arrays
 			blockSkip := blockEnd(data[i:], '[', ']')
 			if blockSkip == -1 {
-				return -1
+				return
 			}
 			i += blockSkip
 		}
@@ -202,7 +236,7 @@ func searchPaths(data []byte, paths ...[]string) int {
 		i++
 	}
 
-	return -1
+	return
 }
 
 // Data types available in valid JSON data.
@@ -231,7 +265,7 @@ If no keys provided it will try to extract closest JSON value (simple ones or ob
 */
 func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error) {
 	if len(keys) > 0 {
-		if offset = searchPaths(data, keys); offset == -1 {
+		if offset = searchKeys(data, keys...); offset == -1 {
 			return []byte{}, NotExist, -1, errors.New("Key path not found")
 		}
 	}
@@ -329,7 +363,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	offset := 1
 
 	if len(keys) > 0 {
-		if offset = searchPaths(data, keys); offset == -1 {
+		if offset = searchKeys(data, keys...); offset == -1 {
 			return errors.New("Key path not found")
 		}
 

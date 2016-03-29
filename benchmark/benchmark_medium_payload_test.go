@@ -15,7 +15,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
 	"testing"
-	// "fmt"
+	_ "fmt"
 )
 
 /*
@@ -31,6 +31,27 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 			jsonparser.Get(value, "url")
 			nothing()
 		}, "person", "gravatar", "avatars")
+	}
+}
+
+func BenchmarkJsonParserMediumOptimized(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r := mediumFixture
+		offsets := jsonparser.KeyOffsets(r,
+			[]string{"person", "name", "fullName"},
+			[]string{"person", "github", "followers"},
+			[]string{"company"},
+			[]string{"person", "gravatar", "avatars"},
+		)
+
+		jsonparser.Get(r[offsets[0]:])
+		jsonparser.GetInt(r[offsets[1]:])
+		jsonparser.Get(r[offsets[2]:])
+
+		jsonparser.ArrayEach(r[offsets[3]:], func(value []byte, dataType int, offset int, err error) {
+			jsonparser.GetUnsafeString(value, "url")
+			nothing()
+		})
 	}
 }
 

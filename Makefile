@@ -1,7 +1,7 @@
 SOURCE = parser.go
 CONTAINER = jsonparser
 SOURCE_PATH = /go/src/github.com/buger/jsonparser
-BENCHMARK = JsonParserSmall
+BENCHMARK = JsonParser
 BENCHTIME = 5s
 TEST = .
 
