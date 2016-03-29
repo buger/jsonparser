@@ -35,7 +35,7 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonParserLargeOptimized(b *testing.B) {
+func BenchmarkJsonParserLargeOffsets(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r := largeFixture
 		offsets := jsonparser.KeyOffsets(r,

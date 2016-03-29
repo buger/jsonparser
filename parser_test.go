@@ -513,3 +513,38 @@ func TestGetSlice(t *testing.T) {
 		},
 	)
 }
+
+type testStruct struct {
+	Name string
+	Order string
+	Sum int
+	Len int8
+	VERYLONGFIELD bool `json:"isPaid"`
+}
+
+var testJson = []byte(`{"name": "Name", "order":"Order", "sum": 100, "len": 12, "isPaid": true}`)
+
+func TestUnmarshal(t *testing.T) {
+	var s testStruct
+	Unmarshal(testJson, &s)
+
+	if s.Name != "Name" {
+		t.Errorf("Should fill Name field")
+	}
+
+	if s.Order != "Order" {
+		t.Errorf("Should fill Order field")
+	}
+
+	if s.Sum != 100 {
+		t.Errorf("Should fill Sum field")
+	}
+
+	if s.Len != 12 {
+		t.Errorf("Should process int8")
+	}
+
+	if !s.VERYLONGFIELD {
+		t.Errorf("Should process boolean and custom name")
+	}
+}

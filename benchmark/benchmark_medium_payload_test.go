@@ -34,7 +34,7 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonParserMediumOptimized(b *testing.B) {
+func BenchmarkJsonParserMediumOffsets(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r := mediumFixture
 		offsets := jsonparser.KeyOffsets(r,
@@ -54,6 +54,20 @@ func BenchmarkJsonParserMediumOptimized(b *testing.B) {
 		})
 	}
 }
+
+// func BenchmarkJsonParserMediumStruct(b *testing.B) {
+// 	for i := 0; i < b.N; i++ {
+// 		var data MediumPayload
+// 		jsonparser.Unmarshal(mediumFixture, &data)
+
+// 		nothing(data.Person.Name.FullName, data.Person.Github.Followers, data.Company)
+
+// 		for _, el := range data.Person.Gravatar.Avatars {
+// 			nothing(el.Url)
+// 		}
+// 	}
+// }
+
 
 /*
    encoding/json
