@@ -118,15 +118,23 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 			i += valueOffset
 
-			if i < ln &&
-				data[i] == ':' && // if string is a Key, and key level match
-				keyLevel == level-1 && // If key nesting level match current object nested level
-				strbytes.Equal(keys[level-1], data[keyBegin:keyEnd]) {
-				keyLevel++
-				// If we found all keys in path
-				if keyLevel == lk {
-					return i + 1
+			if i >= ln {
+				break
+			}
+
+			if data[i] == ':' {
+				// If we see a colon, this is a key, so check the key against our next search key
+				if keyLevel == level-1 && strbytes.Equal(keys[level-1], data[keyBegin:keyEnd]) {
+					// If we found the key we're looking for at the right nesting level, advance to the next key
+					keyLevel++
+					// If we found all keys in path
+					if keyLevel == lk {
+						return i + 1
+					}
 				}
+			} else {
+				// Else, backtrack one character so data[i] can be processed by the next iteration (e.g., it might have been a '}')
+				i--
 			}
 		case '{':
 			level++
