@@ -93,12 +93,23 @@ func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	return -1
 }
 
-func searchKeys(data []byte, keys ...string) int {
+func searchPaths(data []byte, paths ...[]string) int {
 	keyLevel := 0
 	level := 0
 	i := 0
 	ln := len(data)
-	lk := len(keys)
+	var pathOffsets []int
+
+	pathsMatched := 0
+	if len(paths) > 1 {
+		pathOffsets = make([]int, len(paths))
+	}
+	maxLen := len(paths[0])
+	for _, p := range paths {
+		if len(p) > maxLen {
+			maxLen = len(p)
+		}
+	}
 
 	for i < ln {
 		switch data[i] {
@@ -112,31 +123,80 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 			i += strEnd
 			keyEnd := i - 1
+			key := data[keyBegin:keyEnd]
 
-			valueOffset := nextToken(data[i:], true)
-			if valueOffset == -1 {
+			colonOffset := nextToken(data[i:], true)
+			if colonOffset == -1 {
 				return -1
 			}
-			i += valueOffset
+			i += colonOffset
 
-			if i < ln &&
-				data[i] == ':' && // if string is a Key, and key level match
-				keyLevel == level-1 && // If key nesting level match current object nested level
-				keys[level-1] == unsafeBytesToString(data[keyBegin:keyEnd]) {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + 1
+			// If string is a Key
+			if i < ln && data[i] == ':' && level <= maxLen {
+				match := false
+
+				if len(paths) > 1 {
+					// searchMade := false
+					for pi, p := range paths {
+						if pathOffsets[pi] != 0 {
+							continue
+						}
+						// searchMade = true
+
+						if p[level-1] == unsafeBytesToString(key) {
+							match = true
+
+							if len(p) == level {
+								pathOffsets[pi] = i + 1
+								pathsMatched++
+
+								if pathsMatched == len(paths) {
+									return i + 1
+								}
+							}
+						}
 					}
+
+					if !match {
+						tokenOffset := nextToken(data[i+1:], false)
+						i += tokenOffset + 1
+
+						if data[i] == '{' {
+							blockSkip := blockEnd(data[i:], '{', '}')
+							i += blockSkip + 1
+						}
+					}
+				} else {
+					keys := paths[0]
+
+					if keyLevel == level-1 &&
+					   keys[level-1] == unsafeBytesToString(key) {
+						keyLevel++
+						// If we found all keys in path
+						if keyLevel == len(keys) {
+							return i + 1
+						}
+					}
+				}
 			}
+
+			i--
 		case '{':
-			level++
+			if level-1 > maxLen {
+				blockSkip := blockEnd(data[i:], '{', '}')
+				i += blockSkip
+			} else {
+				level++
+			}
 		case '}':
 			level--
 		case '[':
 			// Do not search for keys inside arrays
-			arraySkip := blockEnd(data[i:], '[', ']')
-			i += arraySkip
+			blockSkip := blockEnd(data[i:], '[', ']')
+			if blockSkip == -1 {
+				return -1
+			}
+			i += blockSkip
 		}
 
 		i++
@@ -171,7 +231,7 @@ If no keys provided it will try to extract closest JSON value (simple ones or ob
 */
 func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error) {
 	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
+		if offset = searchPaths(data, keys); offset == -1 {
 			return []byte{}, NotExist, -1, errors.New("Key path not found")
 		}
 	}
@@ -269,7 +329,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 	offset := 1
 
 	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
+		if offset = searchPaths(data, keys); offset == -1 {
 			return errors.New("Key path not found")
 		}
 
