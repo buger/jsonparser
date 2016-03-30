@@ -123,11 +123,11 @@ func searchKeys(data []byte, keys ...string) int {
 				data[i] == ':' && // if string is a Key, and key level match
 				keyLevel == level-1 && // If key nesting level match current object nested level
 				keys[level-1] == unsafeBytesToString(data[keyBegin:keyEnd]) {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + 1
-					}
+				keyLevel++
+				// If we found all keys in path
+				if keyLevel == lk {
+					return i + 1
+				}
 			}
 		case '{':
 			level++
@@ -155,6 +155,12 @@ const (
 	Boolean
 	Null
 	Unknown
+)
+
+var (
+	trueLiteral  = []byte("true")
+	falseLiteral = []byte("false")
+	nullLiteral  = []byte("null")
 )
 
 /*
@@ -222,17 +228,17 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 		}
 
-		value := unsafeBytesToString(data[offset : endOffset+end])
+		value := data[offset : endOffset+end]
 
 		switch data[offset] {
 		case 't', 'f': // true or false
-			if (len(value) == 4 && value == "true") || (len(value) == 5 && value == "false") {
+			if bytes.Equal(value, trueLiteral) || bytes.Equal(value, falseLiteral) {
 				dataType = Boolean
 			} else {
 				return nil, Unknown, offset, errors.New("Unknown value type")
 			}
 		case 'u', 'n': // undefined or null
-			if len(value) == 4 && value == "null" {
+			if bytes.Equal(value, nullLiteral) {
 				dataType = Null
 			} else {
 				return nil, Unknown, offset, errors.New("Unknown value type")
