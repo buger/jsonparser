@@ -117,17 +117,21 @@ func searchKeys(data []byte, keys ...string) int {
 			if valueOffset == -1 {
 				return -1
 			}
+
 			i += valueOffset
 
-			if i < ln &&
-				data[i] == ':' && // if string is a Key, and key level match
-				keyLevel == level-1 && // If key nesting level match current object nested level
-				keys[level-1] == string(data[keyBegin:keyEnd]) {
-				keyLevel++
-				// If we found all keys in path
-				if keyLevel == lk {
-					return i + 1
+			// if string is a Key, and key level match
+			if data[i] == ':'{
+			 	if keyLevel == level-1 && // If key nesting level match current object nested level
+					keys[level-1] == string(data[keyBegin:keyEnd]) {
+					keyLevel++
+					// If we found all keys in path
+					if keyLevel == lk {
+						return i + 1
+					}
 				}
+			} else {
+				i--
 			}
 		case '{':
 			level++
