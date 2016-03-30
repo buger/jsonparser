@@ -51,42 +51,35 @@ func Unmarshal(data []byte, v interface{}) error {
     fields := sCache.fields
     fieldTypes := sCache.fieldTypes
 
-    offsets := KeyOffsets(data, fields...)
-
-    for i, of := range offsets {
+    KeyEach(data, func(i int, d []byte) int {
         f := val.Field(i)
-
         if !f.IsValid() || !f.CanSet() {
-            continue
+            return 0
         }
+
+        v, dt, of, err := Get(d)
 
         switch fieldTypes[i] {
         case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-            v, err := GetInt(data[of:])
-
-            if err == nil {
-                f.SetInt(v)
+            if dt == Number && err == nil {
+                f.SetInt(ParseInt(v))
             }
         case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-            v, err := GetInt(data[of:])
-
-            if err == nil {
-                f.SetUint(uint64(v))
+            if dt == Number && err == nil {
+                f.SetUint(uint64(ParseInt(v)))
             }
         case reflect.String:
-            v, err := GetString(data[of:])
-
-            if err == nil {
-                f.SetString(v)
+            if dt == String && err == nil {
+                f.SetString(unsafeBytesToString(v))
             }
         case reflect.Bool:
-            v, err := GetBoolean(data[of:])
-
-            if err == nil {
-                f.SetBool(v)
+            if dt == Boolean && err == nil {
+                f.SetBool(ParseBoolean(v))
             }
         }
-    }
+
+        return of
+    }, fields...)
 
     return nil
 }

@@ -145,6 +145,105 @@ func searchKeys(data []byte, keys ...string) int {
 	return -1
 }
 
+
+func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
+	level := 0
+	i := 0
+	ln := len(data)
+	pathsMatched := 0
+	keyOffsets := make([]int, len(paths))
+	maxLen := len(paths[0])
+	for _, p := range paths {
+		if len(p) > maxLen {
+			maxLen = len(p)
+		}
+	}
+
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd := stringEnd(data[i:])
+			if strEnd == -1 {
+				return
+			}
+			i += strEnd
+			keyEnd := i - 1
+			key := data[keyBegin:keyEnd]
+
+			colonOffset := nextToken(data[i:], true)
+			if colonOffset == -1 {
+				return
+			}
+			i += colonOffset
+
+			// If string is a Key
+			if i < ln && data[i] == ':' && level <= maxLen {
+				match := false
+				i++
+
+				// searchMade := false
+				for pi, p := range paths {
+					if keyOffsets[pi] != 0 || len(p) < level {
+						continue
+					}
+					// searchMade = true
+
+					if p[level-1] == unsafeBytesToString(key) {
+						match = true
+
+						if len(p) == level {
+							keyOffsets[pi] = i + 1
+							pathsMatched++
+
+							offset := cb(pi, data[i:])
+							i += offset
+
+							if pathsMatched == len(paths) {
+								return
+							}
+						}
+					}
+				}
+
+				if !match {
+					tokenOffset := nextToken(data[i+1:], false)
+					i += tokenOffset + 1
+
+					if data[i] == '{' {
+						blockSkip := blockEnd(data[i:], '{', '}')
+						i += blockSkip + 1
+					}
+				}
+			}
+
+			i--
+		case '{':
+			if level-1 > maxLen {
+				blockSkip := blockEnd(data[i:], '{', '}')
+				i += blockSkip
+			} else {
+				level++
+			}
+		case '}':
+			level--
+		case '[':
+			// Do not search for keys inside arrays
+			blockSkip := blockEnd(data[i:], '[', ']')
+			if blockSkip == -1 {
+				return
+			}
+			i += blockSkip
+		}
+
+		i++
+	}
+
+	return
+}
+
 func KeyOffsets(data []byte, paths ...[]string) (keyOffsets []int) {
 	level := 0
 	i := 0
@@ -428,14 +527,18 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return "", fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
+	val = ParseString(v)
+	return
+}
+
+func ParseString(v []byte) string {
 	// If no escapes return raw conten
 	if bytes.IndexByte(v, '\\') == -1 {
-		return string(v), nil
+		return string(v)
 	}
 
-	s, err := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
-
-	return s, err
+	s, _ := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
+	return s
 }
 
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
@@ -452,7 +555,12 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(unsafeBytesToString(v), 64)
+	val = ParseFloat(v)
+	return
+}
+
+func ParseFloat(v []byte) (num float64) {
+	num, _ = strconv.ParseFloat(unsafeBytesToString(v), 64)
 	return
 }
 
@@ -469,7 +577,12 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseInt(unsafeBytesToString(v), 10, 64)
+	val  = ParseInt(v)
+	return
+}
+
+func ParseInt(v []byte) (num int64) {
+	num, _ = strconv.ParseInt(unsafeBytesToString(v), 10, 64)
 	return
 }
 
@@ -487,13 +600,16 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 		return false, fmt.Errorf("Value is not a boolean: %s", string(v))
 	}
 
-	if v[0] == 't' {
-		val = true
-	} else {
-		val = false
-	}
-
+	val = ParseBoolean(v)
 	return
+}
+
+func ParseBoolean(v []byte) bool {
+	if v[0] == 't' {
+		return true
+	} else {
+		return false
+	}
 }
 
 // A hack until issue golang/go#2632 is fixed.
