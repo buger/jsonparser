@@ -437,6 +437,12 @@ func runTests(t *testing.T, tests []Test, runner func(Test) (interface{}, int, e
 			}
 
 			if ok, expected := typeChecker(test, value); !ok {
+				if expectedBytes, ok := expected.([]byte); ok {
+					expected = string(expectedBytes)
+				}
+				if valueBytes, ok := value.([]byte); ok {
+					value = string(valueBytes)
+				}
 				t.Errorf("Test '%s' expected to return value %v, but did returned %v instead", test.desc, expected, value)
 			}
 		}
