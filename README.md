@@ -58,6 +58,10 @@ jsonparser.ArrayEach(data, func(value []byte, dataType int, offset int, err erro
 }, "person", "gravatar", "avatars")
 ```
 
+## Need to speedup your app?
+
+I'm available for consulting and can help you push your app performance to the limits. Ping me at: Leonid Bugaev <leonsbox@gmail.com>.
+
 ## Reference
 
 Library API is really simple. You just need the `Get` method to perform any operation. The rest is just helpers around it.
