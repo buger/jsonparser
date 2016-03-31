@@ -151,6 +151,13 @@ var getTests = []Test{
 		isFound: true,
 		data:    `2`,
 	},
+	Test{
+		desc:    `no padding + nested + array`,
+		json:    `{"a":{"b":[1,2]},"c":3}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `3`,
+	},
 
 	// Not found key tests
 	Test{
