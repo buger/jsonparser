@@ -60,7 +60,7 @@ jsonparser.ArrayEach(data, func(value []byte, dataType int, offset int, err erro
 
 ## Need to speedup your app?
 
-I'm available for consulting and can help you push your app performance to the limits. Ping me at: Leonid Bugaev <leonsbox@gmail.com>.
+I'm available for consulting and can help you push your app performance to the limits. Ping me at: leonsbox@gmail.com.
 
 ## Reference
 
