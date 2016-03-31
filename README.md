@@ -6,7 +6,9 @@ It does not require you to know the structure of the payload (eg. create structs
 Originally I made this for a project that relies on a lot of 3rd party APIs that can be unpredictable and complex.
 I love simplicity and prefer to avoid external dependecies. `encoding/json` requires you to know exactly your data structures, or if you prefer to use `map[string]interface{}` instead, it will be very slow and hard to manage.
 I investigated what's on the market and found that most libraries are just wrappers around `encoding/json`, there is few options with own parsers (`ffjson`, `easyjson`), but they still requires you to create data structures.
-Let's be honest, JSON is not the hardest format to parse, so i wrote one that focuses on simplicity and performance and leverage Go datastructures. 
+
+
+Goal of this project is to push JSON parser to the performance limits and not sucrifice with compliance and developer user experience.
 
 ## Example
 For the given JSON our goal is to extract the user's full name, number of github followers and avatar.
