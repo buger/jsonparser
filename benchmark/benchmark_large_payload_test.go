@@ -35,6 +35,28 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 	}
 }
 
+func BenchmarkJsonParserLargeOffsets(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r := largeFixture
+		offsets := jsonparser.KeyOffsets(r,
+			[]string{"users"},
+			[]string{"topics", "topics"},
+		)
+
+		jsonparser.ArrayEach(r[offsets[0]:], func(value []byte, dataType int, offset int, err error) {
+			jsonparser.Get(value, "username")
+			nothing()
+		})
+
+		jsonparser.ArrayEach(r[offsets[1]:], func(value []byte, dataType int, offset int, err error) {
+			aOff := jsonparser.KeyOffsets(value, []string{"id"}, []string{"slug"})
+			jsonparser.GetInt(value[aOff[0]:])
+			jsonparser.Get(value[aOff[1]:])
+			nothing()
+		})
+	}
+}
+
 /*
    encoding/json
 */

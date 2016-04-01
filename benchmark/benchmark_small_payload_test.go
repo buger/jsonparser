@@ -35,6 +35,34 @@ func BenchmarkJsonParserSmall(b *testing.B) {
 	}
 }
 
+func BenchmarkJsonParserSmallOffsets(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r := smallFixture
+		offsets := jsonparser.KeyOffsets(r,
+			[]string{"uuid"},
+			[]string{"tz"},
+			[]string{"ua"},
+			[]string{"st"},
+		)
+
+		jsonparser.Get(r[offsets[0]:])
+		jsonparser.GetInt(r[offsets[1]:])
+		jsonparser.Get(r[offsets[2]:])
+		jsonparser.GetInt(r[offsets[3]:])
+
+		nothing()
+	}
+}
+
+func BenchmarkJsonParserSmallStruct(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var data SmallPayload
+		jsonparser.Unmarshal(smallFixture, &data)
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
+}
+
+
 /*
    encoding/json
 */
