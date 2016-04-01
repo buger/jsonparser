@@ -4,30 +4,31 @@ SOURCE_PATH = /go/src/github.com/buger/jsonparser
 BENCHMARK = JsonParser
 BENCHTIME = 5s
 TEST = .
+DRUN = docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER)
 
 build:
 	docker build -t $(CONTAINER) .
 
 race:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) --env GORACE="halt_on_error=1" go test ./. $(ARGS) -v -race -timeout 15s
+	$(DRUN) --env GORACE="halt_on_error=1" go test ./. $(ARGS) -v -race -timeout 15s
 
 bench:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -benchtime $(BENCHTIME) -v
+	$(DRUN) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -benchtime $(BENCHTIME) -v
 
 profile:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -memprofile mem.mprof -v
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -cpuprofile cpu.out -v
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -c
+	$(DRUN) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -memprofile mem.mprof -v
+	$(DRUN) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -cpuprofile cpu.out -v
+	$(DRUN) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -c
 
 test:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) ./ -run $(TEST) -timeout 10s $(ARGS) -v
+	$(DRUN) go test $(LDFLAGS) ./ -run $(TEST) -timeout 10s $(ARGS) -v
 
 fmt:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go fmt ./...
+	$(DRUN) go fmt ./...
 
 vet:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go vet ./.
+	$(DRUN) go vet ./.
 
 
 bash:
-	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) /bin/bash
+	$(DRUN) /bin/bash
