@@ -122,8 +122,10 @@ func searchKeys(data []byte, keys ...string) int {
 
 			// if string is a Key, and key level match
 			if data[i] == ':'{
+				key := unsafeBytesToString(data[keyBegin:keyEnd])
+
 			 	if keyLevel == level-1 && // If key nesting level match current object nested level
-					keys[level-1] == string(data[keyBegin:keyEnd]) {
+					keys[level-1] == key {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
