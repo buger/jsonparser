@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strconv"
 	"unsafe"
+	"strings"
+	"unicode"
 )
 
 func tokenEnd(data []byte) int {
@@ -100,6 +102,13 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
+	escapes := make([]bool, len(keys))
+	for ki, k := range keys {
+		if strings.IndexFunc(k, func(r rune)bool{ return r > unicode.MaxASCII }) != -1 || strings.IndexByte(k, '\\') != -1 {
+			escapes[ki] = true
+		}
+	}
+
 	for i < ln {
 		switch data[i] {
 		case '"':
@@ -124,7 +133,7 @@ func searchKeys(data []byte, keys ...string) int {
 			if data[i] == ':'{
 			 	if keyLevel == level-1 { // If key nesting level match current object nested level
 					key := unsafeBytesToString(data[keyBegin:keyEnd])
-					if bytes.IndexByte(data[keyBegin:keyEnd], '\\') != -1 {
+					if escapes[level-1] && bytes.IndexByte(data[keyBegin:keyEnd], '\\') != -1 {
 						key, _ = unescapeString(key)
 					}
 
