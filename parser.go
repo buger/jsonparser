@@ -150,8 +150,10 @@ func searchKeys(data []byte, keys ...string) int {
 }
 
 // Data types available in valid JSON data.
+type ValueType int
+
 const (
-	NotExist = iota
+	NotExist = ValueType(iota)
 	String
 	Number
 	Object
@@ -179,7 +181,7 @@ Returns:
 Accept multiple keys to specify path to JSON value (in case of quering nested structures).
 If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 */
-func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error) {
+func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset int, err error) {
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
 			return []byte{}, NotExist, -1, errors.New("Key path not found")
@@ -271,7 +273,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) (err error) {
+func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (err error) {
 	if len(data) == 0 {
 		return errors.New("Object is empty")
 	}
