@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strconv"
 	"unsafe"
-	"strings"
 )
 
 func tokenEnd(data []byte) int {
@@ -123,17 +122,18 @@ func searchKeys(data []byte, keys ...string) int {
 
 			// if string is a Key, and key level match
 			if data[i] == ':'{
-				key := unsafeBytesToString(data[keyBegin:keyEnd])
-				if strings.IndexByte(key, '\\') != -1 {
-					key, _ = unescapeString(key)
-				}
+			 	if keyLevel == level-1 { // If key nesting level match current object nested level
+					key := unsafeBytesToString(data[keyBegin:keyEnd])
+					if bytes.IndexByte(data[keyBegin:keyEnd], '\\') != -1 {
+						key, _ = unescapeString(key)
+					}
 
-			 	if keyLevel == level-1 && // If key nesting level match current object nested level
-					keys[level-1] == key {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + 1
+					if keys[level-1] == key {
+						keyLevel++
+						// If we found all keys in path
+						if keyLevel == lk {
+							return i + 1
+						}
 					}
 				}
 			} else {
