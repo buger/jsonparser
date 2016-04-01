@@ -42,13 +42,14 @@ func nextToken(data []byte, skipComma bool) int {
 
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
-func stringEnd(data []byte) int {
+func stringEnd(data []byte) (int, bool) {
+	escaped := false
 	for i, c := range data {
 		if c == '"' {
 			j := i - 1
 			for {
 				if j < 0 || data[j] != '\\' {
-					return i + 1 // even number of backslashes
+					return i + 1, escaped // even number of backslashes
 				}
 				j--
 				if j < 0 || data[j] != '\\' {
@@ -56,10 +57,12 @@ func stringEnd(data []byte) int {
 				}
 				j--
 			}
+		} else if !escaped && c == '\\' {
+			escaped = true
 		}
 	}
 
-	return -1
+	return -1, escaped
 }
 
 // Find end of the data structure, array or object.
@@ -72,7 +75,7 @@ func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	for i < ln {
 		switch data[i] {
 		case '"': // If inside string, skip it
-			se := stringEnd(data[i+1:])
+			se, _ := stringEnd(data[i+1:])
 			if se == -1 {
 				return -1
 			}
@@ -106,7 +109,7 @@ func searchKeys(data []byte, keys ...string) int {
 			i++
 			keyBegin := i
 
-			strEnd := stringEnd(data[i:])
+			strEnd, escaped := stringEnd(data[i:])
 			if strEnd == -1 {
 				return -1
 			}
@@ -123,6 +126,9 @@ func searchKeys(data []byte, keys ...string) int {
 			// if string is a Key, and key level match
 			if data[i] == ':'{
 				key := unsafeBytesToString(data[keyBegin:keyEnd])
+				if escaped {
+					key, _ = unescapeString(key)
+				}
 
 			 	if keyLevel == level-1 && // If key nesting level match current object nested level
 					keys[level-1] == key {
@@ -203,7 +209,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	// if string value
 	if data[offset] == '"' {
 		dataType = String
-		if idx := stringEnd(data[offset+1:]); idx != -1 {
+		if idx, _ := stringEnd(data[offset+1:]); idx != -1 {
 			endOffset += idx + 1
 		} else {
 			return []byte{}, dataType, offset, errors.New("Value is string, but can't find closing '\"' symbol")
@@ -353,8 +359,13 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	s, err := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
+	s, err := unescapeString(unsafeBytesToString(v))
 
+	return s, err
+}
+
+func unescapeString(in string) (string, error) {
+	s, err := strconv.Unquote(`"` + in + `"`)
 	return s, err
 }
 

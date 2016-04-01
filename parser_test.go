@@ -145,6 +145,13 @@ var getTests = []Test{
 		data:    `15°C`,
 	},
 	Test{
+		desc:    `Translate unicode symbols in key`,
+		json:    `{"15\u00b0C": "a"}`,
+		path:    []string{"15°C"},
+		isFound: true,
+		data:    `a`,
+	},
+	Test{
 		desc:    `no padding + nested`,
 		json:    `{"a":{"a":"1"},"b":2}`,
 		path:    []string{"b"},
