@@ -103,7 +103,7 @@ func searchKeys(data []byte, keys ...string) int {
 	lk := len(keys)
 
 	var keyEscaped bool
-	for ki, k := range keys {
+	for _, k := range keys {
 		if strings.IndexFunc(k, func(r rune)bool{ return r > unicode.MaxASCII }) != -1 || strings.IndexByte(k, '\\') != -1 {
 			keyEscaped = true
 			break
