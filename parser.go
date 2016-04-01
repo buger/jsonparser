@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"unsafe"
+	"strings"
 )
 
 func tokenEnd(data []byte) int {
@@ -42,14 +43,13 @@ func nextToken(data []byte, skipComma bool) int {
 
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
-func stringEnd(data []byte) (int, bool) {
-	escaped := false
+func stringEnd(data []byte) int {
 	for i, c := range data {
 		if c == '"' {
 			j := i - 1
 			for {
 				if j < 0 || data[j] != '\\' {
-					return i + 1, escaped // even number of backslashes
+					return i + 1 // even number of backslashes
 				}
 				j--
 				if j < 0 || data[j] != '\\' {
@@ -57,12 +57,10 @@ func stringEnd(data []byte) (int, bool) {
 				}
 				j--
 			}
-		} else if !escaped && c == '\\' {
-			escaped = true
 		}
 	}
 
-	return -1, escaped
+	return -1
 }
 
 // Find end of the data structure, array or object.
@@ -75,7 +73,7 @@ func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	for i < ln {
 		switch data[i] {
 		case '"': // If inside string, skip it
-			se, _ := stringEnd(data[i+1:])
+			se := stringEnd(data[i+1:])
 			if se == -1 {
 				return -1
 			}
@@ -109,7 +107,7 @@ func searchKeys(data []byte, keys ...string) int {
 			i++
 			keyBegin := i
 
-			strEnd, escaped := stringEnd(data[i:])
+			strEnd := stringEnd(data[i:])
 			if strEnd == -1 {
 				return -1
 			}
@@ -126,7 +124,7 @@ func searchKeys(data []byte, keys ...string) int {
 			// if string is a Key, and key level match
 			if data[i] == ':'{
 				key := unsafeBytesToString(data[keyBegin:keyEnd])
-				if escaped {
+				if strings.IndexByte(key, '\\') != -1 {
 					key, _ = unescapeString(key)
 				}
 
@@ -209,7 +207,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	// if string value
 	if data[offset] == '"' {
 		dataType = String
-		if idx, _ := stringEnd(data[offset+1:]); idx != -1 {
+		if idx := stringEnd(data[offset+1:]); idx != -1 {
 			endOffset += idx + 1
 		} else {
 			return []byte{}, dataType, offset, errors.New("Value is string, but can't find closing '\"' symbol")
