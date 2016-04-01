@@ -102,10 +102,11 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
-	escapes := make([]bool, len(keys))
+	var keyEscaped bool
 	for ki, k := range keys {
 		if strings.IndexFunc(k, func(r rune)bool{ return r > unicode.MaxASCII }) != -1 || strings.IndexByte(k, '\\') != -1 {
-			escapes[ki] = true
+			keyEscaped = true
+			break
 		}
 	}
 
@@ -133,7 +134,7 @@ func searchKeys(data []byte, keys ...string) int {
 			if data[i] == ':'{
 			 	if keyLevel == level-1 { // If key nesting level match current object nested level
 					key := unsafeBytesToString(data[keyBegin:keyEnd])
-					if escapes[level-1] && bytes.IndexByte(data[keyBegin:keyEnd], '\\') != -1 {
+					if keyEscaped && bytes.IndexByte(data[keyBegin:keyEnd], '\\') != -1 {
 						key, _ = unescapeString(key)
 					}
 
