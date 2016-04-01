@@ -514,15 +514,27 @@ func TestGetSlice(t *testing.T) {
 	)
 }
 
+type nestedStruct struct {
+	A string
+	B int
+
+	N *nestedStruct `json:"nested3"`
+}
+
 type testStruct struct {
 	Name string
 	Order string
 	Sum int
 	Len int8
 	VERYLONGFIELD bool `json:"isPaid"`
+	NestedPtr *nestedStruct `json:"nested"`
+	Nested nestedStruct `json:"nested2"`
+	Arr []nestedStruct
+	ArrInt []int
+	IntPtr *int
 }
 
-var testJson = []byte(`{"name": "Name", "order":"Order", "sum": 100, "len": 12, "isPaid": true}`)
+var testJson = []byte(`{"name": "Name", "order":"Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10}`)
 
 func TestUnmarshal(t *testing.T) {
 	var s testStruct
@@ -547,4 +559,144 @@ func TestUnmarshal(t *testing.T) {
 	if !s.VERYLONGFIELD {
 		t.Errorf("Should process boolean and custom name")
 	}
+
+	if s.NestedPtr == nil {
+		t.Errorf("Should initialize nested pointer to struct")
+	} else {
+		if s.NestedPtr.A != "test" || s.NestedPtr.B != 2 {
+			t.Errorf("Should fill nested pointer to struct %v", s.NestedPtr)
+		}
+
+		if s.NestedPtr.N == nil {
+			t.Errorf("Should initialize deeply nested pointer to struct")
+		} else {
+			if s.NestedPtr.N.A != "test3" || s.NestedPtr.N.B != 4 {
+				t.Errorf("Should fill nested pointer to struct %v", s.NestedPtr.N)
+			}
+		}
+	}
+
+	if s.Nested.A != "test2" || s.Nested.B != 3 {
+		t.Errorf("Should fill nested struct %v", s.Nested)
+	}
+
+	if len(s.Arr) != 2 {
+		t.Errorf("Should fill array")
+	} else {
+		if s.Arr[0].A != "zxc" && s.Arr[0].B != 1 {
+			t.Errorf("Should fill first array item")
+		}
+		if s.Arr[1].A != "123" && s.Arr[1].B != 2 {
+			t.Errorf("Should fill first array item")
+		}
+	}
+
+	if len(s.ArrInt) != 4 {
+		t.Errorf("Should fill int array")
+	} else {
+		if !reflect.DeepEqual(s.ArrInt, []int{1,2,3,4}) {
+			t.Errorf("Should fill int array with proper values %v", s.ArrInt)
+		}
+	}
+
+	if *s.IntPtr != 10 {
+		t.Errorf("Should update simple type pointer")
+	}
 }
+
+// var fixture []byte = []byte(`{
+//   "person": {
+//     "id": "d50887ca-a6ce-4e59-b89f-14f0b5d03b03",
+//     "name": {
+//       "fullName": "Leonid Bugaev",
+//       "givenName": "Leonid",
+//       "familyName": "Bugaev"
+//     },
+//     "email": "leonsbox@gmail.com",
+//     "gender": "male",
+//     "location": "Saint Petersburg, Saint Petersburg, RU",
+//     "geo": {
+//       "city": "Saint Petersburg",
+//       "state": "Saint Petersburg",
+//       "country": "Russia",
+//       "lat": 59.9342802,
+//       "lng": 30.3350986
+//     },
+//     "bio": "Senior engineer at Granify.com",
+//     "site": "http://flickfaver.com",
+//     "avatar": "https://d1ts43dypk8bqh.cloudfront.net/v1/avatars/d50887ca-a6ce-4e59-b89f-14f0b5d03b03",
+//     "employment": {
+//       "name": "www.latera.ru",
+//       "title": "Software Engineer",
+//       "domain": "gmail.com"
+//     },
+//     "facebook": {
+//       "handle": "leonid.bugaev"
+//     },
+//     "github": {
+//       "handle": "buger",
+//       "id": 14009,
+//       "avatar": "https://avatars.githubusercontent.com/u/14009?v=3",
+//       "company": "Granify",
+//       "blog": "http://leonsbox.com",
+//       "followers": 95,
+//       "following": 10
+//     },
+//     "twitter": {
+//       "handle": "flickfaver",
+//       "id": 77004410,
+//       "bio": null,
+//       "followers": 2,
+//       "following": 1,
+//       "statuses": 5,
+//       "favorites": 0,
+//       "location": "",
+//       "site": "http://flickfaver.com",
+//       "avatar": null
+//     },
+//     "linkedin": {
+//       "handle": "in/leonidbugaev"
+//     },
+//     "googleplus": {
+//       "handle": null
+//     },
+//     "angellist": {
+//       "handle": "leonid-bugaev",
+//       "id": 61541,
+//       "bio": "Senior engineer at Granify.com",
+//       "blog": "http://buger.github.com",
+//       "site": "http://buger.github.com",
+//       "followers": 41,
+//       "avatar": "https://d1qb2nb5cznatu.cloudfront.net/users/61541-medium_jpg?1405474390"
+//     },
+//     "klout": {
+//       "handle": null,
+//       "score": null
+//     },
+//     "foursquare": {
+//       "handle": null
+//     },
+//     "aboutme": {
+//       "handle": "leonid.bugaev",
+//       "bio": null,
+//       "avatar": null
+//     },
+//     "gravatar": {
+//       "handle": "buger",
+//       "urls": [
+
+//       ],
+//       "avatar": "http://1.gravatar.com/avatar/f7c8edd577d13b8930d5522f28123510",
+//       "avatars": [
+//         {
+//           "url": "http://1.gravatar.com/avatar/f7c8edd577d13b8930d5522f28123510",
+//           "type": "thumbnail"
+//         }
+//       ]
+//     },
+//     "fuzzy": false
+//   },
+//   "company": null
+// }`)
+
+

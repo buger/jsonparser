@@ -35,25 +35,47 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonParserLargeOffsets(b *testing.B) {
+
+func BenchmarkJsonParserOffsetsLarge(b *testing.B) {
+	keys := [][]string{
+		[]string{"users"},
+		[]string{"topics", "topics"},
+	}
+
+	nestedKeys := [][]string{
+		[]string{"id"},
+		[]string{"slug"},
+	}
+
 	for i := 0; i < b.N; i++ {
 		r := largeFixture
-		offsets := jsonparser.KeyOffsets(r,
-			[]string{"users"},
-			[]string{"topics", "topics"},
-		)
+		jsonparser.KeyEach(r, func (idx int, value []byte) (offset int) {
+			switch idx {
+			case 0: // users
+				aOff, _ := jsonparser.ArrayEach(value, func(value []byte, dataType int, offset int, err error) {
+					jsonparser.Get(value, "username")
+					nothing()
+				})
+				return aOff
+			case 1: // topics
+				aOff, _ := jsonparser.ArrayEach(value, func(value []byte, dataType int, offset int, err error) {
+					jsonparser.KeyEach(value, func(nidx int, value []byte)(offset int) {
+						v, _, of, _ := jsonparser.Get(value)
+						panic(string(v))
+						switch nidx {
+						case 0:
+							jsonparser.ParseInt(v)
+						case 1:
+							nothing(v)
+						}
 
-		jsonparser.ArrayEach(r[offsets[0]:], func(value []byte, dataType int, offset int, err error) {
-			jsonparser.Get(value, "username")
-			nothing()
-		})
-
-		jsonparser.ArrayEach(r[offsets[1]:], func(value []byte, dataType int, offset int, err error) {
-			aOff := jsonparser.KeyOffsets(value, []string{"id"}, []string{"slug"})
-			jsonparser.GetInt(value[aOff[0]:])
-			jsonparser.Get(value[aOff[1]:])
-			nothing()
-		})
+						return of
+					}, nestedKeys...)
+				})
+				return aOff
+			}
+			return
+		}, keys...)
 	}
 }
 

@@ -17,7 +17,8 @@ func tokenEnd(data []byte) int {
 		}
 	}
 
-	return -1
+	// If end of data
+	return len(data)
 }
 
 // Find position of next character which is not ' ', ',', '}' or ']'
@@ -146,7 +147,7 @@ func searchKeys(data []byte, keys ...string) int {
 }
 
 
-func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
+func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) int {
 	level := 0
 	i := 0
 	ln := len(data)
@@ -167,7 +168,7 @@ func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
 
 			strEnd := stringEnd(data[i:])
 			if strEnd == -1 {
-				return
+				return i
 			}
 			i += strEnd
 			keyEnd := i - 1
@@ -175,7 +176,7 @@ func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
 
 			colonOffset := nextToken(data[i:], true)
 			if colonOffset == -1 {
-				return
+				return i
 			}
 			i += colonOffset
 
@@ -202,7 +203,7 @@ func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
 							i += offset
 
 							if pathsMatched == len(paths) {
-								return
+								return i
 							}
 						}
 					}
@@ -229,11 +230,15 @@ func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
 			}
 		case '}':
 			level--
+
+			if level == 0 {
+				return i
+			}
 		case '[':
 			// Do not search for keys inside arrays
 			blockSkip := blockEnd(data[i:], '[', ']')
 			if blockSkip == -1 {
-				return
+				return i
 			}
 			i += blockSkip
 		}
@@ -241,7 +246,7 @@ func KeyEach(data []byte, cb func(int, []byte) int, paths ...[]string) {
 		i++
 	}
 
-	return
+	return i
 }
 
 func KeyOffsets(data []byte, paths ...[]string) (keyOffsets []int) {
@@ -411,10 +416,6 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 		// Number, Boolean or None
 		end := tokenEnd(data[endOffset:])
 
-		if end == -1 {
-			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
-		}
-
 		value := unsafeBytesToString(data[offset : endOffset+end])
 
 		switch data[offset] {
@@ -454,35 +455,35 @@ func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, e
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) (err error) {
+func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string) (offset int, err error) {
 	if len(data) == 0 {
-		return errors.New("Object is empty")
+		return 0, errors.New("Object is empty")
 	}
 
-	offset := 1
+	offset = 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
-			return errors.New("Key path not found")
+			return offset, errors.New("Key path not found")
 		}
 
 		// Go to closest value
 		nO := nextToken(data[offset:], false)
 
 		if nO == -1 {
-			return errors.New("Malformed JSON")
+			return offset, errors.New("Malformed JSON")
 		}
 
 		offset += nO
 
 		if data[offset] != '[' {
-			return errors.New("Value is not array")
+			return offset, errors.New("Value is not array")
 		}
 
 		offset++
 	}
 
-	for true {
+	for {
 		v, t, o, e := Get(data[offset:])
 
 		if o == 0 {
@@ -500,7 +501,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err 
 		offset += o
 	}
 
-	return nil
+	return offset, nil
 }
 
 // GetUnsafeString returns the value retrieved by `Get`, use creates string without memory allocation by mapping string to slice memory. It does not handle escape symbols.

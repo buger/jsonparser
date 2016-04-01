@@ -34,39 +34,49 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonParserMediumOffsets(b *testing.B) {
+func BenchmarkJsonParserOffsetsMedium(b *testing.B) {
+	keys := [][]string{
+		[]string{"person", "name", "fullName"},
+		[]string{"person", "github", "followers"},
+		[]string{"company"},
+		[]string{"person", "gravatar", "avatars"},
+	}
+
 	for i := 0; i < b.N; i++ {
 		r := mediumFixture
-		offsets := jsonparser.KeyOffsets(r,
-			[]string{"person", "name", "fullName"},
-			[]string{"person", "github", "followers"},
-			[]string{"company"},
-			[]string{"person", "gravatar", "avatars"},
-		)
+		jsonparser.KeyEach(r, func (idx int, value []byte) (offset int) {
+			v, _, offset, _ := jsonparser.Get(value)
 
-		jsonparser.Get(r[offsets[0]:])
-		jsonparser.GetInt(r[offsets[1]:])
-		jsonparser.Get(r[offsets[2]:])
-
-		jsonparser.ArrayEach(r[offsets[3]:], func(value []byte, dataType int, offset int, err error) {
-			jsonparser.GetUnsafeString(value, "url")
-			nothing()
-		})
+			switch idx {
+			case 0: // fullName
+				nothing(v)
+			case 1: // followers
+				jsonparser.ParseInt(value)
+			case 2: // company
+				jsonparser.Get(value)
+			case 3: // Processing array
+				aOff, _ := jsonparser.ArrayEach(value, func(value []byte, dataType int, offset int, err error) {
+					jsonparser.Get(value, "url")
+				})
+				offset += aOff
+			}
+			return
+		}, keys...)
 	}
 }
 
-// func BenchmarkJsonParserMediumStruct(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		var data MediumPayload
-// 		jsonparser.Unmarshal(mediumFixture, &data)
+func BenchmarkJsonParserStructMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var data MediumPayload
+		jsonparser.Unmarshal(mediumFixture, &data)
 
-// 		nothing(data.Person.Name.FullName, data.Person.Github.Followers, data.Company)
+		nothing(data.Person.Name.FullName, data.Person.Github.Followers, data.Company)
 
-// 		for _, el := range data.Person.Gravatar.Avatars {
-// 			nothing(el.Url)
-// 		}
-// 	}
-// }
+		for _, el := range data.Person.Gravatar.Avatars {
+			nothing(el.Url)
+		}
+	}
+}
 
 
 /*
