@@ -203,7 +203,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | mreiferson/go-ujson | **56972** | 11547 | 270 |
 | pquerna/ffjson | **20298** | **856** | **20** |
 | mailru/easyjson | **10512** | **336** | **12** |
-| buger/jsonparser | **15626** | **16** | **1** |
+| buger/jsonparser | **14560** | **0** | **0** |
 
 The difference between ffjson and jsonparser in CPU usage is smaller, while the memory consumption difference is growing. On the other hand `easyjson` shows remarkable performance for medium payload.
 
