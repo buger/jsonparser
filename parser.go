@@ -31,6 +31,7 @@ func tokenEnd(data []byte) int {
 	return -1
 }
 
+
 // Find position of next character which is not ' ', ',', '}' or ']'
 func nextToken(data []byte, skipComma bool) int {
 	for i, c := range data {
@@ -285,6 +286,19 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	return value, dataType, endOffset, nil
 }
 
+func nextArrayItem(data []byte) int {
+	for i, c := range data {
+		switch c {
+		case ' ', '\n', '\r', '\t':
+			continue
+		default:
+			return i
+		}
+	}
+
+	return -1
+}
+
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (err error) {
 	if len(data) == 0 {
@@ -330,6 +344,20 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		offset += o
+
+		nextItem := nextArrayItem(data[offset:])
+		if nextItem == -1 {
+			return MalformedArrayError
+		}
+		offset += nextItem
+
+		if data[offset] == ']' {
+			break
+		}
+
+		if data[offset] != ',' {
+			return MalformedArrayError
+		}
 	}
 
 	return nil
