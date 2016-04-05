@@ -9,9 +9,15 @@ import (
 	"unsafe"
 )
 
+// Errors
 var (
 	KeyPathNotFoundError = errors.New("Key path not found")
 	UnknownValueTypeError = errors.New("Unknown value type")
+	MalformedJsonError = errors.New("Malformed JSON error")
+	MalformedStringError = errors.New("Value is string, but can't find closing '\"' symbol")
+	MalformedArrayError = errors.New("Value is array, but can't find closing ']' symbol")
+	MalformedObjectError = errors.New("Value looks like object, but can't find closing '}' symbol")
+	MalformedValueError = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 )
 
 func tokenEnd(data []byte) int {
@@ -199,7 +205,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	nO := nextToken(data[offset:], false)
 
 	if nO == -1 {
-		return []byte{}, NotExist, -1, errors.New("Malformed JSON error")
+		return []byte{}, NotExist, -1, MalformedJsonError
 	}
 
 	offset += nO
@@ -211,7 +217,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 		if idx := stringEnd(data[offset+1:]); idx != -1 {
 			endOffset += idx + 1
 		} else {
-			return []byte{}, dataType, offset, errors.New("Value is string, but can't find closing '\"' symbol")
+			return []byte{}, dataType, offset, MalformedStringError
 		}
 	} else if data[offset] == '[' { // if array value
 		dataType = Array
@@ -219,7 +225,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 		endOffset = blockEnd(data[offset:], '[', ']')
 
 		if endOffset == -1 {
-			return []byte{}, dataType, offset, errors.New("Value is array, but can't find closing ']' symbol")
+			return []byte{}, dataType, offset, MalformedArrayError
 		}
 
 		endOffset += offset
@@ -229,7 +235,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 		endOffset = blockEnd(data[offset:], '{', '}')
 
 		if endOffset == -1 {
-			return []byte{}, dataType, offset, errors.New("Value looks like object, but can't find closing '}' symbol")
+			return []byte{}, dataType, offset, MalformedObjectError
 		}
 
 		endOffset += offset
@@ -238,7 +244,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 		end := tokenEnd(data[endOffset:])
 
 		if end == -1 {
-			return nil, dataType, offset, errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+			return nil, dataType, offset, MalformedValueError
 		}
 
 		value := data[offset : endOffset+end]
@@ -282,7 +288,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (err error) {
 	if len(data) == 0 {
-		return errors.New("Object is empty")
+		return MalformedObjectError
 	}
 
 	offset := 1
@@ -296,13 +302,13 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		nO := nextToken(data[offset:], false)
 
 		if nO == -1 {
-			return errors.New("Malformed JSON")
+			return MalformedJsonError
 		}
 
 		offset += nO
 
 		if data[offset] != '[' {
-			return errors.New("Value is not array")
+			return MalformedArrayError
 		}
 
 		offset++
