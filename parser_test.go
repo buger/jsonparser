@@ -418,6 +418,10 @@ func checkFoundAndNoError(t *testing.T, testKind string, test Test, jtype ValueT
 		// Else, if the call didn't match the is-found expectation, fail
 		t.Errorf("%s test '%s' isFound mismatch: expected %t, obtained %t", testKind, test.desc, test.isFound, isFound)
 		return false
+	} else if !isFound && err != KeyPathNotFoundError {
+		// Else, if no value was found and the error is not correct, fail
+		t.Errorf("%s test '%s' error mismatch: expected %t, obtained %t", testKind, test.desc, KeyPathNotFoundError, err)
+		return false
 	} else if !isFound {
 		// Else, if no value was found, don't fail and don't check the value
 		return false
