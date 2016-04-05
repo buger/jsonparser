@@ -9,6 +9,11 @@ import (
 	"unsafe"
 )
 
+var (
+	KeyPathNotFoundError = errors.New("Key path not found")
+	UnknownValueTypeError = errors.New("Unknown value type")
+)
+
 func tokenEnd(data []byte) int {
 	for i, c := range data {
 		switch c {
@@ -186,7 +191,7 @@ If no keys provided it will try to extract closest JSON value (simple ones or ob
 func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset int, err error) {
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
-			return []byte{}, NotExist, -1, errors.New("Key path not found")
+			return []byte{}, NotExist, -1, KeyPathNotFoundError
 		}
 	}
 
@@ -243,18 +248,18 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 			if bytes.Equal(value, trueLiteral) || bytes.Equal(value, falseLiteral) {
 				dataType = Boolean
 			} else {
-				return nil, Unknown, offset, errors.New("Unknown value type")
+				return nil, Unknown, offset, UnknownValueTypeError
 			}
 		case 'u', 'n': // undefined or null
 			if bytes.Equal(value, nullLiteral) {
 				dataType = Null
 			} else {
-				return nil, Unknown, offset, errors.New("Unknown value type")
+				return nil, Unknown, offset, UnknownValueTypeError
 			}
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
 			dataType = Number
 		default:
-			return nil, Unknown, offset, errors.New("Unknown value type")
+			return nil, Unknown, offset, UnknownValueTypeError
 		}
 
 		endOffset += end
@@ -284,7 +289,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
-			return errors.New("Key path not found")
+			return KeyPathNotFoundError
 		}
 
 		// Go to closest value
