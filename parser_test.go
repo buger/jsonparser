@@ -158,6 +158,20 @@ var getTests = []Test{
 		isFound: true,
 		data:    `3`,
 	},
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
+		desc:    `malformed with trailing whitespace`,
+		json:    `{"a":1 `,
+		path:    []string{"a"},
+		isFound: true,
+		data:    `1`,
+	},
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
+		desc:    `malformed with wrong closing bracket`,
+		json:    `{"a":1]`,
+		path:    []string{"a"},
+		isFound: true,
+		data:    `1`,
+	},
 
 	// Not found key tests
 	Test{
@@ -254,11 +268,25 @@ var getTests = []Test{
 		path:  []string{"a"},
 		isErr: true,
 	},
-	Test{
+	Test{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:  "malformed key (followed by comma followed by colon)",
 		json:  `{"a",:1}`,
 		path:  []string{"a"},
 		isErr: true,
+	},
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc:    "malformed 'colon chain', lookup first string",
+		json:    `{"a":"b":"c"}`,
+		path:    []string{"a"},
+		isFound: true,
+		data:    "b",
+	},
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc:    "malformed 'colon chain', lookup second string",
+		json:    `{"a":"b":"c"}`,
+		path:    []string{"b"},
+		isFound: true,
+		data:    "c",
 	},
 }
 
