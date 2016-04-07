@@ -116,6 +116,8 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+
 	for i < ln {
 		switch data[i] {
 		case '"':
@@ -138,14 +140,22 @@ func searchKeys(data []byte, keys ...string) int {
 
 			// if string is a Key, and key level match
 			if data[i] == ':' {
-				key := unsafeBytesToString(data[keyBegin:keyEnd])
+				key := data[keyBegin:keyEnd]
 
-				if keyLevel == level-1 && // If key nesting level match current object nested level
-					keys[level-1] == key {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + 1
+				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+				if keyUnesc, err := unescape(key, stackbuf[:]); err != nil {
+					return -1
+				} else {
+					keyUnescStr := unsafeBytesToString(keyUnesc)
+
+					if keyLevel == level-1 && // If key nesting level match current object nested level
+						keys[level-1] == keyUnescStr {
+						keyLevel++
+						// If we found all keys in path
+						if keyLevel == lk {
+							return i + 1
+						}
 					}
 				}
 			} else {
