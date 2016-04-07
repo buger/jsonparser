@@ -326,18 +326,25 @@ var getFloatTests = []Test{
 
 var getStringTests = []Test{
 	Test{
-		desc:    `Translate unicode symbols`,
+		desc:    `Translate Unicode symbols`,
 		json:    `{"c": "test"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `test`,
 	},
 	Test{
-		desc:    `Translate unicode symbols`,
+		desc:    `Translate Unicode symbols`,
 		json:    `{"c": "15\u00b0C"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `15°C`,
+	},
+	Test{
+		desc:    `Translate supplementary Unicode symbols`,
+		json:    `{"c": "\uD83D\uDE03"}`, // Smiley face (UTF16 surrogate pair)
+		path:    []string{"c"},
+		isFound: true,
+		data:    "\U0001F603", // Smiley face
 	},
 	Test{
 		desc:    `Translate escape symbols`,
