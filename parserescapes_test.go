@@ -2,7 +2,6 @@ package jsonparser
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 )
 
@@ -144,7 +143,6 @@ func isSameMemory(a, b []byte) bool {
 }
 
 func TestUnescape(t *testing.T) {
-
 	for _, test := range unescapeTests {
 		type bufferTestCase struct {
 			buf        []byte
@@ -188,28 +186,3 @@ func TestUnescape(t *testing.T) {
 		}
 	}
 }
-
-//
-//escapeSequences := []string{
-//`\"`,
-//`\\`,
-//`\n`,
-//`\t`,
-//`\r`,
-//`\/`,
-//`\b`,
-//`\f`,
-//}
-//
-//runeValues := []struct {
-//r  rune
-//ok bool
-//}{
-//{'"', true},
-//{'\\', true},
-//{'\n', true},
-//{'\t', true},
-//{'/', true},
-//{'\b', true},
-//{'\f', true},
-//}

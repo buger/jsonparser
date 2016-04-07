@@ -2,7 +2,6 @@ package jsonparser
 
 import (
 	"bytes"
-	"fmt"
 	"unicode/utf8"
 )
 
@@ -34,8 +33,6 @@ func h2I(c byte) int {
 // is not checked.
 // In JSON, these escapes can either come alone or as part of "UTF16 surrogate pairs" that must be handled together.
 // This function only handles one; decodeUnicodeEscape handles this more complex case.
-var _ = fmt.Println
-
 func decodeSingleUnicodeEscape(in []byte) (rune, bool) {
 	// We need at least 6 characters total
 	if len(in) < 6 {
@@ -130,8 +127,6 @@ func unescape(in, out []byte) ([]byte, error) {
 		if inLen == -1 {
 			return nil, MalformedStringEscapeError
 		}
-
-		//fmt.Printf("Decoded rune from UTF: inLen: %d, outLen: %d, rune UTF8: %x\n", inLen, bufLen, buf[:bufLen])
 
 		in = in[inLen:]
 		buf = buf[bufLen:]
