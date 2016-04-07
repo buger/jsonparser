@@ -59,6 +59,9 @@ func decodeUnicodeEscape(in []byte) (rune, int) {
 	} else if r2, ok := decodeSingleUnicodeEscape(in[6:]); !ok { // Note: previous decodeSingleUnicodeEscape success guarantees at least 6 bytes remain
 		// UTF16 "high surrogate" without manditory valid following Unicode escape for the "low surrogate"
 		return utf8.RuneError, -1
+	} else if r2 < lowSurrogateOffset {
+		// Invalid UTF16 "low surrogate"
+		return utf8.RuneError, -1
 	} else {
 		// Valid UTF16 surrogate pair
 		return combineUTF16Surrogates(r, r2), 12

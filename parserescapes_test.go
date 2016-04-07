@@ -59,6 +59,7 @@ var multiUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
 	{in: `\uD800\uD`, isErr: true},
 	{in: `\uD800\uDC`, isErr: true},
 	{in: `\uD800\uDC0`, isErr: true},
+	{in: `\uD800\uDBFF`, isErr: true}, // invalid low surrogate
 }, commonUnicodeEscapeTests...)
 
 func TestDecodeSingleUnicodeEscape(t *testing.T) {
@@ -94,10 +95,10 @@ func TestDecodeUnicodeEscape(t *testing.T) {
 }
 
 type unescapeTest struct {
-	in       string
-	out      string
-	canAlloc bool
-	isErr    bool
+	in       string // escaped string
+	out      string // expected unescaped string
+	canAlloc bool   // can unescape cause an allocation (depending on buffer size)? true iff 'in' contains escape sequence(s)
+	isErr    bool   // should this operation result in an error
 }
 
 var unescapeTests = []unescapeTest{
