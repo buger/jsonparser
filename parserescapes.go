@@ -2,16 +2,18 @@ package jsonparser
 
 import (
 	"bytes"
+	"fmt"
 	"unicode/utf8"
 )
 
 // JSON Unicode stuff: see https://tools.ietf.org/html/rfc7159#section-7
 
-const highSurrogateOffset = 0xDB00
+const supplementalPlanesOffset = 0x10000
+const highSurrogateOffset = 0xD800
 const lowSurrogateOffset = 0xDC00
 
 func combineUTF16Surrogates(high, low rune) rune {
-	return (high-highSurrogateOffset)<<10 + (low - lowSurrogateOffset)
+	return supplementalPlanesOffset + (high-highSurrogateOffset)<<10 + (low - lowSurrogateOffset)
 }
 
 const badHex = -1
@@ -28,8 +30,12 @@ func h2I(c byte) int {
 	return badHex
 }
 
-// decodeSingleUnicodeEscape decodes a single \uXXXX escape sequence. In JSON, these can either come alone or as part
-// of "UTF16 surrogate pairs" that must be handled together; this function only handles one at a time
+// decodeSingleUnicodeEscape decodes a single \uXXXX escape sequence. The prefix \u is assumed to be present and
+// is not checked.
+// In JSON, these escapes can either come alone or as part of "UTF16 surrogate pairs" that must be handled together.
+// This function only handles one; decodeUnicodeEscape handles this more complex case.
+var _ = fmt.Println
+
 func decodeSingleUnicodeEscape(in []byte) (rune, bool) {
 	// We need at least 6 characters total
 	if len(in) < 6 {
@@ -124,6 +130,8 @@ func unescape(in, out []byte) ([]byte, error) {
 		if inLen == -1 {
 			return nil, MalformedStringEscapeError
 		}
+
+		//fmt.Printf("Decoded rune from UTF: inLen: %d, outLen: %d, rune UTF8: %x\n", inLen, bufLen, buf[:bufLen])
 
 		in = in[inLen:]
 		buf = buf[bufLen:]

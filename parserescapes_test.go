@@ -1,6 +1,8 @@
 package jsonparser
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 )
 
@@ -15,37 +17,199 @@ func TestH2I(t *testing.T) {
 	}
 }
 
+type escapedUnicodeRuneTest struct {
+	in    string
+	isErr bool
+	out   rune
+	len   int
+}
+
+var commonUnicodeEscapeTests = []escapedUnicodeRuneTest{
+	{in: `\u0041`, out: 'A', len: 6},
+	{in: `\u0000`, out: 0, len: 6},
+	{in: `\u00b0`, out: '°', len: 6},
+	{in: `\u00B0`, out: '°', len: 6},
+
+	{in: `\x1234`, out: 0x1234, len: 6}, // These functions do not check the \u prefix
+
+	{in: ``, isErr: true},
+	{in: `\`, isErr: true},
+	{in: `\u`, isErr: true},
+	{in: `\u1`, isErr: true},
+	{in: `\u11`, isErr: true},
+	{in: `\u111`, isErr: true},
+	{in: `\u123X`, isErr: true},
+}
+
+var singleUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
+	{in: `\uD83D`, out: 0xD83D, len: 6},
+	{in: `\uDE03`, out: 0xDE03, len: 6},
+	{in: `\uFFFF`, out: 0xFFFF, len: 6},
+}, commonUnicodeEscapeTests...)
+
+var multiUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
+	{in: `\uD83D`, isErr: true},
+	{in: `\uDE03`, isErr: true},
+	{in: `\uFFFF`, isErr: true},
+
+	{in: `\uD83D\uDE03`, out: '\U0001F603', len: 12},
+	{in: `\uD800\uDC00`, out: '\U00010000', len: 12},
+
+	{in: `\uD800\`, isErr: true},
+	{in: `\uD800\u`, isErr: true},
+	{in: `\uD800\uD`, isErr: true},
+	{in: `\uD800\uDC`, isErr: true},
+	{in: `\uD800\uDC0`, isErr: true},
+}, commonUnicodeEscapeTests...)
+
 func TestDecodeSingleUnicodeEscape(t *testing.T) {
-	escapeSequences := []string{
-		`\"`,
-		`\\`,
-		`\n`,
-		`\t`,
-		`\r`,
-		`\/`,
-		`\b`,
-		`\f`,
-	}
+	for _, test := range singleUnicodeEscapeTests {
+		r, ok := decodeSingleUnicodeEscape([]byte(test.in))
+		isErr := !ok
 
-	runeValues := []struct {
-		r  rune
-		ok bool
-	}{
-		{'"', true},
-		{'\\', true},
-		{'\n', true},
-		{'\t', true},
-		{'/', true},
-		{'\b', true},
-		{'\f', true},
-	}
-
-	for i, esc := range escapeSequences {
-		expected := runeValues[i]
-		if r, ok := decodeSingleUnicodeEscape([]byte(esc)); ok != expected.ok {
-			t.Errorf("decodeSingleUnicodeEscape(%s) returned 'ok' mismatch: expected %t, obtained %t", esc, expected.ok, ok)
-		} else if r != expected.r {
-			t.Errorf("decodeSingleUnicodeEscape(%s) returned rune mismatch: expected %x (%c), obtained %x (%c)", esc, expected.r, expected.r, r, r)
+		if isErr != test.isErr {
+			t.Errorf("decodeSingleUnicodeEscape(%s) returned isErr mismatch: expected %t, obtained %t", test.in, test.isErr, isErr)
+		} else if isErr {
+			continue
+		} else if r != test.out {
+			t.Errorf("decodeSingleUnicodeEscape(%s) returned rune mismatch: expected %x (%c), obtained %x (%c)", test.in, test.out, test.out, r, r)
 		}
 	}
 }
+
+func TestDecodeUnicodeEscape(t *testing.T) {
+	for _, test := range multiUnicodeEscapeTests {
+		r, len := decodeUnicodeEscape([]byte(test.in))
+		isErr := (len == -1)
+
+		if isErr != test.isErr {
+			t.Errorf("decodeUnicodeEscape(%s) returned isErr mismatch: expected %t, obtained %t", test.in, test.isErr, isErr)
+		} else if isErr {
+			continue
+		} else if len != test.len {
+			t.Errorf("decodeUnicodeEscape(%s) returned length mismatch: expected %d, obtained %d", test.in, test.len, len)
+		} else if r != test.out {
+			t.Errorf("decodeUnicodeEscape(%s) returned rune mismatch: expected %x (%c), obtained %x (%c)", test.in, test.out, test.out, r, r)
+		}
+	}
+}
+
+type unescapeTest struct {
+	in       string
+	out      string
+	canAlloc bool
+	isErr    bool
+}
+
+var unescapeTests = []unescapeTest{
+	{in: ``, out: ``, canAlloc: false},
+	{in: `a`, out: `a`, canAlloc: false},
+	{in: `abcde`, out: `abcde`, canAlloc: false},
+
+	{in: `ab\\de`, out: `ab\de`, canAlloc: true},
+	{in: `ab\"de`, out: `ab"de`, canAlloc: true},
+	{in: `ab \u00B0 de`, out: `ab ° de`, canAlloc: true},
+	{in: `ab \uD83D\uDE03 de`, out: "ab \U0001F603 de", canAlloc: true},
+	{in: `\u0000\u0000\u0000\u0000\u0000`, out: "\u0000\u0000\u0000\u0000\u0000", canAlloc: true},
+	{in: `\u0000 \u0000 \u0000 \u0000 \u0000`, out: "\u0000 \u0000 \u0000 \u0000 \u0000", canAlloc: true},
+	{in: ` \u0000 \u0000 \u0000 \u0000 \u0000 `, out: " \u0000 \u0000 \u0000 \u0000 \u0000 ", canAlloc: true},
+
+	{in: `\uD800`, isErr: true},
+	{in: `\uFFFF`, isErr: true},
+	{in: `abcde\`, isErr: true},
+	{in: `abcde\x`, isErr: true},
+	{in: `abcde\u`, isErr: true},
+	{in: `abcde\u1`, isErr: true},
+	{in: `abcde\u12`, isErr: true},
+	{in: `abcde\u123`, isErr: true},
+	{in: `abcde\uD800`, isErr: true},
+	{in: `ab\uD800de`, isErr: true},
+	{in: `\uD800abcde`, isErr: true},
+}
+
+// isSameMemory checks if two slices contain the same memory pointer (meaning one is a
+// subslice of the other, with possibly differing lengths/capacities).
+func isSameMemory(a, b []byte) bool {
+	if cap(a) == 0 || cap(b) == 0 {
+		return cap(a) == cap(b)
+	} else if a, b = a[:1], b[:1]; a[0] != b[0] {
+		return false
+	} else {
+		a[0]++
+		same := (a[0] == b[0])
+		a[0]--
+		return same
+	}
+
+}
+
+func TestUnescape(t *testing.T) {
+
+	for _, test := range unescapeTests {
+		type bufferTestCase struct {
+			buf        []byte
+			isTooSmall bool
+		}
+
+		var bufs []bufferTestCase
+
+		if len(test.in) == 0 {
+			// If the input string is length 0, only a buffer of size 0 is a meaningful test
+			bufs = []bufferTestCase{{nil, false}}
+		} else {
+			// For non-empty input strings, we can try several buffer sizes (0, len-1, len)
+			bufs = []bufferTestCase{
+				{nil, true},
+				{make([]byte, 0, len(test.in)-1), true},
+				{make([]byte, 0, len(test.in)), false},
+			}
+		}
+
+		for _, buftest := range bufs {
+			in := []byte(test.in)
+			buf := buftest.buf
+
+			out, err := unescape(in, buf)
+			isErr := (err != nil)
+			isAlloc := !isSameMemory(out, in) && !isSameMemory(out, buf)
+
+			if isErr != test.isErr {
+				t.Errorf("unescape(`%s`, bufsize=%d) returned isErr mismatch: expected %t, obtained %t", test.in, cap(buf), test.isErr, isErr)
+				break
+			} else if isErr {
+				continue
+			} else if !bytes.Equal(out, []byte(test.out)) {
+				t.Errorf("unescape(`%s`, bufsize=%d) returned unescaped mismatch: expected `%s` (%v, len %d), obtained `%s` (%v, len %d)", test.in, cap(buf), test.out, []byte(test.out), len(test.out), string(out), out, len(out))
+				break
+			} else if isAlloc != (test.canAlloc && buftest.isTooSmall) {
+				t.Errorf("unescape(`%s`, bufsize=%d) returned isAlloc mismatch: expected %t, obtained %t", test.in, cap(buf), buftest.isTooSmall, isAlloc)
+				break
+			}
+		}
+	}
+}
+
+//
+//escapeSequences := []string{
+//`\"`,
+//`\\`,
+//`\n`,
+//`\t`,
+//`\r`,
+//`\/`,
+//`\b`,
+//`\f`,
+//}
+//
+//runeValues := []struct {
+//r  rune
+//ok bool
+//}{
+//{'"', true},
+//{'\\', true},
+//{'\n', true},
+//{'\t', true},
+//{'/', true},
+//{'\b', true},
+//{'\f', true},
+//}
