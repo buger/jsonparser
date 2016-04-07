@@ -168,7 +168,7 @@ func TestUnescape(t *testing.T) {
 			in := []byte(test.in)
 			buf := buftest.buf
 
-			out, err := unescape(in, buf)
+			out, err := Unescape(in, buf)
 			isErr := (err != nil)
 			isAlloc := !isSameMemory(out, in) && !isSameMemory(out, buf)
 

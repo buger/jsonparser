@@ -144,7 +144,7 @@ func searchKeys(data []byte, keys ...string) int {
 
 				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
 				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
-				if keyUnesc, err := unescape(key, stackbuf[:]); err != nil {
+				if keyUnesc, err := Unescape(key, stackbuf[:]); err != nil {
 					return -1
 				} else {
 					keyUnescStr := unsafeBytesToString(keyUnesc)
@@ -407,7 +407,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 	}
 
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
-	out, err := unescape(v, stackbuf[:])
+	out, err := Unescape(v, stackbuf[:])
 
 	return string(out), err
 }

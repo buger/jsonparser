@@ -106,7 +106,7 @@ func unescapeToUTF8(in, out []byte) (inLen int, outLen int) {
 //   'out' is used to build the unescaped string and is returned with no extra allocation
 // Else:
 //   A new slice is allocated and returned.
-func unescape(in, out []byte) ([]byte, error) {
+func Unescape(in, out []byte) ([]byte, error) {
 	firstBackslash := bytes.IndexByte(in, '\\')
 	if firstBackslash == -1 {
 		return in, nil
