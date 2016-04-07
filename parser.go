@@ -11,14 +11,19 @@ import (
 
 // Errors
 var (
-	KeyPathNotFoundError  = errors.New("Key path not found")
-	UnknownValueTypeError = errors.New("Unknown value type")
-	MalformedJsonError    = errors.New("Malformed JSON error")
-	MalformedStringError  = errors.New("Value is string, but can't find closing '\"' symbol")
-	MalformedArrayError   = errors.New("Value is array, but can't find closing ']' symbol")
-	MalformedObjectError  = errors.New("Value looks like object, but can't find closing '}' symbol")
-	MalformedValueError   = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+	KeyPathNotFoundError       = errors.New("Key path not found")
+	UnknownValueTypeError      = errors.New("Unknown value type")
+	MalformedJsonError         = errors.New("Malformed JSON error")
+	MalformedStringError       = errors.New("Value is string, but can't find closing '\"' symbol")
+	MalformedArrayError        = errors.New("Value is array, but can't find closing ']' symbol")
+	MalformedObjectError       = errors.New("Value looks like object, but can't find closing '}' symbol")
+	MalformedValueError        = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+	MalformedStringEscapeError = errors.New("Encountered an invalid escape sequence in a string")
 )
+
+// How much stack space to allocate for unescaping JSON strings; if a string longer
+// than this needs to be escaped, it will result in a heap allocation
+const unescapeStackBufSize = 64
 
 func tokenEnd(data []byte) int {
 	for i, c := range data {
@@ -105,6 +110,8 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+
 	for i < ln {
 		switch data[i] {
 		case '"':
@@ -127,14 +134,22 @@ func searchKeys(data []byte, keys ...string) int {
 
 			// if string is a Key, and key level match
 			if data[i] == ':' {
-				key := unsafeBytesToString(data[keyBegin:keyEnd])
+				key := data[keyBegin:keyEnd]
 
-				if keyLevel == level-1 && // If key nesting level match current object nested level
-					keys[level-1] == key {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + 1
+				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+				if keyUnesc, err := Unescape(key, stackbuf[:]); err != nil {
+					return -1
+				} else {
+					keyUnescStr := unsafeBytesToString(keyUnesc)
+
+					if keyLevel == level-1 && // If key nesting level match current object nested level
+						keys[level-1] == keyUnescStr {
+						keyLevel++
+						// If we found all keys in path
+						if keyLevel == lk {
+							return i + 1
+						}
 					}
 				}
 			} else {
@@ -372,9 +387,10 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	s, err := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+	out, err := Unescape(v, stackbuf[:])
 
-	return s, err
+	return string(out), err
 }
 
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
@@ -441,4 +457,33 @@ func unsafeBytesToString(data []byte) string {
 	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
 	return *(*string)(unsafe.Pointer(&sh))
+}
+
+// ParseBoolean parses a Boolean ValueType into a Go bool (not particularly useful, but here for completeness)
+func ParseBoolean(vbytes []byte) bool {
+	return (vbytes[0] == 't') // assumes value is already validated by Get(), etc. as signaled by jtype == Boolean
+}
+
+// ParseString parses a String ValueType into a Go []byte (the main parsing work is unescaping the JSON string)
+func ParseStringAsBytes(vbytes []byte) ([]byte, error) {
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings (hopefully; the Go compiler might just always kick stackbuf[:] into the heap)
+	return Unescape(vbytes, stackbuf[:])
+}
+
+// ParseString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
+func ParseString(vbytes []byte) (string, error) {
+	if vbytesUnesc, err := ParseStringAsBytes(vbytes); err != nil {
+		return "", nil
+	} else {
+		return string(vbytesUnesc), nil
+	}
+}
+
+// ParseNumber parses a Number ValueType into a Go float64
+func ParseNumber(vbytes []byte) (float64, error) {
+	if v, err := strconv.ParseFloat(unsafeBytesToString(vbytes), 64); err != nil { // TODO: use better BytesParseFloat in PR #25
+		return 0, MalformedValueError
+	} else {
+		return v, nil
+	}
 }
