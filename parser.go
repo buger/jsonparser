@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 // Errors
@@ -461,7 +460,7 @@ func ParseString(vbytes []byte) (string, error) {
 
 // ParseNumber parses a Number ValueType into a Go float64
 func ParseNumber(vbytes []byte) (float64, error) {
-	if v, err := strconv.ParseFloat(unsafeBytesToString(vbytes), 64); err != nil { // TODO: use better BytesParseFloat in PR #25
+	if v, err := BytesParseFloat(&vbytes, 64); err != nil {
 		return 0, MalformedValueError
 	} else {
 		return v, nil
