@@ -173,15 +173,15 @@ func TestUnescape(t *testing.T) {
 			isAlloc := !isSameMemory(out, in) && !isSameMemory(out, buf)
 
 			if isErr != test.isErr {
-				t.Errorf("unescape(`%s`, bufsize=%d) returned isErr mismatch: expected %t, obtained %t", test.in, cap(buf), test.isErr, isErr)
+				t.Errorf("Unescape(`%s`, bufsize=%d) returned isErr mismatch: expected %t, obtained %t", test.in, cap(buf), test.isErr, isErr)
 				break
 			} else if isErr {
 				continue
 			} else if !bytes.Equal(out, []byte(test.out)) {
-				t.Errorf("unescape(`%s`, bufsize=%d) returned unescaped mismatch: expected `%s` (%v, len %d), obtained `%s` (%v, len %d)", test.in, cap(buf), test.out, []byte(test.out), len(test.out), string(out), out, len(out))
+				t.Errorf("Unescape(`%s`, bufsize=%d) returned unescaped mismatch: expected `%s` (%v, len %d), obtained `%s` (%v, len %d)", test.in, cap(buf), test.out, []byte(test.out), len(test.out), string(out), out, len(out))
 				break
 			} else if isAlloc != (test.canAlloc && buftest.isTooSmall) {
-				t.Errorf("unescape(`%s`, bufsize=%d) returned isAlloc mismatch: expected %t, obtained %t", test.in, cap(buf), buftest.isTooSmall, isAlloc)
+				t.Errorf("Unescape(`%s`, bufsize=%d) returned isAlloc mismatch: expected %t, obtained %t", test.in, cap(buf), buftest.isTooSmall, isAlloc)
 				break
 			}
 		}
