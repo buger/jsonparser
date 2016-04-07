@@ -11,13 +11,13 @@ import (
 
 // Errors
 var (
-	KeyPathNotFoundError = errors.New("Key path not found")
+	KeyPathNotFoundError  = errors.New("Key path not found")
 	UnknownValueTypeError = errors.New("Unknown value type")
-	MalformedJsonError = errors.New("Malformed JSON error")
-	MalformedStringError = errors.New("Value is string, but can't find closing '\"' symbol")
-	MalformedArrayError = errors.New("Value is array, but can't find closing ']' symbol")
-	MalformedObjectError = errors.New("Value looks like object, but can't find closing '}' symbol")
-	MalformedValueError = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+	MalformedJsonError    = errors.New("Malformed JSON error")
+	MalformedStringError  = errors.New("Value is string, but can't find closing '\"' symbol")
+	MalformedArrayError   = errors.New("Value is array, but can't find closing ']' symbol")
+	MalformedObjectError  = errors.New("Value looks like object, but can't find closing '}' symbol")
+	MalformedValueError   = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 )
 
 func tokenEnd(data []byte) int {
@@ -31,19 +31,12 @@ func tokenEnd(data []byte) int {
 	return -1
 }
 
-
-// Find position of next character which is not ' ', ',', '}' or ']'
-func nextToken(data []byte, skipComma bool) int {
+// Find position of next character which is not whitespace
+func nextToken(data []byte) int {
 	for i, c := range data {
 		switch c {
 		case ' ', '\n', '\r', '\t':
 			continue
-		case ',':
-			if !skipComma {
-				continue
-			} else {
-				return i
-			}
 		default:
 			return i
 		}
@@ -125,7 +118,7 @@ func searchKeys(data []byte, keys ...string) int {
 			i += strEnd
 			keyEnd := i - 1
 
-			valueOffset := nextToken(data[i:], true)
+			valueOffset := nextToken(data[i:])
 			if valueOffset == -1 {
 				return -1
 			}
@@ -133,10 +126,10 @@ func searchKeys(data []byte, keys ...string) int {
 			i += valueOffset
 
 			// if string is a Key, and key level match
-			if data[i] == ':'{
+			if data[i] == ':' {
 				key := unsafeBytesToString(data[keyBegin:keyEnd])
 
-			 	if keyLevel == level-1 && // If key nesting level match current object nested level
+				if keyLevel == level-1 && // If key nesting level match current object nested level
 					keys[level-1] == key {
 					keyLevel++
 					// If we found all keys in path
@@ -203,8 +196,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	}
 
 	// Go to closest value
-	nO := nextToken(data[offset:], false)
-
+	nO := nextToken(data[offset:])
 	if nO == -1 {
 		return []byte{}, NotExist, -1, MalformedJsonError
 	}
@@ -286,19 +278,6 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	return value, dataType, endOffset, nil
 }
 
-func nextArrayItem(data []byte) int {
-	for i, c := range data {
-		switch c {
-		case ' ', '\n', '\r', '\t':
-			continue
-		default:
-			return i
-		}
-	}
-
-	return -1
-}
-
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (err error) {
 	if len(data) == 0 {
@@ -313,8 +292,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		// Go to closest value
-		nO := nextToken(data[offset:], false)
-
+		nO := nextToken(data[offset:])
 		if nO == -1 {
 			return MalformedJsonError
 		}
@@ -345,11 +323,11 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 
 		offset += o
 
-		nextItem := nextArrayItem(data[offset:])
-		if nextItem == -1 {
+		skipToToken := nextToken(data[offset:])
+		if skipToToken == -1 {
 			return MalformedArrayError
 		}
-		offset += nextItem
+		offset += skipToToken
 
 		if data[offset] == ']' {
 			break
@@ -358,6 +336,8 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		if data[offset] != ',' {
 			return MalformedArrayError
 		}
+
+		offset++
 	}
 
 	return nil
