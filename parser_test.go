@@ -158,30 +158,6 @@ var getTests = []Test{
 		isFound: true,
 		data:    `3`,
 	},
-
-	// Escaped key tests
-	Test{
-		desc:    `key with simple escape`,
-		json:    `{"a\\b":1}`,
-		path:    []string{"a\\b"},
-		isFound: true,
-		data:    `1`,
-	},
-	Test{
-		desc:    `key with Unicode escape`,
-		json:    `{"a\u00B0b":1}`,
-		path:    []string{"a\u00B0b"},
-		isFound: true,
-		data:    `1`,
-	},
-	Test{
-		desc:    `key with complex escape`,
-		json:    `{"a\uD83D\uDE03b":1}`,
-		path:    []string{"a\U0001F603b"},
-		isFound: true,
-		data:    `1`,
-	},
-
 	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    `malformed with trailing whitespace`,
 		json:    `{"a":1 `,
@@ -292,7 +268,6 @@ var getTests = []Test{
 		path:  []string{"a"},
 		isErr: true,
 	},
-
 	Test{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:  "malformed key (followed by comma followed by colon)",
 		json:  `{"a",:1}`,
@@ -351,25 +326,18 @@ var getFloatTests = []Test{
 
 var getStringTests = []Test{
 	Test{
-		desc:    `Translate Unicode symbols`,
+		desc:    `Translate unicode symbols`,
 		json:    `{"c": "test"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `test`,
 	},
 	Test{
-		desc:    `Translate Unicode symbols`,
+		desc:    `Translate unicode symbols`,
 		json:    `{"c": "15\u00b0C"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `15°C`,
-	},
-	Test{
-		desc:    `Translate supplementary Unicode symbols`,
-		json:    `{"c": "\uD83D\uDE03"}`, // Smiley face (UTF16 surrogate pair)
-		path:    []string{"c"},
-		isFound: true,
-		data:    "\U0001F603", // Smiley face
 	},
 	Test{
 		desc:    `Translate escape symbols`,
