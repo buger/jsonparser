@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
-	"unsafe"
 )
 
 // Errors
@@ -127,10 +125,10 @@ func searchKeys(data []byte, keys ...string) int {
 
 			// if string is a Key, and key level match
 			if data[i] == ':' {
-				key := unsafeBytesToString(data[keyBegin:keyEnd])
+				key := data[keyBegin:keyEnd]
 
 				if keyLevel == level-1 && // If key nesting level match current object nested level
-					keys[level-1] == key {
+					equalStr(&key, keys[level-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -351,7 +349,7 @@ func GetUnsafeString(data []byte, keys ...string) (val string, err error) {
 		return "", e
 	}
 
-	return unsafeBytesToString(v), nil
+	return bytesToString(&v), nil
 }
 
 // GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
@@ -372,7 +370,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	s, err := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
+	s, err := strconv.Unquote(`"` + string(v) + `"`)
 
 	return s, err
 }
@@ -391,7 +389,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseFloat(unsafeBytesToString(v), 64)
+	val, err = parseFloat(&v)
 	return
 }
 
@@ -408,8 +406,11 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = strconv.ParseInt(unsafeBytesToString(v), 10, 64)
-	return
+	if val, ok := parseInt(v); !ok {
+		return 0, MalformedValueError
+	} else {
+		return val, nil
+	}
 }
 
 // GetBoolean returns the value retrieved by `Get`, cast to a bool if possible.
@@ -433,12 +434,4 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 	}
 
 	return
-}
-
-// A hack until issue golang/go#2632 is fixed.
-// See: https://github.com/golang/go/issues/2632
-func unsafeBytesToString(data []byte) string {
-	h := (*reflect.SliceHeader)(unsafe.Pointer(&data))
-	sh := reflect.StringHeader{Data: h.Data, Len: h.Len}
-	return *(*string)(unsafe.Pointer(&sh))
 }
