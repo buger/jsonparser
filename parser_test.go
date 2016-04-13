@@ -26,7 +26,7 @@ func toStringArray(data []byte) (result []string) {
 	return
 }
 
-type GetTest struct {
+type Test struct {
 	desc string
 	json string
 	path []string
@@ -37,121 +37,121 @@ type GetTest struct {
 	data interface{}
 }
 
-var getTests = []GetTest{
+var getTests = []Test{
 	// Found key tests
-	GetTest{
+	Test{
 		desc:    "handling multiple nested keys with same name",
 		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
 		path:    []string{"c", "c"},
 		isFound: true,
 		data:    `[1,2]`,
 	},
-	GetTest{
+	Test{
 		desc:    "read basic key",
 		json:    `{"a":"b"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	Test{
 		desc:    "read basic key with space",
 		json:    `{"a": "b"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	Test{
 		desc:    "read composite key",
 		json:    `{"a": { "b":{"c":"d" }}}`,
 		path:    []string{"a", "b", "c"},
 		isFound: true,
 		data:    `d`,
 	},
-	GetTest{
+	Test{
 		desc:    `read numberic value as string`,
 		json:    `{"a": "b", "c": 1}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	Test{
 		desc:    `handle multiple nested keys with same name`,
 		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
 		path:    []string{"c", "c"},
 		isFound: true,
 		data:    `[1,2]`,
 	},
-	GetTest{
+	Test{
 		desc:    `read string values with quotes`,
 		json:    `{"a": "string\"with\"quotes"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `string\"with\"quotes`,
 	},
-	GetTest{
+	Test{
 		desc:    `read object`,
 		json:    `{"a": { "b":{"c":"d" }}}`,
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    `{"c":"d" }`,
 	},
-	GetTest{
+	Test{
 		desc:    `empty path`,
 		json:    `{"c":"d" }`,
 		path:    []string{},
 		isFound: true,
 		data:    `{"c":"d" }`,
 	},
-	GetTest{
+	Test{
 		desc:    `formatted JSON value`,
 		json:    "{\n  \"a\": \"b\"\n}",
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	Test{
 		desc:    `formatted JSON value 2`,
 		json:    "{\n  \"a\":\n    {\n\"b\":\n   {\"c\":\"d\",\n\"e\": \"f\"}\n}\n}",
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    "{\"c\":\"d\",\n\"e\": \"f\"}",
 	},
-	GetTest{
+	Test{
 		desc:    `whitespace`,
 		json:    " \n\r\t{ \n\r\t\"whitespace\" \n\r\t: \n\r\t333 \n\r\t} \n\r\t",
 		path:    []string{"whitespace"},
 		isFound: true,
 		data:    "333",
 	},
-	GetTest{
+	Test{
 		desc:    `escaped backslash quote`,
 		json:    `{"a": "\\\""}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `\\\"`,
 	},
-	GetTest{
+	Test{
 		desc:    `unescaped backslash quote`,
 		json:    `{"a": "\\"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `\\`,
 	},
-	GetTest{
+	Test{
 		desc:    `unicode in JSON`,
 		json:    `{"a": "15°C"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `15°C`,
 	},
-	GetTest{
+	Test{
 		desc:    `no padding + nested`,
 		json:    `{"a":{"a":"1"},"b":2}`,
 		path:    []string{"b"},
 		isFound: true,
 		data:    `2`,
 	},
-	GetTest{
+	Test{
 		desc:    `no padding + nested + array`,
 		json:    `{"a":{"b":[1,2]},"c":3}`,
 		path:    []string{"c"},
@@ -160,21 +160,21 @@ var getTests = []GetTest{
 	},
 
 	// Escaped key tests
-	GetTest{
+	Test{
 		desc:    `key with simple escape`,
 		json:    `{"a\\b":1}`,
 		path:    []string{"a\\b"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	Test{
 		desc:    `key with Unicode escape`,
 		json:    `{"a\u00B0b":1}`,
 		path:    []string{"a\u00B0b"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	Test{
 		desc:    `key with complex escape`,
 		json:    `{"a\uD83D\uDE03b":1}`,
 		path:    []string{"a\U0001F603b"},
@@ -182,14 +182,14 @@ var getTests = []GetTest{
 		data:    `1`,
 	},
 
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    `malformed with trailing whitespace`,
 		json:    `{"a":1 `,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    `malformed with wrong closing bracket`,
 		json:    `{"a":1]`,
 		path:    []string{"a"},
@@ -198,42 +198,42 @@ var getTests = []GetTest{
 	},
 
 	// Not found key tests
-	GetTest{
+	Test{
 		desc:    "non-existent key 1",
 		json:    `{"a":"b"}`,
 		path:    []string{"c"},
 		isFound: false,
 		isErr:   true,
 	},
-	GetTest{
+	Test{
 		desc:    "non-existent key 2",
 		json:    `{"a":"b"}`,
 		path:    []string{"b"},
 		isFound: false,
 		isErr:   true,
 	},
-	GetTest{
+	Test{
 		desc:    "non-existent key 3",
 		json:    `{"aa":"b"}`,
 		path:    []string{"a"},
 		isFound: false,
 		isErr:   true,
 	},
-	GetTest{
+	Test{
 		desc:    "apply scope of parent when search for nested key",
 		json:    `{"a": { "b": 1}, "c": 2 }`,
 		path:    []string{"a", "b", "c"},
 		isFound: false,
 		isErr:   true,
 	},
-	GetTest{
+	Test{
 		desc:    `apply scope to key level`,
 		json:    `{"a": { "b": 1}, "c": 2 }`,
 		path:    []string{"b"},
 		isFound: false,
 		isErr:   true,
 	},
-	GetTest{
+	Test{
 		desc:    `handle escaped quote in key name in JSON`,
 		json:    `{"key\"key": 1}`,
 		path:    []string{"key"},
@@ -242,71 +242,71 @@ var getTests = []GetTest{
 	},
 
 	// Error/invalid tests
-	GetTest{
+	Test{
 		desc:    `handle escaped quote in key name in JSON`,
 		json:    `{"key\"key": 1}`,
 		path:    []string{"key"},
 		isFound: false,
 		isErr:   true,
 	},
-	GetTest{
+	Test{
 		desc:    `missing closing brace, but can still find key`,
 		json:    `{"a":"b"`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	Test{
 		desc:  `missing value closing quote`,
 		json:  `{"a":"b`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:  `missing value closing curly brace`,
 		json:  `{"a": { "b": "c"`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:  `missing value closing square bracket`,
 		json:  `{"a": [1, 2, 3 }`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:  `missing value 1`,
 		json:  `{"a":`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:  `missing value 2`,
 		json:  `{"a": `,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:  `missing value 3`,
 		json:  `{"a":}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
 
-	GetTest{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
+	Test{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:  "malformed key (followed by comma followed by colon)",
 		json:  `{"a",:1}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup first string",
 		json:    `{"a":"b":"c"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    "b",
 	},
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+	Test{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup second string",
 		json:    `{"a":"b":"c"}`,
 		path:    []string{"b"},
@@ -315,15 +315,15 @@ var getTests = []GetTest{
 	},
 }
 
-var getIntTests = []GetTest{
-	GetTest{
+var getIntTests = []Test{
+	Test{
 		desc:    `read numeric value as number`,
 		json:    `{"a": "b", "c": 1}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    int64(1),
 	},
-	GetTest{
+	Test{
 		desc:    `read numeric value as number in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": 1 \n}",
 		path:    []string{"c"},
@@ -332,15 +332,15 @@ var getIntTests = []GetTest{
 	},
 }
 
-var getFloatTests = []GetTest{
-	GetTest{
+var getFloatTests = []Test{
+	Test{
 		desc:    `read numeric value as number`,
 		json:    `{"a": "b", "c": 1.123}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    float64(1.123),
 	},
-	GetTest{
+	Test{
 		desc:    `read numeric value as number in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": 23.41323 \n}",
 		path:    []string{"c"},
@@ -349,29 +349,29 @@ var getFloatTests = []GetTest{
 	},
 }
 
-var getStringTests = []GetTest{
-	GetTest{
+var getStringTests = []Test{
+	Test{
 		desc:    `Translate Unicode symbols`,
 		json:    `{"c": "test"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `test`,
 	},
-	GetTest{
+	Test{
 		desc:    `Translate Unicode symbols`,
 		json:    `{"c": "15\u00b0C"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `15°C`,
 	},
-	GetTest{
+	Test{
 		desc:    `Translate supplementary Unicode symbols`,
 		json:    `{"c": "\uD83D\uDE03"}`, // Smiley face (UTF16 surrogate pair)
 		path:    []string{"c"},
 		isFound: true,
 		data:    "\U0001F603", // Smiley face
 	},
-	GetTest{
+	Test{
 		desc:    `Translate escape symbols`,
 		json:    `{"c": "\\\""}`,
 		path:    []string{"c"},
@@ -380,48 +380,48 @@ var getStringTests = []GetTest{
 	},
 }
 
-var getBoolTests = []GetTest{
-	GetTest{
+var getBoolTests = []Test{
+	Test{
 		desc:    `read boolean true as boolean`,
 		json:    `{"a": "b", "c": true}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    true,
 	},
-	GetTest{
+	Test{
 		desc:    `boolean true in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": true \n}",
 		path:    []string{"c"},
 		isFound: true,
 		data:    true,
 	},
-	GetTest{
+	Test{
 		desc:    `read boolean false as boolean`,
 		json:    `{"a": "b", "c": false}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    false,
 	},
-	GetTest{
+	Test{
 		desc:    `boolean true in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": false \n}",
 		path:    []string{"c"},
 		isFound: true,
 		data:    false,
 	},
-	GetTest{
+	Test{
 		desc:  `read fake boolean true`,
 		json:  `{"a": txyz}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:  `read fake boolean false`,
 		json:  `{"a": fwxyz}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	Test{
 		desc:    `read boolean true with whitespace and another key`,
 		json:    "{\r\t\n \"a\"\r\t\n :\r\t\n true\r\t\n ,\r\t\n \"b\": 1}",
 		path:    []string{"a"},
@@ -430,29 +430,29 @@ var getBoolTests = []GetTest{
 	},
 }
 
-var getArrayTests = []GetTest{
-	GetTest{
+var getArrayTests = []Test{
+	Test{
 		desc:    `read array of simple values`,
 		json:    `{"a": { "b":[1,2,3,4]}}`,
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    []string{`1`, `2`, `3`, `4`},
 	},
-	GetTest{
+	Test{
 		desc:    `read array via empty path`,
 		json:    `[1,2,3,4]`,
 		path:    []string{},
 		isFound: true,
 		data:    []string{`1`, `2`, `3`, `4`},
 	},
-	GetTest{
+	Test{
 		desc:    `read array of objects`,
 		json:    `{"a": { "b":[{"x":1},{"x":2},{"x":3},{"x":4}]}}`,
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    []string{`{"x":1}`, `{"x":2}`, `{"x":3}`, `{"x":4}`},
 	},
-	GetTest{
+	Test{
 		desc:    `read nested array`,
 		json:    `{"a": [[[1]],[[2]]]}`,
 		path:    []string{"a"},
@@ -463,7 +463,7 @@ var getArrayTests = []GetTest{
 
 // checkFoundAndNoError checks the dataType and error return from Get*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Get*(), or false if the test is finished.
-func checkFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
+func checkFoundAndNoError(t *testing.T, testKind string, test Test, jtype ValueType, value interface{}, err error) bool {
 	isFound := (jtype != NotExist)
 	isErr := (err != nil)
 
@@ -491,7 +491,7 @@ func checkFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype Val
 	}
 }
 
-func runTests(t *testing.T, tests []GetTest, runner func(GetTest) (interface{}, ValueType, error), typeChecker func(GetTest, interface{}) (bool, interface{})) {
+func runTests(t *testing.T, tests []Test, runner func(Test) (interface{}, ValueType, error), typeChecker func(Test, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
@@ -522,11 +522,11 @@ func runTests(t *testing.T, tests []GetTest, runner func(GetTest) (interface{}, 
 
 func TestGet(t *testing.T) {
 	runTests(t, getTests,
-		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+		func(test Test) (value interface{}, dataType ValueType, err error) {
 			value, dataType, _, err = Get([]byte(test.json), test.path...)
 			return
 		},
-		func(test GetTest, value interface{}) (bool, interface{}) {
+		func(test Test, value interface{}) (bool, interface{}) {
 			expected := []byte(test.data.(string))
 			return bytes.Equal(expected, value.([]byte)), expected
 		},
@@ -535,11 +535,11 @@ func TestGet(t *testing.T) {
 
 func TestGetString(t *testing.T) {
 	runTests(t, getStringTests,
-		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+		func(test Test) (value interface{}, dataType ValueType, err error) {
 			value, err = GetString([]byte(test.json), test.path...)
 			return value, String, err
 		},
-		func(test GetTest, value interface{}) (bool, interface{}) {
+		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(string)
 			return expected == value.(string), expected
 		},
@@ -548,11 +548,11 @@ func TestGetString(t *testing.T) {
 
 func TestGetInt(t *testing.T) {
 	runTests(t, getIntTests,
-		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+		func(test Test) (value interface{}, dataType ValueType, err error) {
 			value, err = GetInt([]byte(test.json), test.path...)
 			return value, Number, err
 		},
-		func(test GetTest, value interface{}) (bool, interface{}) {
+		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(int64)
 			return expected == value.(int64), expected
 		},
@@ -561,11 +561,11 @@ func TestGetInt(t *testing.T) {
 
 func TestGetFloat(t *testing.T) {
 	runTests(t, getFloatTests,
-		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+		func(test Test) (value interface{}, dataType ValueType, err error) {
 			value, err = GetFloat([]byte(test.json), test.path...)
 			return value, Number, err
 		},
-		func(test GetTest, value interface{}) (bool, interface{}) {
+		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(float64)
 			return expected == value.(float64), expected
 		},
@@ -574,11 +574,11 @@ func TestGetFloat(t *testing.T) {
 
 func TestGetBoolean(t *testing.T) {
 	runTests(t, getBoolTests,
-		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+		func(test Test) (value interface{}, dataType ValueType, err error) {
 			value, err = GetBoolean([]byte(test.json), test.path...)
 			return value, Boolean, err
 		},
-		func(test GetTest, value interface{}) (bool, interface{}) {
+		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.(bool)
 			return expected == value.(bool), expected
 		},
@@ -587,11 +587,11 @@ func TestGetBoolean(t *testing.T) {
 
 func TestGetSlice(t *testing.T) {
 	runTests(t, getArrayTests,
-		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+		func(test Test) (value interface{}, dataType ValueType, err error) {
 			value, dataType, _, err = Get([]byte(test.json), test.path...)
 			return
 		},
-		func(test GetTest, value interface{}) (bool, interface{}) {
+		func(test Test, value interface{}) (bool, interface{}) {
 			expected := test.data.([]string)
 			return reflect.DeepEqual(expected, toStringArray(value.([]byte))), expected
 		},
