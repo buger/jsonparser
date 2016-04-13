@@ -1,6 +1,7 @@
 package jsonparser
 
-func BytesParseInt(bytes []byte) (v int64, ok bool) {
+// About 3x faster then strconv.ParseInt because does not check for range error and support only base 10, which is enough for JSON
+func parseInt(bytes []byte) (v int64, ok bool) {
 	if len(bytes) == 0 {
 		return 0, false
 	}
