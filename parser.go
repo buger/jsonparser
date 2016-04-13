@@ -4,19 +4,23 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 // Errors
 var (
-	KeyPathNotFoundError  = errors.New("Key path not found")
-	UnknownValueTypeError = errors.New("Unknown value type")
-	MalformedJsonError    = errors.New("Malformed JSON error")
-	MalformedStringError  = errors.New("Value is string, but can't find closing '\"' symbol")
-	MalformedArrayError   = errors.New("Value is array, but can't find closing ']' symbol")
-	MalformedObjectError  = errors.New("Value looks like object, but can't find closing '}' symbol")
-	MalformedValueError   = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+	KeyPathNotFoundError       = errors.New("Key path not found")
+	UnknownValueTypeError      = errors.New("Unknown value type")
+	MalformedJsonError         = errors.New("Malformed JSON error")
+	MalformedStringError       = errors.New("Value is string, but can't find closing '\"' symbol")
+	MalformedArrayError        = errors.New("Value is array, but can't find closing ']' symbol")
+	MalformedObjectError       = errors.New("Value looks like object, but can't find closing '}' symbol")
+	MalformedValueError        = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
+	MalformedStringEscapeError = errors.New("Encountered an invalid escape sequence in a string")
 )
+
+// How much stack space to allocate for unescaping JSON strings; if a string longer
+// than this needs to be escaped, it will result in a heap allocation
+const unescapeStackBufSize = 64
 
 func tokenEnd(data []byte) int {
 	for i, c := range data {
@@ -45,24 +49,32 @@ func nextToken(data []byte) int {
 
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
-func stringEnd(data []byte) int {
+func stringEnd(data []byte) (int, bool) {
+	escaped := false
 	for i, c := range data {
 		if c == '"' {
-			j := i - 1
-			for {
-				if j < 0 || data[j] != '\\' {
-					return i + 1 // even number of backslashes
+			if !escaped {
+				return i + 1, false
+			} else {
+				j := i - 1
+				for {
+					if j < 0 || data[j] != '\\' {
+						return i + 1, true // even number of backslashes
+					}
+					j--
+					if j < 0 || data[j] != '\\' {
+						break // odd number of backslashes
+					}
+					j--
+
 				}
-				j--
-				if j < 0 || data[j] != '\\' {
-					break // odd number of backslashes
-				}
-				j--
 			}
+		} else if c == '\\' {
+			escaped = true
 		}
 	}
 
-	return -1
+	return -1, escaped
 }
 
 // Find end of the data structure, array or object.
@@ -75,7 +87,7 @@ func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	for i < ln {
 		switch data[i] {
 		case '"': // If inside string, skip it
-			se := stringEnd(data[i+1:])
+			se, _ := stringEnd(data[i+1:])
 			if se == -1 {
 				return -1
 			}
@@ -103,13 +115,15 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+
 	for i < ln {
 		switch data[i] {
 		case '"':
 			i++
 			keyBegin := i
 
-			strEnd := stringEnd(data[i:])
+			strEnd, keyEscaped := stringEnd(data[i:])
 			if strEnd == -1 {
 				return -1
 			}
@@ -123,12 +137,22 @@ func searchKeys(data []byte, keys ...string) int {
 
 			i += valueOffset
 
-			// if string is a Key, and key level match
-			if data[i] == ':' {
+			// if string is a key, and key level match
+			if data[i] == ':' && keyLevel == level-1 {
 				key := data[keyBegin:keyEnd]
 
-				if keyLevel == level-1 && // If key nesting level match current object nested level
-					equalStr(&key, keys[level-1]) {
+				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+				var keyUnesc []byte
+				if !keyEscaped {
+					keyUnesc = key
+				} else if ku, err := Unescape(key, stackbuf[:]); err != nil {
+					return -1
+				} else {
+					keyUnesc = ku
+				}
+
+				if equalStr(&keyUnesc, keys[level-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -205,7 +229,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	// if string value
 	if data[offset] == '"' {
 		dataType = String
-		if idx := stringEnd(data[offset+1:]); idx != -1 {
+		if idx, _ := stringEnd(data[offset+1:]); idx != -1 {
 			endOffset += idx + 1
 		} else {
 			return []byte{}, dataType, offset, MalformedStringError
@@ -370,9 +394,10 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	s, err := strconv.Unquote(`"` + unsafeBytesToString(v) + `"`)
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+	out, err := Unescape(v, stackbuf[:])
 
-	return s, err
+	return string(out), err
 }
 
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
