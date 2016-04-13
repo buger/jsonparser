@@ -70,7 +70,7 @@ var parseIntTests = []ParseIntTest{
 
 func TestBytesParseInt(t *testing.T) {
 	for _, test := range parseIntTests {
-		out, ok := BytesParseInt([]byte(test.in))
+		out, ok := parseInt([]byte(test.in))
 		if ok != !test.isErr {
 			t.Errorf("Test '%s' error return did not match expectation (obtained %t, expected %t)", test.in, !ok, test.isErr)
 		} else if ok && out != test.out {
@@ -82,7 +82,7 @@ func TestBytesParseInt(t *testing.T) {
 func BenchmarkParseInt(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
-		BytesParseInt(bytes)
+		parseInt(bytes)
 	}
 }
 

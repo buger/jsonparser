@@ -14,11 +14,18 @@ import (
 // inlined, whereas the pointer []byte version is equally fast to the manually inlined
 // version. Instruction count in assembly taken from "go tool compile" confirms this difference.
 //
-
-func BytesEqualStr(abytesptr *[]byte, bstr string) bool {
-	return *(*string)(unsafe.Pointer(abytesptr)) == bstr
+// TODO: Remove hack after Go 1.7 release
+//
+func equalStr(b *[]byte, s string) bool {
+	return *(*string)(unsafe.Pointer(b)) == s
 }
 
-func BytesParseFloat(bytesptr *[]byte, bitSize int) (float64, error) {
-	return strconv.ParseFloat(*(*string)(unsafe.Pointer(bytesptr)), bitSize)
+func parseFloat(b *[]byte) (float64, error) {
+	return strconv.ParseFloat(*(*string)(unsafe.Pointer(b)), 64)
+}
+
+// A hack until issue golang/go#2632 is fixed.
+// See: https://github.com/golang/go/issues/2632
+func bytesToString(b *[]byte) string {
+	return *(*string)(unsafe.Pointer(b))
 }

@@ -1,7 +1,7 @@
 SOURCE = parser.go
 CONTAINER = jsonparser
 SOURCE_PATH = /go/src/github.com/buger/jsonparser
-BENCHMARK = JsonParser
+BENCHMARK = JsonParserSmall
 BENCHTIME = 5s
 TEST = .
 
@@ -13,6 +13,9 @@ race:
 
 bench:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -benchtime $(BENCHTIME) -v
+
+bench_local:
+	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench . $(ARGS) -benchtime $(BENCHTIME) -v
 
 profile:
 	docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER) go test $(LDFLAGS) -test.benchmem -bench $(BENCHMARK) ./benchmark/ $(ARGS) -memprofile mem.mprof -v
