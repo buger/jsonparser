@@ -181,7 +181,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | mreiferson/go-ujson | **7008** | **1409** | 37 |
 | pquerna/ffjson | **3769** | **624** | **15** |
 | mailru/easyjson | **2002** | **192** | **9** |
-| buger/jsonparser | **1267** | **0** | **0** |
+| buger/jsonparser | **1367** | **0** | **0** |
 
 Winners are ffjson, easyjson and jsonparser, where jsonparser is 5.5x faster then encoding/json and 2.8x faster then ffjson, and slightly faster then easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
@@ -204,7 +204,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | mreiferson/go-ujson | **56972** | 11547 | 270 |
 | pquerna/ffjson | **20298** | **856** | **20** |
 | mailru/easyjson | **10512** | **336** | **12** |
-| buger/jsonparser | **14560** | **0** | **0** |
+| buger/jsonparser | **15955** | **0** | **0** |
 
 The difference between ffjson and jsonparser in CPU usage is smaller, while the memory consumption difference is growing. On the other hand `easyjson` shows remarkable performance for medium payload.
 
@@ -226,7 +226,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | encoding/json interface{} | 1224271 | 215425 | 3395 |
 | pquerna/ffjson | **312271** | **7792** | **298** |
 | mailru/easyjson | **154186** | **6992** | **288** |
-| buger/jsonparser | **79268** | **0** | **0** |
+| buger/jsonparser | **85308** | **0** | **0** |
 
 `jsonparser` now is a winner, but do not forget that it is way more lighweight parser then `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
 
