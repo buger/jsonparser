@@ -51,12 +51,12 @@ jsonparser.Get(data, "company")
 
 // If the key doesn't exist it will throw an error
 var size int64
-if value, _, err := jsonparser.GetInt(data, "company", "size"); err != nil {
+if value, _, err := jsonparser.GetInt(data, "company", "size"); err == nil {
   size = value
 }
 
 // You can use `ArrayEach` helper to iterate items
-jsonparser.ArrayEach(data, func(value []byte, dataType int, offset int, err error) (err error) {
+jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
 }, "person", "gravatar", "avatars")
 ```
@@ -74,7 +74,7 @@ You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonpars
 
 ### **`Get`**
 ```
-func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error)
+func Get(data []byte, keys ...string) (value []byte, dataType jsonparser.ValueType, offset int, err error)
 ```
 Receives data structure, and key path to extract value from.
 
@@ -94,7 +94,7 @@ func GetString(data []byte, keys ...string) (val string, err error)
 Returns strings properly handing escaped and unicode characters. Note that this will cause additional memory allocations.
 
 ### **`GetUnsafeString`**
-If you need string in your app, and ready to sacrifice with support of escaped symbols in favor of speed. It returns string mapped to exsting byte slice memory, without any allocations:
+If you need string in your app, and ready to sacrifice with support of escaped symbols in favor of speed. It returns string mapped to existing byte slice memory, without any allocations:
 ```go
 s, _, := jsonparser.GetUnsafeString(data, "person", "name", "title")
 switch s {
@@ -105,7 +105,7 @@ switch s {
   ...
 }
 ```
-Note that `unsafe` here means that your string will exist until GC will free unrelying byte slice, for most of cases it means that you can use this string only in current context, and should not pass it anywhere externally: through channels or any other way.
+Note that `unsafe` here means that your string will exist until GC will free underlying byte slice, for most of cases it means that you can use this string only in current context, and should not pass it anywhere externally: through channels or any other way.
 
 
 ### **`GetBoolean`**, **`GetInt`** and **`GetFloat`**
@@ -121,7 +121,7 @@ If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
 ```
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string)
+func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err error), keys ...string)
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
 
@@ -181,7 +181,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | mreiferson/go-ujson | **7008** | **1409** | 37 |
 | pquerna/ffjson | **3769** | **624** | **15** |
 | mailru/easyjson | **2002** | **192** | **9** |
-| buger/jsonparser | **1267** | **0** | **0** |
+| buger/jsonparser | **1367** | **0** | **0** |
 
 Winners are ffjson, easyjson and jsonparser, where jsonparser is 5.5x faster then encoding/json and 2.8x faster then ffjson, and slightly faster then easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
@@ -204,7 +204,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | mreiferson/go-ujson | **56972** | 11547 | 270 |
 | pquerna/ffjson | **20298** | **856** | **20** |
 | mailru/easyjson | **10512** | **336** | **12** |
-| buger/jsonparser | **14560** | **0** | **0** |
+| buger/jsonparser | **15955** | **0** | **0** |
 
 The difference between ffjson and jsonparser in CPU usage is smaller, while the memory consumption difference is growing. On the other hand `easyjson` shows remarkable performance for medium payload.
 
@@ -226,7 +226,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | encoding/json interface{} | 1224271 | 215425 | 3395 |
 | pquerna/ffjson | **312271** | **7792** | **298** |
 | mailru/easyjson | **154186** | **6992** | **288** |
-| buger/jsonparser | **79268** | **0** | **0** |
+| buger/jsonparser | **85308** | **0** | **0** |
 
 `jsonparser` now is a winner, but do not forget that it is way more lighweight parser then `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
 
