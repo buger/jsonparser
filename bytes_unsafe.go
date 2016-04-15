@@ -27,5 +27,5 @@ func parseFloat(b *[]byte) (float64, error) {
 // A hack until issue golang/go#2632 is fixed.
 // See: https://github.com/golang/go/issues/2632
 func bytesToString(b *[]byte) string {
-  return *(*string)(unsafe.Pointer(b))
+	return *(*string)(unsafe.Pointer(b))
 }
