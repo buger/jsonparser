@@ -51,12 +51,12 @@ jsonparser.Get(data, "company")
 
 // If the key doesn't exist it will throw an error
 var size int64
-if value, _, err := jsonparser.GetInt(data, "company", "size"); err != nil {
+if value, _, err := jsonparser.GetInt(data, "company", "size"); err == nil {
   size = value
 }
 
 // You can use `ArrayEach` helper to iterate items
-jsonparser.ArrayEach(data, func(value []byte, dataType int, offset int, err error) (err error) {
+jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
 }, "person", "gravatar", "avatars")
 ```
@@ -74,7 +74,7 @@ You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonpars
 
 ### **`Get`**
 ```
-func Get(data []byte, keys ...string) (value []byte, dataType int, offset int, err error)
+func Get(data []byte, keys ...string) (value []byte, dataType jsonparser.ValueType, offset int, err error)
 ```
 Receives data structure, and key path to extract value from.
 
@@ -94,7 +94,7 @@ func GetString(data []byte, keys ...string) (val string, err error)
 Returns strings properly handing escaped and unicode characters. Note that this will cause additional memory allocations.
 
 ### **`GetUnsafeString`**
-If you need string in your app, and ready to sacrifice with support of escaped symbols in favor of speed. It returns string mapped to exsting byte slice memory, without any allocations:
+If you need string in your app, and ready to sacrifice with support of escaped symbols in favor of speed. It returns string mapped to existing byte slice memory, without any allocations:
 ```go
 s, _, := jsonparser.GetUnsafeString(data, "person", "name", "title")
 switch s {
@@ -105,7 +105,7 @@ switch s {
   ...
 }
 ```
-Note that `unsafe` here means that your string will exist until GC will free unrelying byte slice, for most of cases it means that you can use this string only in current context, and should not pass it anywhere externally: through channels or any other way.
+Note that `unsafe` here means that your string will exist until GC will free underlying byte slice, for most of cases it means that you can use this string only in current context, and should not pass it anywhere externally: through channels or any other way.
 
 
 ### **`GetBoolean`**, **`GetInt`** and **`GetFloat`**
@@ -121,7 +121,7 @@ If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
 ```
-func ArrayEach(data []byte, cb func(value []byte, dataType int, offset int, err error), keys ...string)
+func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err error), keys ...string)
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
 
