@@ -394,10 +394,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return string(v), nil
 	}
 
-	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
-	out, err := Unescape(v, stackbuf[:])
-
-	return string(out), err
+	return ParseString(v)
 }
 
 // GetFloat returns the value retrieved by `Get`, cast to a float64 if possible.
@@ -414,8 +411,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	val, err = parseFloat(&v)
-	return
+	return ParseFloat(v)
 }
 
 // GetInt returns the value retrieved by `Get`, cast to a float64 if possible.
@@ -431,11 +427,7 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
-	if val, ok := parseInt(v); !ok {
-		return 0, MalformedValueError
-	} else {
-		return val, nil
-	}
+	return ParseInt(v)
 }
 
 // GetBoolean returns the value retrieved by `Get`, cast to a bool if possible.
@@ -452,11 +444,50 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 		return false, fmt.Errorf("Value is not a boolean: %s", string(v))
 	}
 
-	if v[0] == 't' {
-		val = true
-	} else {
-		val = false
-	}
+	return ParseBoolean(v)
+}
 
-	return
+// ParseBoolean parses a Boolean ValueType into a Go bool (not particularly useful, but here for completeness)
+func ParseBoolean(b []byte) (bool, error) {
+	switch b[0] {
+	case 't':
+		return true, nil
+	case 'f':
+		return false, nil
+	default:
+		return false, MalformedValueError
+	}
+}
+
+// ParseString parses a String ValueType into a Go []byte (the main parsing work is unescaping the JSON string)
+func parseStringAsBytes(b []byte) ([]byte, error) {
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings (hopefully; the Go compiler might just always kick stackbuf[:] into the heap)
+	return Unescape(b, stackbuf[:])
+}
+
+// ParseString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
+func ParseString(b []byte) (string, error) {
+	if bU, err := parseStringAsBytes(b); err != nil {
+		return "", nil
+	} else {
+		return string(bU), nil
+	}
+}
+
+// ParseNumber parses a Number ValueType into a Go float64
+func ParseFloat(b []byte) (float64, error) {
+	if v, err := parseFloat(&b); err != nil {
+		return 0, MalformedValueError
+	} else {
+		return v, nil
+	}
+}
+
+// ParseNumber parses a Number ValueType into a Go float64
+func ParseInt(b []byte) (int64, error) {
+	if v, err := parseInt(b); !err {
+		return 0, MalformedValueError
+	} else {
+		return v, nil
+	}
 }
