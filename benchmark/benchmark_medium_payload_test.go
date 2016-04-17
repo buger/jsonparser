@@ -34,6 +34,32 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 	}
 }
 
+func BenchmarkJsonParserEachKeyManualMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		paths := [][]string{
+			[]string{"person", "name", "fullName"},
+			[]string{"person", "github", "followers"},
+			[]string{"company"},
+			[]string{"person", "gravatar", "avatars"},
+		}
+
+		jsonparser.EachKey(mediumFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+			switch idx {
+			case 0:
+				// jsonparser.ParseString(value)
+			case 1:
+				jsonparser.ParseInt(value)
+			case 2:
+				// jsonparser.ParseString(value)
+			case 3:
+				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
+					jsonparser.Get(avalue, "url")
+				})
+			}
+		}, paths...)
+	}
+}
+
 /*
    encoding/json
 */

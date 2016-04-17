@@ -627,3 +627,40 @@ func TestArrayEach(t *testing.T) {
 		}
 	}, "a", "b")
 }
+
+var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10}`)
+
+func TestEachKey(t *testing.T) {
+	paths := [][]string{
+		[]string{"name"},
+		[]string{"nested", "a"},
+		[]string{"nested", "nested3", "b"},
+	}
+
+	keysFound := 0
+
+	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error){
+		keysFound++
+
+		switch idx {
+		case 0:
+			if string(value) != "Name" {
+				t.Errorf("Should find 1 key")
+			}
+		case 1:
+			if string(value) != "test" {
+				t.Errorf("Should find 2 key")
+			}
+		case 2:
+			if string(value) != "4" {
+				t.Errorf("Should find 3 key")
+			}
+		default:
+			t.Errorf("Should found only 3 keys")
+		}
+	}, paths...)
+
+	if keysFound != 3 {
+		t.Errorf("Should find 3 keys: %d", keysFound)
+	}
+}
