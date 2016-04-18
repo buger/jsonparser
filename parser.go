@@ -449,10 +449,10 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 
 // ParseBoolean parses a Boolean ValueType into a Go bool (not particularly useful, but here for completeness)
 func ParseBoolean(b []byte) (bool, error) {
-	switch b[0] {
-	case 't':
+	switch {
+	case bytes.Equal(b, trueLiteral):
 		return true, nil
-	case 'f':
+	case bytes.Equal(b, falseLiteral):
 		return false, nil
 	default:
 		return false, MalformedValueError
