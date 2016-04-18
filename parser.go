@@ -459,15 +459,10 @@ func ParseBoolean(b []byte) (bool, error) {
 	}
 }
 
-// ParseString parses a String ValueType into a Go []byte (the main parsing work is unescaping the JSON string)
-func parseStringAsBytes(b []byte) ([]byte, error) {
-	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings (hopefully; the Go compiler might just always kick stackbuf[:] into the heap)
-	return Unescape(b, stackbuf[:])
-}
-
 // ParseString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
 func ParseString(b []byte) (string, error) {
-	if bU, err := parseStringAsBytes(b); err != nil {
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+	if bU, err := Unescape(b, stackbuf[:]); err != nil {
 		return "", nil
 	} else {
 		return string(bU), nil
