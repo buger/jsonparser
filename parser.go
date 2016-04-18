@@ -483,9 +483,9 @@ func ParseFloat(b []byte) (float64, error) {
 	}
 }
 
-// ParseNumber parses a Number ValueType into a Go float64
+// ParseInt parses a Number ValueType into a Go int64
 func ParseInt(b []byte) (int64, error) {
-	if v, err := parseInt(b); !err {
+	if v, ok := parseInt(b); !ok {
 		return 0, MalformedValueError
 	} else {
 		return v, nil
