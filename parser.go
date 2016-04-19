@@ -449,25 +449,20 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 
 // ParseBoolean parses a Boolean ValueType into a Go bool (not particularly useful, but here for completeness)
 func ParseBoolean(b []byte) (bool, error) {
-	switch b[0] {
-	case 't':
+	switch {
+	case bytes.Equal(b, trueLiteral):
 		return true, nil
-	case 'f':
+	case bytes.Equal(b, falseLiteral):
 		return false, nil
 	default:
 		return false, MalformedValueError
 	}
 }
 
-// ParseString parses a String ValueType into a Go []byte (the main parsing work is unescaping the JSON string)
-func parseStringAsBytes(b []byte) ([]byte, error) {
-	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings (hopefully; the Go compiler might just always kick stackbuf[:] into the heap)
-	return Unescape(b, stackbuf[:])
-}
-
 // ParseString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
 func ParseString(b []byte) (string, error) {
-	if bU, err := parseStringAsBytes(b); err != nil {
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+	if bU, err := Unescape(b, stackbuf[:]); err != nil {
 		return "", nil
 	} else {
 		return string(bU), nil
@@ -483,9 +478,9 @@ func ParseFloat(b []byte) (float64, error) {
 	}
 }
 
-// ParseNumber parses a Number ValueType into a Go float64
+// ParseInt parses a Number ValueType into a Go int64
 func ParseInt(b []byte) (int64, error) {
-	if v, err := parseInt(b); !err {
+	if v, ok := parseInt(b); !ok {
 		return 0, MalformedValueError
 	} else {
 		return v, nil
