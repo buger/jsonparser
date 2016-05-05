@@ -158,6 +158,13 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    `3`,
 	},
+	GetTest{
+		desc:    `empty key`,
+		json:    `{"":{"":{"":true}}}`,
+		path:    []string{"", "", ""},
+		isFound: true,
+		data:    `true`,
+	},
 
 	// Escaped key tests
 	GetTest{
@@ -206,48 +213,54 @@ var getTests = []GetTest{
 
 	// Not found key tests
 	GetTest{
-		desc:  "non-existent key 1",
-		json:  `{"a":"b"}`,
-		path:  []string{"c"},
-		isErr: true,
+		desc:    `empty input`,
+		json:    ``,
+		path:    []string{"a"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  "non-existent key 2",
-		json:  `{"a":"b"}`,
-		path:  []string{"b"},
-		isErr: true,
+		desc:    "non-existent key 1",
+		json:    `{"a":"b"}`,
+		path:    []string{"c"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  "non-existent key 3",
-		json:  `{"aa":"b"}`,
-		path:  []string{"a"},
-		isErr: true,
+		desc:    "non-existent key 2",
+		json:    `{"a":"b"}`,
+		path:    []string{"b"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  "apply scope of parent when search for nested key",
-		json:  `{"a": { "b": 1}, "c": 2 }`,
-		path:  []string{"a", "b", "c"},
-		isErr: true,
+		desc:    "non-existent key 3",
+		json:    `{"aa":"b"}`,
+		path:    []string{"a"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  `apply scope to key level`,
-		json:  `{"a": { "b": 1}, "c": 2 }`,
-		path:  []string{"b"},
-		isErr: true,
+		desc:    "apply scope of parent when search for nested key",
+		json:    `{"a": { "b": 1}, "c": 2 }`,
+		path:    []string{"a", "b", "c"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  `handle escaped quote in key name in JSON`,
-		json:  `{"key\"key": 1}`,
-		path:  []string{"key"},
-		isErr: true,
+		desc:    `apply scope to key level`,
+		json:    `{"a": { "b": 1}, "c": 2 }`,
+		path:    []string{"b"},
+		isFound: false,
+	},
+	GetTest{
+		desc:    `handle escaped quote in key name in JSON`,
+		json:    `{"key\"key": 1}`,
+		path:    []string{"key"},
+		isFound: false,
 	},
 
 	// Error/invalid tests
 	GetTest{
-		desc:  `handle escaped quote in key name in JSON`,
-		json:  `{"key\"key": 1}`,
-		path:  []string{"key"},
-		isErr: true,
+		desc:    `handle escaped quote in key name in JSON`,
+		json:    `{"key\"key": 1}`,
+		path:    []string{"key"},
+		isFound: false,
 	},
 	GetTest{
 		desc:    `missing closing brace, but can still find key`,
@@ -294,10 +307,10 @@ var getTests = []GetTest{
 	},
 
 	GetTest{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
-		desc:  "malformed key (followed by comma followed by colon)",
-		json:  `{"a",:1}`,
-		path:  []string{"a"},
-		isErr: true,
+		desc:    "malformed key (followed by comma followed by colon)",
+		json:    `{"a",:1}`,
+		path:    []string{"a"},
+		isFound: false,
 	},
 	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup first string",
@@ -471,8 +484,8 @@ var getArrayTests = []GetTest{
 // checkFoundAndNoError checks the dataType and error return from Get*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Get*(), or false if the test is finished.
 func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
-	isFound := (jtype != NotExist) && (err != KeyPathNotFoundError)
-	isErr := (err != nil)
+	isFound := (err != KeyPathNotFoundError)
+	isErr := (err != nil && err != KeyPathNotFoundError)
 
 	if test.isErr != isErr {
 		// If the call didn't match the error expectation, fail
