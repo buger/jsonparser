@@ -414,7 +414,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 	return ParseFloat(v)
 }
 
-// GetInt returns the value retrieved by `Get`, cast to a float64 if possible.
+// GetInt returns the value retrieved by `Get`, cast to a int64 if possible.
 // If key data type do not match, it will return an error.
 func GetInt(data []byte, keys ...string) (val int64, err error) {
 	v, t, _, e := Get(data, keys...)
