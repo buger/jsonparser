@@ -125,6 +125,37 @@ func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType,
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
 
+### **`KeyEach`**
+```
+func KeyEach(data []byte, cb func(idx int, value []byte, dataType jsonparser.ValueType, err error), paths ...[]string)
+```
+When you need to read multiple keys, and you do not afraid of low-level API `KeyEach` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `KeyEach` can be multiple times faster then `Get`. Path can use nested keys as well!
+
+```
+paths := [][]string{
+	[]string{"uuid"},
+	[]string{"tz"},
+	[]string{"ua"},
+	[]string{"st"},
+}
+var data SmallPayload
+
+jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+	switch idx {
+	case 0:
+		data.Uuid, _ = value
+	case 1:
+		v, _ := jsonparser.ParseInt(value)
+		data.Tz = int(v)
+	case 2:
+		data.Ua, _ = value
+	case 3:
+		v, _ := jsonparser.ParseInt(value)
+		data.St = int(v)
+	}
+}, paths...)
+```
+
 
 ## What makes it so fast?
 * It does not rely on `encoding/json`, `reflection` or `interface{}`, the only real package dependency is `bytes`.
@@ -182,8 +213,9 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | pquerna/ffjson | **3769** | **624** | **15** |
 | mailru/easyjson | **2002** | **192** | **9** |
 | buger/jsonparser | **1367** | **0** | **0** |
+| buger/jsonparser (EachKey API) | **809** | **0** | **0** |
 
-Winners are ffjson, easyjson and jsonparser, where jsonparser is 5.5x faster then encoding/json and 2.8x faster then ffjson, and slightly faster then easyjson.
+Winners are ffjson, easyjson and jsonparser, where jsonparser is up to 9.8x faster then encoding/json and 4.6x faster then ffjson, and slightly faster then easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
 
 #### Medium payload
@@ -205,6 +237,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | pquerna/ffjson | **20298** | **856** | **20** |
 | mailru/easyjson | **10512** | **336** | **12** |
 | buger/jsonparser | **15955** | **0** | **0** |
+| buger/jsonparser (EachKey API) | **8916** | **0** | **0** |
 
 The difference between ffjson and jsonparser in CPU usage is smaller, while the memory consumption difference is growing. On the other hand `easyjson` shows remarkable performance for medium payload.
 
@@ -229,6 +262,8 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | buger/jsonparser | **85308** | **0** | **0** |
 
 `jsonparser` now is a winner, but do not forget that it is way more lighweight parser then `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
+
+Also last benchmark did not included `EachKey` test, because in this particular case we need to read lot of Array values, and using `ArrayEach` is more efficient. 
 
 ## Questions and support
 
