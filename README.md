@@ -73,7 +73,7 @@ You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonpars
 
 
 ### **`Get`**
-```
+```go
 func Get(data []byte, keys ...string) (value []byte, dataType jsonparser.ValueType, offset int, err error)
 ```
 Receives data structure, and key path to extract value from.
@@ -88,7 +88,7 @@ Accepts multiple keys to specify path to JSON value (in case of quering nested s
 If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 
 ### **`GetString`**
-```
+```go
 func GetString(data []byte, keys ...string) (val string, err error)
 ```
 Returns strings properly handing escaped and unicode characters. Note that this will cause additional memory allocations.
@@ -109,7 +109,7 @@ Note that `unsafe` here means that your string will exist until GC will free und
 
 
 ### **`GetBoolean`**, **`GetInt`** and **`GetFloat`**
-```
+```go
 func GetBoolean(data []byte, keys ...string) (val bool, err error)
 
 func GetFloat(data []byte, keys ...string) (val float64, err error)
@@ -120,18 +120,18 @@ If you know the key type, you can use the helpers above.
 If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
-```
+```go
 func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err error), keys ...string)
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
 
 ### **`KeyEach`**
-```
+```go
 func KeyEach(data []byte, cb func(idx int, value []byte, dataType jsonparser.ValueType, err error), paths ...[]string)
 ```
 When you need to read multiple keys, and you do not afraid of low-level API `KeyEach` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `KeyEach` can be multiple times faster then `Get`. Path can use nested keys as well!
 
-```
+```go
 paths := [][]string{
 	[]string{"uuid"},
 	[]string{"tz"},
