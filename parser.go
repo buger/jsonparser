@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 )
 
 // Errors
@@ -157,6 +158,113 @@ func searchKeys(data []byte, keys ...string) int {
 					// If we found all keys in path
 					if keyLevel == lk {
 						return i + 1
+					}
+				}
+			} else {
+				i--
+			}
+		case '{':
+			level++
+		case '}':
+			level--
+		case '[':
+			// Do not search for keys inside arrays
+			arraySkip := blockEnd(data[i:], '[', ']')
+			i += arraySkip - 1
+		}
+
+		i++
+	}
+
+	return -1
+}
+
+var bitwiseFlags []int64
+func init() {
+	for i:=0; i<63; i++ {
+		bitwiseFlags = append(bitwiseFlags, int64(math.Pow(2, float64(i))))
+	}
+}
+
+func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
+	var pathFlags int64
+	var level, pathsMatched, i int
+	ln := len(data)
+
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd, keyEscaped := stringEnd(data[i:])
+			if strEnd == -1 {
+				return -1
+			}
+			i += strEnd
+
+			keyEnd := i - 1
+
+			valueOffset := nextToken(data[i:])
+			if valueOffset == -1 {
+				return -1
+			}
+
+			i += valueOffset
+
+
+			// if string is a key, and key level match
+			if data[i] == ':' {
+				match := false
+				key := data[keyBegin:keyEnd]
+
+				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+				var keyUnesc []byte
+				if !keyEscaped {
+					keyUnesc = key
+				} else if ku, err := Unescape(key, stackbuf[:]); err != nil {
+					return -1
+				} else {
+					keyUnesc = ku
+				}
+
+				for pi, p := range paths {
+					if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0  {
+						continue
+					}
+
+					if equalStr(&keyUnesc, p[level-1]) {
+						match = true
+
+						if len(p) == level {
+							i++
+							pathsMatched++
+							pathFlags |= bitwiseFlags[pi]
+
+							v, dt, of, e := Get(data[i:])
+							cb(pi, v, dt, e)
+
+							if of != -1 {
+								i += of
+							}
+
+							if pathsMatched == len(paths) {
+								return i
+							}
+						}
+					}
+				}
+
+				if !match {
+					tokenOffset := nextToken(data[i+1:])
+					i += tokenOffset
+
+					if data[i] == '{' {
+						blockSkip := blockEnd(data[i:], '{', '}')
+						i += blockSkip + 1
 					}
 				}
 			} else {

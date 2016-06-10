@@ -35,6 +35,60 @@ func BenchmarkJsonParserSmall(b *testing.B) {
 	}
 }
 
+func BenchmarkJsonParserEachKeyManualSmall(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		paths := [][]string{
+			[]string{"uuid"},
+			[]string{"tz"},
+			[]string{"ua"},
+			[]string{"st"},
+		}
+
+		jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+			switch idx {
+			case 0:
+				// jsonparser.ParseString(value)
+			case 1:
+				jsonparser.ParseInt(value)
+			case 2:
+				// jsonparser.ParseString(value)
+			case 3:
+				jsonparser.ParseInt(value)
+			}
+		}, paths...)
+	}
+}
+
+
+func BenchmarkJsonParserEachKeyStructSmall(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		paths := [][]string{
+			[]string{"uuid"},
+			[]string{"tz"},
+			[]string{"ua"},
+			[]string{"st"},
+		}
+		var data SmallPayload
+
+		jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+			switch idx {
+			case 0:
+				data.Uuid, _ = jsonparser.ParseString(value)
+			case 1:
+				v, _ := jsonparser.ParseInt(value)
+				data.Tz = int(v)
+			case 2:
+				data.Ua, _ = jsonparser.ParseString(value)
+			case 3:
+				v, _ := jsonparser.ParseInt(value)
+				data.St = int(v)
+			}
+		}, paths...)
+
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
+}
+
 /*
    encoding/json
 */
