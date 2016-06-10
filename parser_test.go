@@ -199,55 +199,48 @@ var getTests = []GetTest{
 
 	// Not found key tests
 	GetTest{
-		desc:    "non-existent key 1",
-		json:    `{"a":"b"}`,
-		path:    []string{"c"},
-		isFound: false,
-		isErr:   true,
+		desc:  "non-existent key 1",
+		json:  `{"a":"b"}`,
+		path:  []string{"c"},
+		isErr: true,
 	},
 	GetTest{
-		desc:    "non-existent key 2",
-		json:    `{"a":"b"}`,
-		path:    []string{"b"},
-		isFound: false,
-		isErr:   true,
+		desc:  "non-existent key 2",
+		json:  `{"a":"b"}`,
+		path:  []string{"b"},
+		isErr: true,
 	},
 	GetTest{
-		desc:    "non-existent key 3",
-		json:    `{"aa":"b"}`,
-		path:    []string{"a"},
-		isFound: false,
-		isErr:   true,
+		desc:  "non-existent key 3",
+		json:  `{"aa":"b"}`,
+		path:  []string{"a"},
+		isErr: true,
 	},
 	GetTest{
-		desc:    "apply scope of parent when search for nested key",
-		json:    `{"a": { "b": 1}, "c": 2 }`,
-		path:    []string{"a", "b", "c"},
-		isFound: false,
-		isErr:   true,
+		desc:  "apply scope of parent when search for nested key",
+		json:  `{"a": { "b": 1}, "c": 2 }`,
+		path:  []string{"a", "b", "c"},
+		isErr: true,
 	},
 	GetTest{
-		desc:    `apply scope to key level`,
-		json:    `{"a": { "b": 1}, "c": 2 }`,
-		path:    []string{"b"},
-		isFound: false,
-		isErr:   true,
+		desc:  `apply scope to key level`,
+		json:  `{"a": { "b": 1}, "c": 2 }`,
+		path:  []string{"b"},
+		isErr: true,
 	},
 	GetTest{
-		desc:    `handle escaped quote in key name in JSON`,
-		json:    `{"key\"key": 1}`,
-		path:    []string{"key"},
-		isFound: false,
-		isErr:   true,
+		desc:  `handle escaped quote in key name in JSON`,
+		json:  `{"key\"key": 1}`,
+		path:  []string{"key"},
+		isErr: true,
 	},
 
 	// Error/invalid tests
 	GetTest{
-		desc:    `handle escaped quote in key name in JSON`,
-		json:    `{"key\"key": 1}`,
-		path:    []string{"key"},
-		isFound: false,
-		isErr:   true,
+		desc:  `handle escaped quote in key name in JSON`,
+		json:  `{"key\"key": 1}`,
+		path:  []string{"key"},
+		isErr: true,
 	},
 	GetTest{
 		desc:    `missing closing brace, but can still find key`,
@@ -463,8 +456,8 @@ var getArrayTests = []GetTest{
 
 // checkFoundAndNoError checks the dataType and error return from Get*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Get*(), or false if the test is finished.
-func checkFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
-	isFound := (jtype != NotExist)
+func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
+	isFound := (jtype != NotExist) && (err != KeyPathNotFoundError)
 	isErr := (err != nil)
 
 	if test.isErr != isErr {
@@ -478,10 +471,6 @@ func checkFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype Val
 		// Else, if the call didn't match the is-found expectation, fail
 		t.Errorf("%s test '%s' isFound mismatch: expected %t, obtained %t", testKind, test.desc, test.isFound, isFound)
 		return false
-	} else if !isFound && err != KeyPathNotFoundError {
-		// Else, if no value was found and the error is not correct, fail
-		t.Errorf("%s test '%s' error mismatch: expected %t, obtained %t", testKind, test.desc, KeyPathNotFoundError, err)
-		return false
 	} else if !isFound {
 		// Else, if no value was found, don't fail and don't check the value
 		return false
@@ -491,7 +480,7 @@ func checkFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype Val
 	}
 }
 
-func runTests(t *testing.T, tests []GetTest, runner func(GetTest) (interface{}, ValueType, error), typeChecker func(GetTest, interface{}) (bool, interface{})) {
+func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(GetTest) (interface{}, ValueType, error), resultChecker func(GetTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
@@ -501,27 +490,27 @@ func runTests(t *testing.T, tests []GetTest, runner func(GetTest) (interface{}, 
 
 		value, dataType, err := runner(test)
 
-		if checkFoundAndNoError(t, "Get()", test, dataType, value, err) {
+		if getTestCheckFoundAndNoError(t, testKind, test, dataType, value, err) {
 			if test.data == nil {
 				t.Errorf("MALFORMED TEST: %v", test)
 				continue
 			}
 
-			if ok, expected := typeChecker(test, value); !ok {
+			if ok, expected := resultChecker(test, value); !ok {
 				if expectedBytes, ok := expected.([]byte); ok {
 					expected = string(expectedBytes)
 				}
 				if valueBytes, ok := value.([]byte); ok {
 					value = string(valueBytes)
 				}
-				t.Errorf("Test '%s' expected to return value %v, but did returned %v instead", test.desc, expected, value)
+				t.Errorf("%s test '%s' expected to return value %v, but did returned %v instead", testKind, test.desc, expected, value)
 			}
 		}
 	}
 }
 
 func TestGet(t *testing.T) {
-	runTests(t, getTests,
+	runGetTests(t, "Get()", getTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, dataType, _, err = Get([]byte(test.json), test.path...)
 			return
@@ -534,7 +523,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetString(t *testing.T) {
-	runTests(t, getStringTests,
+	runGetTests(t, "GetString()", getStringTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetString([]byte(test.json), test.path...)
 			return value, String, err
@@ -547,7 +536,7 @@ func TestGetString(t *testing.T) {
 }
 
 func TestGetInt(t *testing.T) {
-	runTests(t, getIntTests,
+	runGetTests(t, "GetInt()", getIntTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetInt([]byte(test.json), test.path...)
 			return value, Number, err
@@ -560,7 +549,7 @@ func TestGetInt(t *testing.T) {
 }
 
 func TestGetFloat(t *testing.T) {
-	runTests(t, getFloatTests,
+	runGetTests(t, "GetFloat()", getFloatTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetFloat([]byte(test.json), test.path...)
 			return value, Number, err
@@ -573,7 +562,7 @@ func TestGetFloat(t *testing.T) {
 }
 
 func TestGetBoolean(t *testing.T) {
-	runTests(t, getBoolTests,
+	runGetTests(t, "GetBoolean()", getBoolTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetBoolean([]byte(test.json), test.path...)
 			return value, Boolean, err
@@ -586,7 +575,7 @@ func TestGetBoolean(t *testing.T) {
 }
 
 func TestGetSlice(t *testing.T) {
-	runTests(t, getArrayTests,
+	runGetTests(t, "Get()-for-arrays", getArrayTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, dataType, _, err = Get([]byte(test.json), test.path...)
 			return
@@ -663,4 +652,165 @@ func TestEachKey(t *testing.T) {
 	if keysFound != 3 {
 		t.Errorf("Should find 3 keys: %d", keysFound)
 	}
+}
+
+type ParseTest struct {
+	in     string
+	intype ValueType
+	out    interface{}
+	isErr  bool
+}
+
+var parseBoolTests = []ParseTest{
+	ParseTest{
+		in:     "true",
+		intype: Boolean,
+		out:    true,
+	},
+	ParseTest{
+		in:     "false",
+		intype: Boolean,
+		out:    false,
+	},
+	ParseTest{
+		in:     "foo",
+		intype: Boolean,
+		isErr:  true,
+	},
+	ParseTest{
+		in:     "trux",
+		intype: Boolean,
+		isErr:  true,
+	},
+	ParseTest{
+		in:     "truex",
+		intype: Boolean,
+		isErr:  true,
+	},
+	ParseTest{
+		in:     "",
+		intype: Boolean,
+		isErr:  true,
+	},
+}
+
+var parseFloatTest = []ParseTest{
+	ParseTest{
+		in:     "0",
+		intype: Number,
+		out:    float64(0),
+	},
+	ParseTest{
+		in:     "0.0",
+		intype: Number,
+		out:    float64(0.0),
+	},
+	ParseTest{
+		in:     "1",
+		intype: Number,
+		out:    float64(1),
+	},
+	ParseTest{
+		in:     "1.234",
+		intype: Number,
+		out:    float64(1.234),
+	},
+	ParseTest{
+		in:     "1.234e5",
+		intype: Number,
+		out:    float64(1.234e5),
+	},
+	ParseTest{
+		in:     "-1.234e5",
+		intype: Number,
+		out:    float64(-1.234e5),
+	},
+	ParseTest{
+		in:     "+1.234e5", // Note: + sign not allowed under RFC7159, but our parser accepts it since it uses strconv.ParseFloat
+		intype: Number,
+		out:    float64(1.234e5),
+	},
+	ParseTest{
+		in:     "1.2.3",
+		intype: Number,
+		isErr:  true,
+	},
+	ParseTest{
+		in:     "1..1",
+		intype: Number,
+		isErr:  true,
+	},
+	ParseTest{
+		in:     "1a",
+		intype: Number,
+		isErr:  true,
+	},
+	ParseTest{
+		in:     "",
+		intype: Number,
+		isErr:  true,
+	},
+}
+
+// parseTestCheckNoError checks the error return from Parse*() against the test case expectations.
+// Returns true the test should proceed to checking the actual data returned from Parse*(), or false if the test is finished.
+func parseTestCheckNoError(t *testing.T, testKind string, test ParseTest, value interface{}, err error) bool {
+	if isErr := (err != nil); test.isErr != isErr {
+		// If the call didn't match the error expectation, fail
+		t.Errorf("%s test '%s' isErr mismatch: expected %t, obtained %t (err %v). Obtained value: %v", testKind, test.in, test.isErr, isErr, err, value)
+		return false
+	} else if isErr {
+		// Else, if there was an error, don't fail and don't check isFound or the value
+		return false
+	} else {
+		// Else, there was no error and a value was found, so check the value
+		return true
+	}
+}
+
+func runParseTests(t *testing.T, testKind string, tests []ParseTest, runner func(ParseTest) (interface{}, error), resultChecker func(ParseTest, interface{}) (bool, interface{})) {
+	for _, test := range tests {
+		value, err := runner(test)
+
+		if parseTestCheckNoError(t, testKind, test, value, err) {
+			if test.out == nil {
+				t.Errorf("MALFORMED TEST: %v", test)
+				continue
+			}
+
+			if ok, expected := resultChecker(test, value); !ok {
+				if expectedBytes, ok := expected.([]byte); ok {
+					expected = string(expectedBytes)
+				}
+				if valueBytes, ok := value.([]byte); ok {
+					value = string(valueBytes)
+				}
+				t.Errorf("%s test '%s' expected to return value %v, but did returned %v instead", testKind, test.in, expected, value)
+			}
+		}
+	}
+}
+
+func TestParseBoolean(t *testing.T) {
+	runParseTests(t, "ParseBoolean()", parseBoolTests,
+		func(test ParseTest) (value interface{}, err error) {
+			return ParseBoolean([]byte(test.in))
+		},
+		func(test ParseTest, obtained interface{}) (bool, interface{}) {
+			expected := test.out.(bool)
+			return obtained.(bool) == expected, expected
+		},
+	)
+}
+
+func TestParseFloat(t *testing.T) {
+	runParseTests(t, "ParseFloat()", parseFloatTest,
+		func(test ParseTest) (value interface{}, err error) {
+			return ParseFloat([]byte(test.in))
+		},
+		func(test ParseTest, obtained interface{}) (bool, interface{}) {
+			expected := test.out.(float64)
+			return obtained.(float64) == expected, expected
+		},
+	)
 }
