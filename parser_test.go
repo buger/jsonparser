@@ -168,6 +168,13 @@ var getTests = []GetTest{
 		data:    `1`,
 	},
 	GetTest{
+		desc:    `key and value with whitespace escapes`,
+		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
+		path:    []string{"key\b\f\n\r\tkey"},
+		isFound: true,
+		data:    `value\b\f\n\r\tvalue`, // value is not unescaped since this is Get(), but the key should work correctly
+	},
+	GetTest{
 		desc:    `key with Unicode escape`,
 		json:    `{"a\u00B0b":1}`,
 		path:    []string{"a\u00B0b"},
@@ -370,6 +377,13 @@ var getStringTests = []GetTest{
 		path:    []string{"c"},
 		isFound: true,
 		data:    `\"`,
+	},
+	GetTest{
+		desc:    `key and value with whitespace escapes`,
+		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
+		path:    []string{"key\b\f\n\r\tkey"},
+		isFound: true,
+		data:    "value\b\f\n\r\tvalue", // value is unescaped since this is GetString()
 	},
 }
 
