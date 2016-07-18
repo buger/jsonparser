@@ -42,8 +42,8 @@ data := []byte(`{
 // You can specify key path by providing arguments to Get function
 jsonparser.Get(data, "person", "name", "fullName")
 
-// There is `GetNumber` and `GetBoolean` helpers if you exactly know key data type
-jsonparser.GetNumber(data, "person", "github", "followers")
+// There is `GetInt` and `GetBoolean` helpers if you exactly know key data type
+jsonparser.GetInt(data, "person", "github", "followers")
 
 // When you try to get object, it will return you []byte slice pointer to data containing it
 // In `company` it will be `{"name": "Acme"}`
