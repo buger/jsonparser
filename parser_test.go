@@ -309,7 +309,7 @@ var getTests = []GetTest{
 		desc:  `malformed array (no closing brace)`,
 		json:  `{"a":[, "b":123}`,
 		path:  []string{"b"},
-		isErr: true,
+		isFound: false,
 	},
 
 	GetTest{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
