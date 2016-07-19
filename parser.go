@@ -187,7 +187,7 @@ func init() {
 }
 
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
-	var pathFlags int64
+	var pathFlags, ignorePathFlags int64
 	var level, pathsMatched, i int
 	ln := len(data)
 
@@ -214,7 +214,6 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 			i += valueOffset
 
-
 			// if string is a key, and key level match
 			if data[i] == ':' {
 				match := false
@@ -232,7 +231,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				}
 
 				for pi, p := range paths {
-					if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0  {
+					if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0 || (ignorePathFlags & bitwiseFlags[pi] != 0) {
 						continue
 					}
 
@@ -255,10 +254,13 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 								return i
 							}
 						}
+					} else {
+						ignorePathFlags |= bitwiseFlags[pi]
 					}
 				}
 
 				if !match {
+					ignorePathFlags = 0
 					tokenOffset := nextToken(data[i+1:])
 					i += tokenOffset
 
@@ -266,6 +268,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 						blockSkip := blockEnd(data[i:], '{', '}')
 						i += blockSkip + 1
 					}
+				}
+
+				switch data[i] {
+				case '{', '}', '[', '"':
+					i--
 				}
 			} else {
 				i--

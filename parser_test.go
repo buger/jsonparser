@@ -637,6 +637,7 @@ func TestEachKey(t *testing.T) {
 	paths := [][]string{
 		[]string{"name"},
 		[]string{"nested", "a"},
+		[]string{"nested2", "a"},
 		[]string{"nested", "nested3", "b"},
 	}
 
@@ -655,16 +656,20 @@ func TestEachKey(t *testing.T) {
 				t.Errorf("Should find 2 key")
 			}
 		case 2:
+			if string(value) != "test2" {
+				t.Error("Should find 3 key", string(value))
+			}
+		case 3:
 			if string(value) != "4" {
-				t.Errorf("Should find 3 key")
+				t.Errorf("Should find 4 key")
 			}
 		default:
-			t.Errorf("Should found only 3 keys")
+			t.Errorf("Should found only 4 keys")
 		}
 	}, paths...)
 
-	if keysFound != 3 {
-		t.Errorf("Should find 3 keys: %d", keysFound)
+	if keysFound != 4 {
+		t.Errorf("Should find 4 keys: %d", keysFound)
 	}
 }
 
