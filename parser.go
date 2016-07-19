@@ -283,8 +283,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			level--
 		case '[':
 			// Do not search for keys inside arrays
-			arraySkip := blockEnd(data[i:], '[', ']')
-			i += arraySkip - 1
+			if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
+				return -1
+			} else {
+				i += arraySkip - 1
+			}
 		}
 
 		i++
