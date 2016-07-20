@@ -655,7 +655,9 @@ var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12,
 func TestEachKey(t *testing.T) {
 	paths := [][]string{
 		[]string{"name"},
+		[]string{"order"},
 		[]string{"nested", "a"},
+		[]string{"nested", "b"},
 		[]string{"nested2", "a"},
 		[]string{"nested", "nested3", "b"},
 	}
@@ -671,24 +673,32 @@ func TestEachKey(t *testing.T) {
 				t.Errorf("Should find 1 key")
 			}
 		case 1:
-			if string(value) != "test" {
+			if string(value) != "Order" {
 				t.Errorf("Should find 2 key")
 			}
 		case 2:
-			if string(value) != "test2" {
-				t.Error("Should find 3 key", string(value))
+			if string(value) != "test" {
+				t.Errorf("Should find 2 key")
 			}
 		case 3:
+			if string(value) != "2" {
+				t.Errorf("Should find 3 key")
+			}
+		case 4:
+			if string(value) != "test2" {
+				t.Error("Should find 4 key", string(value))
+			}
+		case 5:
 			if string(value) != "4" {
-				t.Errorf("Should find 4 key")
+				t.Errorf("Should find 5 key")
 			}
 		default:
-			t.Errorf("Should found only 4 keys")
+			t.Errorf("Should found only 6 keys")
 		}
 	}, paths...)
 
-	if keysFound != 4 {
-		t.Errorf("Should find 4 keys: %d", keysFound)
+	if keysFound != 6 {
+		t.Errorf("Should find 6 keys: %d", keysFound)
 	}
 }
 

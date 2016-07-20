@@ -189,6 +189,24 @@ func init() {
 	}
 }
 
+func sameTree(p1, p2 []string) bool {
+	if len(p1) == 1 && len(p2) == 1 {
+		return true
+	}
+
+	for pi_1, p_1 := range p1[:len(p1)-1] {
+		if len(p2)-2 < pi_1 {
+			break
+		}
+
+		if p2[pi_1] != p_1 {
+			return false
+		}
+	}
+
+	return true
+}
+
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
 	var pathFlags, ignorePathFlags int64
 	var level, pathsMatched, i int
@@ -219,7 +237,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 			// if string is a key, and key level match
 			if data[i] == ':' {
-				match := false
+				match := -1
 				key := data[keyBegin:keyEnd]
 
 				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
@@ -239,7 +257,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					}
 
 					if equalStr(&keyUnesc, p[level-1]) {
-						match = true
+						match = pi
 
 						if len(p) == level {
 							i++
@@ -257,12 +275,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 								return i
 							}
 						}
-					} else {
-						ignorePathFlags |= bitwiseFlags[pi]
 					}
 				}
 
-				if !match {
+				if match == -1 {
 					ignorePathFlags = 0
 					tokenOffset := nextToken(data[i+1:])
 					i += tokenOffset
@@ -270,6 +286,22 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					if data[i] == '{' {
 						blockSkip := blockEnd(data[i:], '{', '}')
 						i += blockSkip + 1
+					}
+				} else {
+					m_p := paths[match]
+
+					for pi, p := range paths {
+						if pi == match {
+							continue
+						}
+
+						if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0 || (ignorePathFlags & bitwiseFlags[pi] != 0) {
+							continue
+						}
+
+						if !sameTree(m_p, p) {
+							ignorePathFlags |= bitwiseFlags[pi]
+						}
 					}
 				}
 
