@@ -306,9 +306,9 @@ var getTests = []GetTest{
 		isErr: true,
 	},
 	GetTest{
-		desc:  `malformed array (no closing brace)`,
-		json:  `{"a":[, "b":123}`,
-		path:  []string{"b"},
+		desc:    `malformed array (no closing brace)`,
+		json:    `{"a":[, "b":123}`,
+		path:    []string{"b"},
 		isFound: false,
 	},
 
@@ -664,7 +664,7 @@ func TestEachKey(t *testing.T) {
 
 	keysFound := 0
 
-	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error){
+	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
 		keysFound++
 
 		switch idx {
