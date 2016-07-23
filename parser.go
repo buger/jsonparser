@@ -446,10 +446,6 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 		value = value[1 : len(value)-1]
 	}
 
-	if dataType == Null {
-		value = []byte{}
-	}
-
 	return value, dataType, endOffset, nil
 }
 
