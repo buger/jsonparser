@@ -183,8 +183,9 @@ func searchKeys(data []byte, keys ...string) int {
 }
 
 var bitwiseFlags []int64
+
 func init() {
-	for i:=0; i<63; i++ {
+	for i := 0; i < 63; i++ {
 		bitwiseFlags = append(bitwiseFlags, int64(math.Pow(2, float64(i))))
 	}
 }
@@ -252,7 +253,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				}
 
 				for pi, p := range paths {
-					if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0 || (ignorePathFlags & bitwiseFlags[pi] != 0) {
+					if len(p) < level || (pathFlags&bitwiseFlags[pi]) != 0 || (ignorePathFlags&bitwiseFlags[pi] != 0) {
 						continue
 					}
 
@@ -295,7 +296,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 							continue
 						}
 
-						if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0 || (ignorePathFlags & bitwiseFlags[pi] != 0) {
+						if len(p) < level || (pathFlags&bitwiseFlags[pi]) != 0 || (ignorePathFlags&bitwiseFlags[pi] != 0) {
 							continue
 						}
 
