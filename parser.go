@@ -456,6 +456,15 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (err error) {
+	return ArrayEachLimited(data, func(_ int, value []byte, dataType ValueType, offset int, err error) bool {
+		cb(value, dataType, offset, err)
+		return true
+	}, keys...)
+}
+
+// ArrayEachLimited is used when iterating arrays, accepts a callback function with the same return arguments as `Get` with value index.
+// It allows to break iterating when necessary value found by returning false from callback func.
+func ArrayEachLimited(data []byte, cb func(idx int, value []byte, dataType ValueType, offset int, err error) bool, keys ...string) (err error) {
 	if len(data) == 0 {
 		return MalformedObjectError
 	}
@@ -482,6 +491,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		offset++
 	}
 
+	var idx int
 	for true {
 		v, t, o, e := Get(data[offset:])
 
@@ -490,7 +500,10 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if t != NotExist {
-			cb(v, t, o, e)
+			if !cb(idx, v, t, o, e) {
+				break
+			}
+			idx++
 		}
 
 		if e != nil {
