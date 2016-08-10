@@ -650,6 +650,71 @@ func TestArrayEach(t *testing.T) {
 	}, "a", "b")
 }
 
+func TestArrayEachLimited(t *testing.T) {
+	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
+	count := 0
+
+	ArrayEachLimited(mock, func(idx int, value []byte, dataType ValueType, offset int, err error) bool {
+		count++
+
+		if count != idx+1 {
+			t.Errorf("Wrong index: %v", idx)
+		}
+
+		switch count {
+		case 1:
+			if string(value) != `{"x": 1}` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 2:
+			if string(value) != `{"x":2}` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+		case 3:
+			if string(value) != `{ "x":3}` {
+				t.Errorf("Wrong third item: %s", string(value))
+			}
+		case 4:
+			if string(value) != `{"x":4}` {
+				t.Errorf("Wrong forth item: %s", string(value))
+			}
+		default:
+			t.Errorf("Should process only 4 items")
+		}
+
+		return true
+	}, "a", "b")
+
+	count = 0
+	ArrayEachLimited(mock, func(idx int, value []byte, dataType ValueType, offset int, err error) bool {
+		count++
+
+		if count != idx+1 {
+			t.Errorf("Wrong index: %v", idx)
+		}
+
+		switch count {
+		case 1:
+			if string(value) != `{"x": 1}` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 2:
+			if string(value) != `{"x":2}` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+			return false
+		case 3:
+			t.Errorf("Wrong behavior. Should process only two values from array")
+		case 4:
+			t.Errorf("Wrong behavior. Should process only two values from array")
+		default:
+			t.Errorf("Wrong behavior. Should process only two values from array")
+		}
+
+		return true
+	}, "a", "b")
+}
+
 var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10}`)
 
 func TestEachKey(t *testing.T) {
