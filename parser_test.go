@@ -40,8 +40,62 @@ type GetTest struct {
 var getTests = []GetTest{
 	// Found key tests
 	GetTest{
+		desc:    "last key in path is index",
+		json:    `{"a":[{"b":1},{"b":"2"}, 3],"c":{"c":[1,2]}}`,
+		path:    []string{"a", "[1]"},
+		isFound: true,
+		data:    `{"b":"2"}`,
+	},
+	GetTest{
+		desc:    "key in path is index",
+		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
+		path:    []string{"a", "[0]", "b"},
+		isFound: true,
+		data:    `1`,
+	},
+	GetTest{
+		desc: "last key in path is an index to value in array (formatted json)",
+		json: `{
+		    "a": [
+			{
+			    "b": 1
+			},
+			{"b":"2"},
+			3
+		    ],
+		    "c": {
+			"c": [
+			    1,
+			    2
+			]
+		    }
+		}`,
+		path:    []string{"a", "[1]"},
+		isFound: true,
+		data:    `{"b":"2"}`,
+	},
+	GetTest{
+		desc: "key in path is index (formatted json)",
+		json: `{
+                    "a": [
+                        {"b": 1},
+                        {"b": "2"},
+                        3
+                    ],
+                    "c": {
+                        "c": [
+                            1,
+                            2
+                        ]
+                    }
+                }`,
+		path:    []string{"a", "[0]", "b"},
+		isFound: true,
+		data:    `1`,
+	},
+	GetTest{
 		desc:    "handling multiple nested keys with same name",
-		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
+		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}}`,
 		path:    []string{"c", "c"},
 		isFound: true,
 		data:    `[1,2]`,
@@ -76,7 +130,7 @@ var getTests = []GetTest{
 	},
 	GetTest{
 		desc:    `handle multiple nested keys with same name`,
-		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
+		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}}`,
 		path:    []string{"c", "c"},
 		isFound: true,
 		data:    `[1,2]`,
@@ -642,7 +696,7 @@ func TestEachKey(t *testing.T) {
 
 	keysFound := 0
 
-	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error){
+	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
 		keysFound++
 
 		switch idx {

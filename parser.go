@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 )
 
 // Errors
@@ -152,7 +153,6 @@ func searchKeys(data []byte, keys ...string) int {
 				} else {
 					keyUnesc = ku
 				}
-
 				if equalStr(&keyUnesc, keys[level-1]) {
 					keyLevel++
 					// If we found all keys in path
@@ -168,9 +168,52 @@ func searchKeys(data []byte, keys ...string) int {
 		case '}':
 			level--
 		case '[':
-			// Do not search for keys inside arrays
-			arraySkip := blockEnd(data[i:], '[', ']')
-			i += arraySkip - 1
+			curKey := keys[keyLevel]
+			// valid key to array value follows this struture: [<int>]
+			// ex: [2] would extract 3 from the following slice [1, 2, 3]
+			if curKey[0] == '[' && len(curKey) > 2 && curKey[len(curKey)-1] == ']' {
+				if index, err := strconv.Atoi(curKey[1 : len(curKey)-1]); err == nil {
+					i++
+					level++
+					keyLevel++
+					for index > 0 {
+						_, _, o, e := Get(data[i:])
+						if o == 0 {
+							break
+						} else if e != nil {
+							return -1
+						}
+						i += o
+
+						if skipToToken := nextToken(data[i:]); skipToToken != -1 {
+							i += skipToToken
+							if data[i] == ']' {
+								break
+							} else if data[i] != ',' {
+								return -1
+							}
+							i++
+							index--
+						} else {
+							return -1
+						}
+					}
+					i += nextToken(data[i:])
+					if index != 0 { // if keys have been looped through and array is smaller then expected return
+						return -1
+					} else if keyLevel == lk {
+						return i
+					} else {
+						i--
+					}
+				} else {
+					return -1
+				}
+			} else {
+				// Do not search for keys inside arrays unless key dictates otherwise
+				arraySkip := blockEnd(data[i:], '[', ']')
+				i += arraySkip - 1
+			}
 		}
 
 		i++
@@ -180,8 +223,9 @@ func searchKeys(data []byte, keys ...string) int {
 }
 
 var bitwiseFlags []int64
+
 func init() {
-	for i:=0; i<63; i++ {
+	for i := 0; i < 63; i++ {
 		bitwiseFlags = append(bitwiseFlags, int64(math.Pow(2, float64(i))))
 	}
 }
@@ -214,7 +258,6 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 			i += valueOffset
 
-
 			// if string is a key, and key level match
 			if data[i] == ':' {
 				match := false
@@ -232,7 +275,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				}
 
 				for pi, p := range paths {
-					if len(p) < level || (pathFlags & bitwiseFlags[pi]) != 0  {
+					if len(p) < level || (pathFlags&bitwiseFlags[pi]) != 0 {
 						continue
 					}
 
