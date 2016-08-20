@@ -77,18 +77,18 @@ var getTests = []GetTest{
 	GetTest{
 		desc: "key in path is index (formatted json)",
 		json: `{
-                    "a": [
-                        {"b": 1},
-                        {"b": "2"},
-                        3
-                    ],
-                    "c": {
-                        "c": [
-                            1,
-                            2
-                        ]
-                    }
-                }`,
+		    "a": [
+			{"b": 1},
+			{"b": "2"},
+			3
+		    ],
+		    "c": {
+			"c": [
+			    1,
+			    2
+			]
+		    }
+		}`,
 		path:    []string{"a", "[0]", "b"},
 		isFound: true,
 		data:    `1`,

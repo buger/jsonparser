@@ -176,29 +176,16 @@ func searchKeys(data []byte, keys ...string) int {
 					i++
 					level++
 					keyLevel++
-					for index > 0 {
-						_, _, o, e := Get(data[i:])
-						if o == 0 {
-							break
-						} else if e != nil {
-							return -1
-						}
-						i += o
-
-						if skipToToken := nextToken(data[i:]); skipToToken != -1 {
-							i += skipToToken
-							if data[i] == ']' {
-								break
-							} else if data[i] != ',' {
-								return -1
-							}
-							i++
+					ArrayEach(data[i-1:blockEnd(data[i-1:], '[', ']')-1], func(value []byte, dataType ValueType, offset int, err error) {
+						if index > 0 {
 							index--
-						} else {
-							return -1
+							if skipToToken := nextToken(data[i:]); skipToToken != -1 {
+								i += skipToToken
+							}
+							i += len(value)
+							i++
 						}
-					}
-					i += nextToken(data[i:])
+					}, make([]string, 0)...)
 					if index != 0 { // if keys have been looped through and array is smaller then expected return
 						return -1
 					} else if keyLevel == lk {
