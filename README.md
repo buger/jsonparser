@@ -55,10 +55,16 @@ if value, _, err := jsonparser.GetInt(data, "company", "size"); err == nil {
   size = value
 }
 
-// You can use `ArrayEach` helper to iterate items
+// You can use `ArrayEach` helper to iterate items [item1, item2 .... itemN]
 jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
-}, "person", "gravatar", "avatars")
+}, "person", "avatars")
+
+// You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
+jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+        fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
+	return nil
+}, "person", "name")
 ```
 
 ## Need to speedup your app?
@@ -124,6 +130,20 @@ If key data type do not match, it will return error.
 func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err error), keys ...string)
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
+
+### **`ObjectEach`**
+```go
+func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error)
+```
+Needed for iterating object, accepts a callback function. Example:
+```go
+var handler func([]byte, []byte, jsonparser.ValueType, int) error
+handler = func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+	//do stuff here
+}
+jsonparser.ObjectEach(myJson, handler)
+```
+
 
 ### **`KeyEach`**
 ```go
