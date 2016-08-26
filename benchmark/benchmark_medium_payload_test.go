@@ -16,6 +16,8 @@ import (
 	"github.com/ugorji/go/codec"
 	"testing"
 	// "fmt"
+	"bytes"
+	"errors"
 )
 
 /*
@@ -35,28 +37,112 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 }
 
 func BenchmarkJsonParserEachKeyManualMedium(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		paths := [][]string{
-			[]string{"person", "name", "fullName"},
-			[]string{"person", "github", "followers"},
-			[]string{"company"},
-			[]string{"person", "gravatar", "avatars"},
-		}
+	paths := [][]string{
+		[]string{"person", "name", "fullName"},
+		[]string{"person", "github", "followers"},
+		[]string{"company"},
+		[]string{"person", "gravatar", "avatars"},
+	}
 
-		jsonparser.EachKey(mediumFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+	for i := 0; i < b.N; i++ {
+		jsonparser.EachKey(mediumFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 			switch idx {
 			case 0:
-				// jsonparser.ParseString(value)
+			// jsonparser.ParseString(value)
 			case 1:
 				jsonparser.ParseInt(value)
 			case 2:
-				// jsonparser.ParseString(value)
+			// jsonparser.ParseString(value)
 			case 3:
 				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
 					jsonparser.Get(avalue, "url")
 				})
 			}
 		}, paths...)
+	}
+}
+
+func BenchmarkJsonParserEachKeyStructMedium(b *testing.B) {
+	paths := [][]string{
+		[]string{"person", "name", "fullName"},
+		[]string{"person", "github", "followers"},
+		[]string{"company"},
+		[]string{"person", "gravatar", "avatars"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		data := MediumPayload{
+			Person: &CBPerson{
+				Name:     &CBName{},
+				Github:   &CBGithub{},
+				Gravatar: &CBGravatar{},
+			},
+		}
+
+		jsonparser.EachKey(mediumFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
+			switch idx {
+			case 0:
+				data.Person.Name.FullName, _ = jsonparser.ParseString(value)
+			case 1:
+				v, _ := jsonparser.ParseInt(value)
+				data.Person.Github.Followers = int(v)
+			case 2:
+				json.Unmarshal(value, &data.Company) // we don't have a JSON -> map[string]interface{} function yet, so use standard encoding/json here
+			case 3:
+				var avatars []*CBAvatar
+				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
+					url, _ := jsonparser.ParseString(avalue)
+					avatars = append(avatars, &CBAvatar{Url: url})
+				})
+				data.Person.Gravatar.Avatars = avatars
+			}
+		}, paths...)
+	}
+}
+
+func BenchmarkJsonParserObjectEachStructMedium(b *testing.B) {
+	nameKey, githubKey, gravatarKey := []byte("name"), []byte("github"), []byte("gravatar")
+	errStop := errors.New("stop")
+
+	for i := 0; i < b.N; i++ {
+		data := MediumPayload{
+			Person: &CBPerson{
+				Name:     &CBName{},
+				Github:   &CBGithub{},
+				Gravatar: &CBGravatar{},
+			},
+		}
+
+		missing := 3
+
+		jsonparser.ObjectEach(mediumFixture, func(k, v []byte, vt jsonparser.ValueType, o int) error {
+			switch {
+			case bytes.Equal(k, nameKey):
+				data.Person.Name.FullName, _ = jsonparser.GetString(v, "fullName")
+				missing--
+			case bytes.Equal(k, githubKey):
+				x, _ := jsonparser.GetInt(v, "followers")
+				data.Person.Github.Followers = int(x)
+				missing--
+			case bytes.Equal(k, gravatarKey):
+				var avatars []*CBAvatar
+				jsonparser.ArrayEach(v, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
+					url, _ := jsonparser.ParseString(avalue)
+					avatars = append(avatars, &CBAvatar{Url: url})
+				}, "avatars")
+				data.Person.Gravatar.Avatars = avatars
+				missing--
+			}
+
+			if missing == 0 {
+				return errStop
+			} else {
+				return nil
+			}
+		}, "person")
+
+		cv, _, _, _ := jsonparser.Get(mediumFixture, "company")
+		json.Unmarshal(cv, &data.Company)
 	}
 }
 
