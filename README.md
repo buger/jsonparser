@@ -60,7 +60,7 @@ jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, off
 	fmt.Println(jsonparser.Get(value, "url"))
 }, "person", "avatars")
 
-// You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
+// You can use `ObjectEach` helper to iterate object keys { "key1":object1, "key2":object2, .... "keyN":objectN }
 jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
         fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
 	return nil
@@ -135,14 +135,18 @@ Needed for iterating arrays, accepts a callback function with the same return ar
 ```go
 func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error)
 ```
-Needed for iterating object, accepts a callback function. Example:
+
+Used for iterating object keys, accepts a callback function. Example:
 ```go
 var handler func([]byte, []byte, jsonparser.ValueType, int) error
 handler = func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 	//do stuff here
+	return nil // If you return error it will stop processing JSON
 }
 jsonparser.ObjectEach(myJson, handler)
 ```
+
+More user-friendly version of `KeyEach`, but a bit slower and does not support querying keys on multiple levels using single call. You need to use nested `ObjectEach` to achieve same result.
 
 
 ### **`KeyEach`**
