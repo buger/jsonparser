@@ -63,7 +63,7 @@ jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, off
 // You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
 jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int, err error) {
         fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
-}, "person", "avatars")
+}, "person", "name")
 ```
 
 ## Need to speedup your app?
