@@ -42,8 +42,8 @@ data := []byte(`{
 // You can specify key path by providing arguments to Get function
 jsonparser.Get(data, "person", "name", "fullName")
 
-// There is `GetNumber` and `GetBoolean` helpers if you exactly know key data type
-jsonparser.GetNumber(data, "person", "github", "followers")
+// There is `GetInt` and `GetBoolean` helpers if you exactly know key data type
+jsonparser.GetInt(data, "person", "github", "followers")
 
 // When you try to get object, it will return you []byte slice pointer to data containing it
 // In `company` it will be `{"name": "Acme"}`
@@ -55,10 +55,16 @@ if value, _, err := jsonparser.GetInt(data, "company", "size"); err == nil {
   size = value
 }
 
-// You can use `ArrayEach` helper to iterate items
+// You can use `ArrayEach` helper to iterate items [item1, item2 .... itemN]
 jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 	fmt.Println(jsonparser.Get(value, "url"))
-}, "person", "gravatar", "avatars")
+}, "person", "avatars")
+
+// You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
+jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+        fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
+	return nil
+}, "person", "name")
 ```
 
 ## Need to speedup your app?
@@ -73,7 +79,7 @@ You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonpars
 
 
 ### **`Get`**
-```
+```go
 func Get(data []byte, keys ...string) (value []byte, dataType jsonparser.ValueType, offset int, err error)
 ```
 Receives data structure, and key path to extract value from.
@@ -88,7 +94,7 @@ Accepts multiple keys to specify path to JSON value (in case of quering nested s
 If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 
 ### **`GetString`**
-```
+```go
 func GetString(data []byte, keys ...string) (val string, err error)
 ```
 Returns strings properly handing escaped and unicode characters. Note that this will cause additional memory allocations.
@@ -109,7 +115,7 @@ Note that `unsafe` here means that your string will exist until GC will free und
 
 
 ### **`GetBoolean`**, **`GetInt`** and **`GetFloat`**
-```
+```go
 func GetBoolean(data []byte, keys ...string) (val bool, err error)
 
 func GetFloat(data []byte, keys ...string) (val float64, err error)
@@ -120,10 +126,55 @@ If you know the key type, you can use the helpers above.
 If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
-```
+```go
 func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err error), keys ...string)
 ```
 Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
+
+### **`ObjectEach`**
+```go
+func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error)
+```
+Needed for iterating object, accepts a callback function. Example:
+```go
+var handler func([]byte, []byte, jsonparser.ValueType, int) error
+handler = func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+	//do stuff here
+}
+jsonparser.ObjectEach(myJson, handler)
+```
+
+
+### **`KeyEach`**
+```go
+func KeyEach(data []byte, cb func(idx int, value []byte, dataType jsonparser.ValueType, err error), paths ...[]string)
+```
+When you need to read multiple keys, and you do not afraid of low-level API `KeyEach` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `KeyEach` can be multiple times faster then `Get`. Path can use nested keys as well!
+
+```go
+paths := [][]string{
+	[]string{"uuid"},
+	[]string{"tz"},
+	[]string{"ua"},
+	[]string{"st"},
+}
+var data SmallPayload
+
+jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+	switch idx {
+	case 0:
+		data.Uuid, _ = value
+	case 1:
+		v, _ := jsonparser.ParseInt(value)
+		data.Tz = int(v)
+	case 2:
+		data.Ua, _ = value
+	case 3:
+		v, _ := jsonparser.ParseInt(value)
+		data.St = int(v)
+	}
+}, paths...)
+```
 
 
 ## What makes it so fast?
@@ -182,8 +233,9 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | pquerna/ffjson | **3769** | **624** | **15** |
 | mailru/easyjson | **2002** | **192** | **9** |
 | buger/jsonparser | **1367** | **0** | **0** |
+| buger/jsonparser (EachKey API) | **809** | **0** | **0** |
 
-Winners are ffjson, easyjson and jsonparser, where jsonparser is 5.5x faster then encoding/json and 2.8x faster then ffjson, and slightly faster then easyjson.
+Winners are ffjson, easyjson and jsonparser, where jsonparser is up to 9.8x faster then encoding/json and 4.6x faster then ffjson, and slightly faster then easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
 
 #### Medium payload
@@ -205,6 +257,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | pquerna/ffjson | **20298** | **856** | **20** |
 | mailru/easyjson | **10512** | **336** | **12** |
 | buger/jsonparser | **15955** | **0** | **0** |
+| buger/jsonparser (EachKey API) | **8916** | **0** | **0** |
 
 The difference between ffjson and jsonparser in CPU usage is smaller, while the memory consumption difference is growing. On the other hand `easyjson` shows remarkable performance for medium payload.
 
@@ -229,6 +282,8 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | buger/jsonparser | **85308** | **0** | **0** |
 
 `jsonparser` now is a winner, but do not forget that it is way more lighweight parser then `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
+
+Also last benchmark did not included `EachKey` test, because in this particular case we need to read lot of Array values, and using `ArrayEach` is more efficient. 
 
 ## Questions and support
 

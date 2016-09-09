@@ -16,6 +16,8 @@ import (
 	"github.com/ugorji/go/codec"
 	"testing"
 	// "fmt"
+	"bytes"
+	"errors"
 )
 
 // Just for emulating field access, so it will not throw "evaluated but not used"
@@ -32,6 +34,98 @@ func BenchmarkJsonParserSmall(b *testing.B) {
 		jsonparser.GetInt(smallFixture, "st")
 
 		nothing()
+	}
+}
+
+func BenchmarkJsonParserEachKeyManualSmall(b *testing.B) {
+	paths := [][]string{
+		[]string{"uuid"},
+		[]string{"tz"},
+		[]string{"ua"},
+		[]string{"st"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
+			switch idx {
+			case 0:
+				// jsonparser.ParseString(value)
+			case 1:
+				jsonparser.ParseInt(value)
+			case 2:
+				// jsonparser.ParseString(value)
+			case 3:
+				jsonparser.ParseInt(value)
+			}
+		}, paths...)
+	}
+}
+
+func BenchmarkJsonParserEachKeyStructSmall(b *testing.B) {
+	paths := [][]string{
+		[]string{"uuid"},
+		[]string{"tz"},
+		[]string{"ua"},
+		[]string{"st"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		var data SmallPayload
+
+		jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
+			switch idx {
+			case 0:
+				data.Uuid, _ = jsonparser.ParseString(value)
+			case 1:
+				v, _ := jsonparser.ParseInt(value)
+				data.Tz = int(v)
+			case 2:
+				data.Ua, _ = jsonparser.ParseString(value)
+			case 3:
+				v, _ := jsonparser.ParseInt(value)
+				data.St = int(v)
+			}
+		}, paths...)
+
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
+}
+
+func BenchmarkJsonParserObjectEachStructSmall(b *testing.B) {
+	uuidKey, tzKey, uaKey, stKey := []byte("uuid"), []byte("tz"), []byte("ua"), []byte("st")
+	errStop := errors.New("stop")
+
+	for i := 0; i < b.N; i++ {
+		var data SmallPayload
+
+		missing := 4
+
+		jsonparser.ObjectEach(smallFixture, func(key, value []byte, vt jsonparser.ValueType, off int) error {
+			switch {
+			case bytes.Equal(key, uuidKey):
+				data.Uuid, _ = jsonparser.ParseString(value)
+				missing--
+			case bytes.Equal(key, tzKey):
+				v, _ := jsonparser.ParseInt(value)
+				data.Tz = int(v)
+				missing--
+			case bytes.Equal(key, uaKey):
+				data.Ua, _ = jsonparser.ParseString(value)
+				missing--
+			case bytes.Equal(key, stKey):
+				v, _ := jsonparser.ParseInt(value)
+				data.St = int(v)
+				missing--
+			}
+
+			if missing == 0 {
+				return errStop
+			} else {
+				return nil
+			}
+		})
+
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
 	}
 }
 

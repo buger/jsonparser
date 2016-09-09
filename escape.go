@@ -69,6 +69,18 @@ func decodeUnicodeEscape(in []byte) (rune, int) {
 
 }
 
+// backslashCharEscapeTable: when '\X' is found for some byte X, it is to be replaced with backslashCharEscapeTable[X]
+var backslashCharEscapeTable = [...]byte{
+	'"':  '"',
+	'\\': '\\',
+	'/':  '/',
+	'b':  '\b',
+	'f':  '\f',
+	'n':  '\n',
+	'r':  '\r',
+	't':  '\t',
+}
+
 // unescapeToUTF8 unescapes the single escape sequence starting at 'in' into 'out' and returns
 // how many characters were consumed from 'in' and emitted into 'out'.
 // If a valid escape sequence does not appear as a prefix of 'in', (-1, -1) to signal the error.
@@ -80,9 +92,9 @@ func unescapeToUTF8(in, out []byte) (inLen int, outLen int) {
 
 	// https://tools.ietf.org/html/rfc7159#section-7
 	switch e := in[1]; e {
-	case '"', '\\', 'n', 't', 'r', '/', 'b', 'f':
-		// Valid basic 2-character escapes
-		out[0] = e
+	case '"', '\\', '/', 'b', 'f', 'n', 'r', 't':
+		// Valid basic 2-character escapes (use lookup table)
+		out[0] = backslashCharEscapeTable[e]
 		return 2, 1
 	case 'u':
 		// Unicode escape

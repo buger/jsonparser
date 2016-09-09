@@ -2,6 +2,7 @@ package jsonparser
 
 import (
 	"bytes"
+	"fmt"
 	_ "fmt"
 	"reflect"
 	"testing"
@@ -158,6 +159,13 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    `3`,
 	},
+	GetTest{
+		desc:    `empty key`,
+		json:    `{"":{"":{"":true}}}`,
+		path:    []string{"", "", ""},
+		isFound: true,
+		data:    `true`,
+	},
 
 	// Escaped key tests
 	GetTest{
@@ -166,6 +174,13 @@ var getTests = []GetTest{
 		path:    []string{"a\\b"},
 		isFound: true,
 		data:    `1`,
+	},
+	GetTest{
+		desc:    `key and value with whitespace escapes`,
+		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
+		path:    []string{"key\b\f\n\r\tkey"},
+		isFound: true,
+		data:    `value\b\f\n\r\tvalue`, // value is not unescaped since this is Get(), but the key should work correctly
 	},
 	GetTest{
 		desc:    `key with Unicode escape`,
@@ -199,48 +214,54 @@ var getTests = []GetTest{
 
 	// Not found key tests
 	GetTest{
-		desc:  "non-existent key 1",
-		json:  `{"a":"b"}`,
-		path:  []string{"c"},
-		isErr: true,
+		desc:    `empty input`,
+		json:    ``,
+		path:    []string{"a"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  "non-existent key 2",
-		json:  `{"a":"b"}`,
-		path:  []string{"b"},
-		isErr: true,
+		desc:    "non-existent key 1",
+		json:    `{"a":"b"}`,
+		path:    []string{"c"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  "non-existent key 3",
-		json:  `{"aa":"b"}`,
-		path:  []string{"a"},
-		isErr: true,
+		desc:    "non-existent key 2",
+		json:    `{"a":"b"}`,
+		path:    []string{"b"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  "apply scope of parent when search for nested key",
-		json:  `{"a": { "b": 1}, "c": 2 }`,
-		path:  []string{"a", "b", "c"},
-		isErr: true,
+		desc:    "non-existent key 3",
+		json:    `{"aa":"b"}`,
+		path:    []string{"a"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  `apply scope to key level`,
-		json:  `{"a": { "b": 1}, "c": 2 }`,
-		path:  []string{"b"},
-		isErr: true,
+		desc:    "apply scope of parent when search for nested key",
+		json:    `{"a": { "b": 1}, "c": 2 }`,
+		path:    []string{"a", "b", "c"},
+		isFound: false,
 	},
 	GetTest{
-		desc:  `handle escaped quote in key name in JSON`,
-		json:  `{"key\"key": 1}`,
-		path:  []string{"key"},
-		isErr: true,
+		desc:    `apply scope to key level`,
+		json:    `{"a": { "b": 1}, "c": 2 }`,
+		path:    []string{"b"},
+		isFound: false,
+	},
+	GetTest{
+		desc:    `handle escaped quote in key name in JSON`,
+		json:    `{"key\"key": 1}`,
+		path:    []string{"key"},
+		isFound: false,
 	},
 
 	// Error/invalid tests
 	GetTest{
-		desc:  `handle escaped quote in key name in JSON`,
-		json:  `{"key\"key": 1}`,
-		path:  []string{"key"},
-		isErr: true,
+		desc:    `handle escaped quote in key name in JSON`,
+		json:    `{"key\"key": 1}`,
+		path:    []string{"key"},
+		isFound: false,
 	},
 	GetTest{
 		desc:    `missing closing brace, but can still find key`,
@@ -286,17 +307,17 @@ var getTests = []GetTest{
 		isErr: true,
 	},
 	GetTest{
-		desc:  `malformed array (no closing brace)`,
-		json:  `{"a":[, "b":123}`,
-		path:  []string{"b"},
-		isErr: true,
+		desc:    `malformed array (no closing brace)`,
+		json:    `{"a":[, "b":123}`,
+		path:    []string{"b"},
+		isFound: false,
 	},
 
 	GetTest{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
-		desc:  "malformed key (followed by comma followed by colon)",
-		json:  `{"a",:1}`,
-		path:  []string{"a"},
-		isErr: true,
+		desc:    "malformed key (followed by comma followed by colon)",
+		json:    `{"a",:1}`,
+		path:    []string{"a"},
+		isFound: false,
 	},
 	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup first string",
@@ -376,6 +397,13 @@ var getStringTests = []GetTest{
 		path:    []string{"c"},
 		isFound: true,
 		data:    `\"`,
+	},
+	GetTest{
+		desc:    `key and value with whitespace escapes`,
+		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
+		path:    []string{"key\b\f\n\r\tkey"},
+		isFound: true,
+		data:    "value\b\f\n\r\tvalue", // value is unescaped since this is GetString()
 	},
 }
 
@@ -463,8 +491,8 @@ var getArrayTests = []GetTest{
 // checkFoundAndNoError checks the dataType and error return from Get*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Get*(), or false if the test is finished.
 func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
-	isFound := (jtype != NotExist) && (err != KeyPathNotFoundError)
-	isErr := (err != nil)
+	isFound := (err != KeyPathNotFoundError)
+	isErr := (err != nil && err != KeyPathNotFoundError)
 
 	if test.isErr != isErr {
 		// If the call didn't match the error expectation, fail
@@ -621,6 +649,219 @@ func TestArrayEach(t *testing.T) {
 			t.Errorf("Should process only 4 items")
 		}
 	}, "a", "b")
+}
+
+type keyValueEntry struct {
+	key       string
+	value     string
+	valueType ValueType
+}
+
+func (kv keyValueEntry) String() string {
+	return fmt.Sprintf("[%s: %s (%s)]", kv.key, kv.value, kv.valueType)
+}
+
+type ObjectEachTest struct {
+	desc string
+	json string
+
+	isErr   bool
+	entries []keyValueEntry
+}
+
+var objectEachTests = []ObjectEachTest{
+	{
+		desc:    "empty object",
+		json:    `{}`,
+		entries: []keyValueEntry{},
+	},
+	{
+		desc: "single key-value object",
+		json: `{"key": "value"}`,
+		entries: []keyValueEntry{
+			{"key", "value", String},
+		},
+	},
+	{
+		desc: "multiple key-value object with many value types",
+		json: `{
+		  "key1": null,
+		  "key2": true,
+		  "key3": 1.23,
+		  "key4": "string value",
+		  "key5": [1,2,3],
+		  "key6": {"a":"b"}
+		}`,
+		entries: []keyValueEntry{
+			{"key1", "", Null},
+			{"key2", "true", Boolean},
+			{"key3", "1.23", Number},
+			{"key4", "string value", String},
+			{"key5", "[1,2,3]", Array},
+			{"key6", `{"a":"b"}`, Object},
+		},
+	},
+	{
+		desc: "escaped key",
+		json: `{"key\"\\\/\b\f\n\r\t\u00B0": "value"}`,
+		entries: []keyValueEntry{
+			{"key\"\\/\b\f\n\r\t\u00B0", "value", String},
+		},
+	},
+	// Error cases
+	{
+		desc:  "no object present",
+		json:  ` \t\n\r`,
+		isErr: true,
+	},
+	{
+		desc:  "unmatched braces 1",
+		json:  `{`,
+		isErr: true,
+	},
+	{
+		desc:  "unmatched braces 2",
+		json:  `}`,
+		isErr: true,
+	},
+	{
+		desc:  "unmatched braces 3",
+		json:  `}{}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad key (number)",
+		json:  `{123: "value"}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad key (unclosed quote)",
+		json:  `{"key: 123}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad value (no value)",
+		json:  `{"key":}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad value (bogus value)",
+		json:  `{"key": notavalue}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad entry (missing colon)",
+		json:  `{"key" "value"}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad entry (no trailing comma)",
+		json:  `{"key": "value" "key2": "value2"}`,
+		isErr: true,
+	},
+	{
+		desc:  "bad entry (two commas)",
+		json:  `{"key": "value",, "key2": "value2"}`,
+		isErr: true,
+	},
+}
+
+func TestObjectEach(t *testing.T) {
+	for _, test := range objectEachTests {
+		if activeTest != "" && test.desc != activeTest {
+			continue
+		}
+
+		// Execute ObjectEach and capture all of the entries visited, in order
+		var entries []keyValueEntry
+		err := ObjectEach([]byte(test.json), func(key, value []byte, valueType ValueType, off int) error {
+			entries = append(entries, keyValueEntry{
+				key:       string(key),
+				value:     string(value),
+				valueType: valueType,
+			})
+			return nil
+		})
+
+		// Check the correctness of the result
+		isErr := (err != nil)
+		if test.isErr != isErr {
+			// If the call didn't match the error expectation, fail
+			t.Errorf("ObjectEach test '%s' isErr mismatch: expected %t, obtained %t (err %v)", test.desc, test.isErr, isErr, err)
+		} else if isErr {
+			// Else, if there was an expected error, don't fail and don't check anything further
+		} else if len(test.entries) != len(entries) {
+			t.Errorf("ObjectEach test '%s' mismatch in number of key-value entries: expected %d, obtained %d (entries found: %s)", test.desc, len(test.entries), len(entries), entries)
+		} else {
+			for i, entry := range entries {
+				expectedEntry := test.entries[i]
+				if expectedEntry.key != entry.key {
+					t.Errorf("ObjectEach test '%s' key mismatch at entry %d: expected %s, obtained %s", test.desc, i, expectedEntry.key, entry.key)
+					break
+				} else if expectedEntry.value != entry.value {
+					t.Errorf("ObjectEach test '%s' value mismatch at entry %d: expected %s, obtained %s", test.desc, i, expectedEntry.value, entry.value)
+					break
+				} else if expectedEntry.valueType != entry.valueType {
+					t.Errorf("ObjectEach test '%s' value type mismatch at entry %d: expected %s, obtained %s", test.desc, i, expectedEntry.valueType, entry.valueType)
+					break
+				} else {
+					// Success for this entry
+				}
+			}
+		}
+	}
+}
+
+var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10}`)
+
+func TestEachKey(t *testing.T) {
+	paths := [][]string{
+		[]string{"name"},
+		[]string{"order"},
+		[]string{"nested", "a"},
+		[]string{"nested", "b"},
+		[]string{"nested2", "a"},
+		[]string{"nested", "nested3", "b"},
+	}
+
+	keysFound := 0
+
+	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
+		keysFound++
+
+		switch idx {
+		case 0:
+			if string(value) != "Name" {
+				t.Errorf("Should find 1 key")
+			}
+		case 1:
+			if string(value) != "Order" {
+				t.Errorf("Should find 2 key")
+			}
+		case 2:
+			if string(value) != "test" {
+				t.Errorf("Should find 2 key")
+			}
+		case 3:
+			if string(value) != "2" {
+				t.Errorf("Should find 3 key")
+			}
+		case 4:
+			if string(value) != "test2" {
+				t.Error("Should find 4 key", string(value))
+			}
+		case 5:
+			if string(value) != "4" {
+				t.Errorf("Should find 5 key")
+			}
+		default:
+			t.Errorf("Should found only 6 keys")
+		}
+	}, paths...)
+
+	if keysFound != 6 {
+		t.Errorf("Should find 6 keys: %d", keysFound)
+	}
 }
 
 type ParseTest struct {
