@@ -1,7 +1,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/buger/jsonparser)](https://goreportcard.com/report/github.com/buger/jsonparser) ![License](https://img.shields.io/dub/l/vibe-d.svg)
 # Alternative JSON parser for Go (so far fastest)
 
-It does not require you to know the structure of the payload (eg. create structs), and allows accessing fields by providing the path to them. It is up to **10 times faster** then standard `encoding/json` package (depending on payload size and usage), **allocates no memory**. See benchmarks below.
+It does not require you to know the structure of the payload (eg. create structs), and allows accessing fields by providing the path to them. It is up to **10 times faster** than standard `encoding/json` package (depending on payload size and usage), **allocates no memory**. See benchmarks below.
 
 ## Rationale
 Originally I made this for a project that relies on a lot of 3rd party APIs that can be unpredictable and complex.
@@ -149,7 +149,7 @@ jsonparser.ObjectEach(myJson, handler)
 ```go
 func KeyEach(data []byte, cb func(idx int, value []byte, dataType jsonparser.ValueType, err error), paths ...[]string)
 ```
-When you need to read multiple keys, and you do not afraid of low-level API `KeyEach` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `KeyEach` can be multiple times faster then `Get`. Path can use nested keys as well!
+When you need to read multiple keys, and you do not afraid of low-level API `KeyEach` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `KeyEach` can be multiple times faster than `Get`. Path can use nested keys as well!
 
 ```go
 paths := [][]string{
@@ -203,7 +203,7 @@ Compared libraries:
 
 #### TLDR
 If you want to skip next sections we have 2 winner: `jsonparser` and `easyjson`.
-`jsonparser` is up to 10 times faster then standard `encoding/json` package (depending on payload size and usage), and almost infinitely (literally) better in memory consumption because it operates with data on byte level, and provide direct slice pointers.
+`jsonparser` is up to 10 times faster than standard `encoding/json` package (depending on payload size and usage), and almost infinitely (literally) better in memory consumption because it operates with data on byte level, and provide direct slice pointers.
 `easyjson` wins in CPU in medium tests and frankly i'm impressed with this package: it is remarkable results considering that it is almost drop-in replacement for `encoding/json` (require some code generation).
 
 It's hard to fully compare `jsonparser` and `easyjson` (or `ffson`), they a true parsers and fully process record, unlike `jsonparser` which parse only keys you specified.
@@ -235,7 +235,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | buger/jsonparser | **1367** | **0** | **0** |
 | buger/jsonparser (EachKey API) | **809** | **0** | **0** |
 
-Winners are ffjson, easyjson and jsonparser, where jsonparser is up to 9.8x faster then encoding/json and 4.6x faster then ffjson, and slightly faster then easyjson.
+Winners are ffjson, easyjson and jsonparser, where jsonparser is up to 9.8x faster than encoding/json and 4.6x faster than ffjson, and slightly faster than easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
 
 #### Medium payload
@@ -281,7 +281,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | mailru/easyjson | **154186** | **6992** | **288** |
 | buger/jsonparser | **85308** | **0** | **0** |
 
-`jsonparser` now is a winner, but do not forget that it is way more lighweight parser then `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
+`jsonparser` now is a winner, but do not forget that it is way more lighweight parser than `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
 
 Also last benchmark did not included `EachKey` test, because in this particular case we need to read lot of Array values, and using `ArrayEach` is more efficient. 
 
