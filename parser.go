@@ -31,7 +31,7 @@ func tokenEnd(data []byte) int {
 		}
 	}
 
-	return -1
+	return len(data)
 }
 
 // Find position of next character which is not whitespace
