@@ -40,7 +40,6 @@ type GetTest struct {
 
 var getTests = []GetTest{
 	// Found key tests
-
 	GetTest{
 		desc:    "handling multiple nested keys with same name",
 		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
