@@ -365,6 +365,62 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    "c",
 	},
+
+	// Array index paths
+	GetTest{
+		desc:    "last key in path is index",
+		json:    `{"a":[{"b":1},{"b":"2"}, 3],"c":{"c":[1,2]}}`,
+		path:    []string{"a", "[1]"},
+		isFound: true,
+		data:    `{"b":"2"}`,
+	},
+	GetTest{
+		desc:    "key in path is index",
+		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
+		path:    []string{"a", "[0]", "b"},
+		isFound: true,
+		data:    `1`,
+	},
+	GetTest{
+		desc: "last key in path is an index to value in array (formatted json)",
+		json: `{
+		    "a": [
+			{
+			    "b": 1
+			},
+			{"b":"2"},
+			3
+		    ],
+		    "c": {
+			"c": [
+			    1,
+			    2
+			]
+		    }
+		}`,
+		path:    []string{"a", "[1]"},
+		isFound: true,
+		data:    `{"b":"2"}`,
+	},
+	GetTest{
+		desc: "key in path is index (formatted json)",
+		json: `{
+		    "a": [
+			{"b": 1},
+			{"b": "2"},
+			3
+		    ],
+		    "c": {
+			"c": [
+			    1,
+			    2
+			]
+		    }
+		}`,
+		path:    []string{"a", "[0]", "b"},
+		isFound: true,
+		data:    `1`,
+	},
 }
 
 var getIntTests = []GetTest{
@@ -552,7 +608,7 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 			continue
 		}
 
-		// fmt.Println("Running:", test.desc)
+		fmt.Println("Running:", test.desc)
 
 		value, dataType, err := runner(test)
 
@@ -854,6 +910,9 @@ func TestEachKey(t *testing.T) {
 		[]string{"nested", "b"},
 		[]string{"nested2", "a"},
 		[]string{"nested", "nested3", "b"},
+		[]string{"arr", "[1]", "b"},
+		[]string{"arrInt", "[3]"},
+		[]string{"arrInt", "[5]"}, // Should not find last key
 	}
 
 	keysFound := 0
@@ -864,7 +923,7 @@ func TestEachKey(t *testing.T) {
 		switch idx {
 		case 0:
 			if string(value) != "Name" {
-				t.Errorf("Should find 1 key")
+				t.Error("Should find 1 key", string(value))
 			}
 		case 1:
 			if string(value) != "Order" {
@@ -872,27 +931,35 @@ func TestEachKey(t *testing.T) {
 			}
 		case 2:
 			if string(value) != "test" {
-				t.Errorf("Should find 2 key")
+				t.Errorf("Should find 3 key")
 			}
 		case 3:
 			if string(value) != "2" {
-				t.Errorf("Should find 3 key")
+				t.Errorf("Should find 4 key")
 			}
 		case 4:
 			if string(value) != "test2" {
-				t.Error("Should find 4 key", string(value))
+				t.Error("Should find 5 key", string(value))
 			}
 		case 5:
 			if string(value) != "4" {
-				t.Errorf("Should find 5 key")
+				t.Errorf("Should find 6 key")
+			}
+		case 6:
+			if string(value) != "2" {
+				t.Errorf("Should find 7 key")
+			}
+		case 7:
+			if string(value) != "4" {
+				t.Error("Should find 8 key", string(value))
 			}
 		default:
-			t.Errorf("Should found only 6 keys")
+			t.Errorf("Should found only 8 keys")
 		}
 	}, paths...)
 
-	if keysFound != 6 {
-		t.Errorf("Should find 6 keys: %d", keysFound)
+	if keysFound != 8 {
+		t.Errorf("Should find 8 keys: %d", keysFound)
 	}
 }
 
