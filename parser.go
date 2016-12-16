@@ -166,6 +166,9 @@ func searchKeys(data []byte, keys ...string) int {
 		case '{':
 			level++
 		case '}':
+			if keyLevel > 0 {
+				keyLevel--
+			}
 			level--
 		case '[':
 			// Do not search for keys inside arrays

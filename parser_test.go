@@ -40,6 +40,7 @@ type GetTest struct {
 
 var getTests = []GetTest{
 	// Found key tests
+
 	GetTest{
 		desc:    "handling multiple nested keys with same name",
 		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
@@ -253,6 +254,12 @@ var getTests = []GetTest{
 		desc:    `handle escaped quote in key name in JSON`,
 		json:    `{"key\"key": 1}`,
 		path:    []string{"key"},
+		isFound: false,
+	},
+	GetTest{
+		desc:    "handling multiple keys with different name",
+		json:    `{"a":{"a":1},"b":{"a":3,"c":[1,2]}}`,
+		path:    []string{"a", "c"},
 		isFound: false,
 	},
 
