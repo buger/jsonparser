@@ -39,6 +39,38 @@ type GetTest struct {
 }
 
 var getTests = []GetTest{
+	// Trivial tests
+	GetTest{
+		desc:    "read string",
+		json:    `""`,
+		isFound: true,
+		data:    ``,
+	},
+	GetTest{
+		desc:    "read number",
+		json:    `0`,
+		isFound: true,
+		data:    `0`,
+	},
+	GetTest{
+		desc:    "read object",
+		json:    `{}`,
+		isFound: true,
+		data:    `{}`,
+	},
+	GetTest{
+		desc:    "read array",
+		json:    `[]`,
+		isFound: true,
+		data:    `[]`,
+	},
+	GetTest{
+		desc:    "read boolean",
+		json:    `true`,
+		isFound: true,
+		data:    `true`,
+	},
+
 	// Found key tests
 	GetTest{
 		desc:    "handling multiple nested keys with same name",
