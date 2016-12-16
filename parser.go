@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 )
 
 // Errors
@@ -31,7 +32,7 @@ func tokenEnd(data []byte) int {
 		}
 	}
 
-	return -1
+	return len(data)
 }
 
 // Find position of next character which is not whitespace
@@ -116,6 +117,10 @@ func searchKeys(data []byte, keys ...string) int {
 	ln := len(data)
 	lk := len(keys)
 
+	if lk == 0 {
+		return 0
+	}
+
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 
 	for i < ln {
@@ -168,11 +173,34 @@ func searchKeys(data []byte, keys ...string) int {
 		case '}':
 			level--
 		case '[':
-			// Do not search for keys inside arrays
-			if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
-				return -1
+			// If we want to get array element by index
+			if keyLevel == level && keys[level][0] == '[' {
+				aIdx, _ := strconv.Atoi(keys[level][1 : len(keys[level])-1])
+
+				var curIdx int
+				var valueFound []byte
+				var valueOffset int
+
+				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+					if (curIdx == aIdx) {
+						valueFound = value
+						valueOffset = offset
+					}
+					curIdx += 1
+				})
+
+				if valueFound == nil {
+					return -1
+				} else {
+					return i + valueOffset + searchKeys(valueFound, keys[level+1:]...)
+				}
 			} else {
-				i += arraySkip - 1
+				// Do not search for keys inside arrays
+				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
+					return -1
+				} else {
+					i += arraySkip - 1
+				}
 			}
 		}
 
@@ -191,15 +219,12 @@ func init() {
 }
 
 func sameTree(p1, p2 []string) bool {
-	if len(p1) == 1 && len(p2) == 1 {
-		return true
+	minLen := len(p1)
+	if len(p2) < minLen {
+		minLen = len(p2)
 	}
 
-	for pi_1, p_1 := range p1[:len(p1)-1] {
-		if len(p2)-2 < pi_1 {
-			break
-		}
-
+	for pi_1, p_1 := range p1[:minLen] {
 		if p2[pi_1] != p_1 {
 			return false
 		}
@@ -209,11 +234,19 @@ func sameTree(p1, p2 []string) bool {
 }
 
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
-	var pathFlags, ignorePathFlags int64
+	var pathFlags int64
 	var level, pathsMatched, i int
 	ln := len(data)
 
+	var maxPath int
+	for _, p := range paths {
+		if len(p) > maxPath {
+			maxPath = len(p)
+		}
+	}
+
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+	pathsBuf := make([]string, maxPath)
 
 	for i < ln {
 		switch data[i] {
@@ -252,57 +285,40 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					keyUnesc = ku
 				}
 
-				for pi, p := range paths {
-					if len(p) < level || (pathFlags&bitwiseFlags[pi]) != 0 || (ignorePathFlags&bitwiseFlags[pi] != 0) {
-						continue
-					}
+				if maxPath >= level {
+					pathsBuf[level-1] = bytesToString(&keyUnesc)
 
-					if equalStr(&keyUnesc, p[level-1]) {
+					for pi, p := range paths {
+						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+							continue
+						}
+
 						match = pi
 
-						if len(p) == level {
-							i++
-							pathsMatched++
-							pathFlags |= bitwiseFlags[pi]
+						i++
+						pathsMatched++
+						pathFlags |= bitwiseFlags[pi+1]
 
-							v, dt, of, e := Get(data[i:])
-							cb(pi, v, dt, e)
+						v, dt, of, e := Get(data[i:])
+						cb(pi, v, dt, e)
 
-							if of != -1 {
-								i += of
-							}
+						if of != -1 {
+							i += of
+						}
 
-							if pathsMatched == len(paths) {
-								return i
-							}
+						if pathsMatched == len(paths) {
+							return i
 						}
 					}
 				}
 
 				if match == -1 {
-					ignorePathFlags = 0
 					tokenOffset := nextToken(data[i+1:])
 					i += tokenOffset
 
 					if data[i] == '{' {
 						blockSkip := blockEnd(data[i:], '{', '}')
 						i += blockSkip + 1
-					}
-				} else {
-					m_p := paths[match]
-
-					for pi, p := range paths {
-						if pi == match {
-							continue
-						}
-
-						if len(p) < level || (pathFlags&bitwiseFlags[pi]) != 0 || (ignorePathFlags&bitwiseFlags[pi] != 0) {
-							continue
-						}
-
-						if !sameTree(m_p, p) {
-							ignorePathFlags |= bitwiseFlags[pi]
-						}
 					}
 				}
 
@@ -318,12 +334,61 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '}':
 			level--
 		case '[':
-			// Do not search for keys inside arrays
-			if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
-				return -1
-			} else {
-				i += arraySkip - 1
+			var arrIdxFlags int64
+			var pIdxFlags int64
+			for pi, p := range paths {
+				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+					continue
+				}
+
+				aIdx, _ := strconv.Atoi(p[level][1: len(p[level]) - 1])
+				arrIdxFlags |= bitwiseFlags[aIdx+1]
+				pIdxFlags |= bitwiseFlags[pi+1]
 			}
+
+			if arrIdxFlags > 0 {
+				level++
+
+				var curIdx int
+				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+					if (arrIdxFlags&bitwiseFlags[curIdx+1] != 0) {
+						for pi, p := range paths {
+							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
+								aIdx, _ := strconv.Atoi(p[level-1][1: len(p[level-1]) - 1])
+
+								if curIdx == aIdx {
+									of := searchKeys(value, p[level:]...)
+
+									pathsMatched++
+									pathFlags |= bitwiseFlags[pi+1]
+
+									if of != -1 {
+										v, dt, _, e := Get(value[of:])
+										cb(pi, v, dt, e)
+									}
+								}
+							}
+						}
+					}
+
+					curIdx += 1
+				})
+
+				if pathsMatched == len(paths) {
+					return i
+				}
+
+				i += arrOff - 1
+			} else {
+				// Do not search for keys inside arrays
+				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
+					return -1
+				} else {
+					i += arraySkip - 1
+				}
+			}
+		case ']':
+			level--
 		}
 
 		i++
@@ -476,28 +541,28 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
-func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (err error) {
+func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (offset int, err error) {
 	if len(data) == 0 {
-		return MalformedObjectError
+		return -1, MalformedObjectError
 	}
 
-	offset := 1
+	offset = 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
-			return KeyPathNotFoundError
+			return offset, KeyPathNotFoundError
 		}
 
 		// Go to closest value
 		nO := nextToken(data[offset:])
 		if nO == -1 {
-			return MalformedJsonError
+			return offset, MalformedJsonError
 		}
 
 		offset += nO
 
 		if data[offset] != '[' {
-			return MalformedArrayError
+			return offset, MalformedArrayError
 		}
 
 		offset++
@@ -511,7 +576,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if t != NotExist {
-			cb(v, t, o, e)
+			cb(v, t, offset + o - len(v), e)
 		}
 
 		if e != nil {
@@ -522,7 +587,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 
 		skipToToken := nextToken(data[offset:])
 		if skipToToken == -1 {
-			return MalformedArrayError
+			return offset, MalformedArrayError
 		}
 		offset += skipToToken
 
@@ -531,13 +596,13 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if data[offset] != ',' {
-			return MalformedArrayError
+			return offset, MalformedArrayError
 		}
 
 		offset++
 	}
 
-	return nil
+	return offset, nil
 }
 
 // ObjectEach iterates over the key-value pairs of a JSON object, invoking a given callback for each such entry

@@ -60,11 +60,34 @@ jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, off
 	fmt.Println(jsonparser.Get(value, "url"))
 }, "person", "avatars")
 
+// Or use can access fields by index!
+jsonparser.GetInt("person", "avatars", "[0]", "url")
+
 // You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
 jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
         fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
 	return nil
 }, "person", "name")
+
+// The most efficient way to extract multiple keys is `EachKey`
+
+paths := [][]string{
+  []string{"person", "name", "fullName"},
+  []string{"person", "avatars", "[0]", "url"},
+  []string{"company", "url"},
+}
+jsonparser.EachKey(data, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+  switch idx {
+  case 0: // []string{"person", "name", "fullName"}
+    ...
+  case 1: // []string{"person", "avatars", "[0]", "url"}
+    ...
+  case 2: // []string{"company", "url"},
+    ...
+  }
+}, paths...)
+
+// For more information see docs below
 ```
 
 ## Need to speedup your app?
@@ -92,6 +115,8 @@ Returns:
 
 Accepts multiple keys to specify path to JSON value (in case of quering nested structures).
 If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
+
+Note that keys can be an array indexes: `jsonparser.GetInt("person", "avatars", "[0]", "url")`, pretty cool, yeah?
 
 ### **`GetString`**
 ```go
