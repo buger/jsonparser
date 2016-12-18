@@ -11,6 +11,7 @@ import (
 	// "github.com/Jeffail/gabs"
 	// "github.com/bitly/go-simplejson"
 	"encoding/json"
+	"github.com/a8m/djson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/pquerna/ffjson/ffjson"
 	// "github.com/antonholmquist/jason"
@@ -106,6 +107,25 @@ func BenchmarkEasyJsonLarge(b *testing.B) {
 
 		for _, t := range data.Topics.Topics {
 			nothing(t.Id, t.Slug)
+		}
+	}
+}
+
+/*
+   github.com/a8m/djson
+*/
+func BenchmarkDjsonLarge(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		m, _ := djson.DecodeObject(largeFixture)
+		users := m["users"].([]interface{})
+		for _, u := range users {
+			nothing(u.(map[string]interface{})["username"].(string))
+		}
+
+		topics := m["topics"].(map[string]interface{})["topics"].([]interface{})
+		for _, t := range topics {
+			tI := t.(map[string]interface{})
+			nothing(tI["id"].(float64), tI["slug"].(string))
 		}
 	}
 }
