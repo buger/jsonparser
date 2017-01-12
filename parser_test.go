@@ -287,6 +287,19 @@ var getTests = []GetTest{
 		path:    []string{"key"},
 		isFound: false,
 	},
+	GetTest{
+		desc:    "handling multiple keys with different name",
+		json:    `{"a":{"a":1},"b":{"a":3,"c":[1,2]}}`,
+		path:    []string{"a", "c"},
+		isFound: false,
+	},
+	GetTest{
+		desc:    "handling nested json",
+		json:    `{"a":{"b":{"c":1},"d":4}}`,
+		path:    []string{"a", "d"},
+		isFound: true,
+		data:    `4`,
+	},
 
 	// Error/invalid tests
 	GetTest{
