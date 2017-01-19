@@ -170,11 +170,11 @@ jsonparser.ObjectEach(myJson, handler)
 ```
 
 
-### **`KeyEach`**
+### **`EachKey`**
 ```go
-func KeyEach(data []byte, cb func(idx int, value []byte, dataType jsonparser.ValueType, err error), paths ...[]string)
+func EachKey(data []byte, cb func(idx int, value []byte, dataType jsonparser.ValueType, err error), paths ...[]string)
 ```
-When you need to read multiple keys, and you do not afraid of low-level API `KeyEach` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `KeyEach` can be multiple times faster than `Get`. Path can use nested keys as well!
+When you need to read multiple keys, and you do not afraid of low-level API `EachKey` is your friend. It read payload only single time, and calls callback function once path is found. For example when you call multiple times `Get`, it has to process payload multiple times, each time you call it. Depending on payload `EachKey` can be multiple times faster than `Get`. Path can use nested keys as well!
 
 ```go
 paths := [][]string{
