@@ -574,6 +574,10 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 	for true {
 		v, t, o, e := Get(data[offset:])
 
+		if e != nil {
+			return offset, e
+		}
+
 		if o == 0 {
 			break
 		}
