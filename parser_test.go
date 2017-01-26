@@ -44,7 +44,7 @@ var getTests = []GetTest{
 		desc:    "read string",
 		json:    `""`,
 		isFound: true,
-		data:    ``,
+		data:    `""`,
 	},
 	GetTest{
 		desc:    "read number",
@@ -84,21 +84,21 @@ var getTests = []GetTest{
 		json:    `{"a":"b"}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `b`,
+		data:    `"b"`,
 	},
 	GetTest{
 		desc:    "read basic key with space",
 		json:    `{"a": "b"}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `b`,
+		data:    `"b"`,
 	},
 	GetTest{
 		desc:    "read composite key",
 		json:    `{"a": { "b":{"c":"d" }}}`,
 		path:    []string{"a", "b", "c"},
 		isFound: true,
-		data:    `d`,
+		data:    `"d"`,
 	},
 	GetTest{
 		desc:    `read numberic value as string`,
@@ -119,7 +119,7 @@ var getTests = []GetTest{
 		json:    `{"a": "string\"with\"quotes"}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `string\"with\"quotes`,
+		data:    `"string\"with\"quotes"`,
 	},
 	GetTest{
 		desc:    `read object`,
@@ -140,7 +140,7 @@ var getTests = []GetTest{
 		json:    "{\n  \"a\": \"b\"\n}",
 		path:    []string{"a"},
 		isFound: true,
-		data:    `b`,
+		data:    `"b"`,
 	},
 	GetTest{
 		desc:    `formatted JSON value 2`,
@@ -161,21 +161,21 @@ var getTests = []GetTest{
 		json:    `{"a": "\\\""}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `\\\"`,
+		data:    `"\\\""`,
 	},
 	GetTest{
 		desc:    `unescaped backslash quote`,
 		json:    `{"a": "\\"}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `\\`,
+		data:    `"\\"`,
 	},
 	GetTest{
 		desc:    `unicode in JSON`,
 		json:    `{"a": "15°C"}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `15°C`,
+		data:    `"15°C"`,
 	},
 	GetTest{
 		desc:    `no padding + nested`,
@@ -212,7 +212,7 @@ var getTests = []GetTest{
 		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
 		path:    []string{"key\b\f\n\r\tkey"},
 		isFound: true,
-		data:    `value\b\f\n\r\tvalue`, // value is not unescaped since this is Get(), but the key should work correctly
+		data:    `"value\b\f\n\r\tvalue"`, // value is not unescaped since this is Get(), but the key should work correctly
 	},
 	GetTest{
 		desc:    `key with Unicode escape`,
@@ -313,7 +313,7 @@ var getTests = []GetTest{
 		json:    `{"a":"b"`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    `b`,
+		data:    `"b"`,
 	},
 	GetTest{
 		desc:  `missing value closing quote`,
@@ -369,14 +369,14 @@ var getTests = []GetTest{
 		json:    `{"a":"b":"c"}`,
 		path:    []string{"a"},
 		isFound: true,
-		data:    "b",
+		data:    `"b"`,
 	},
 	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup second string",
 		json:    `{"a":"b":"c"}`,
 		path:    []string{"b"},
 		isFound: true,
-		data:    "c",
+		data:    `"c"`,
 	},
 
 	// Array index paths
@@ -392,7 +392,7 @@ var getTests = []GetTest{
 		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
 		path:    []string{"a", "[0]", "b"},
 		isFound: true,
-		data:    `1`,
+		data:    `"1"`,
 	},
 	GetTest{
 		desc: "last key in path is an index to value in array (formatted json)",
@@ -657,6 +657,43 @@ func TestGet(t *testing.T) {
 	)
 }
 
+func TestJsonValueGet(t *testing.T) {
+	/*runGetTests(t, "JsonValue.Get()", getTests,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			//two steps to explicitly test JsonValue.Get(). (we could just pass the keys to ParseJson)
+			if json, err := ParseJson([]byte(test.json)); err != nil {
+				return nil, Unknown, err
+			} else {
+				if json, err = json.Get(test.path...); err != nil {
+					return nil, Unknown, err
+				} else {
+					return json.data, json.Type, err
+				}
+			}
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+	*/
+	runGetTests(t, "JsonValue.Get()", getTests,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			//two steps to explicitly test JsonValue.Get(). (we could just pass the keys to ParseJson)
+			if json, err := ParseJson([]byte(test.json), test.path...); err != nil {
+				return nil, Unknown, err
+			} else {
+				return json.data, json.Type, err
+			}
+
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
 func TestGetString(t *testing.T) {
 	runGetTests(t, "GetString()", getStringTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -752,6 +789,43 @@ func TestArrayEach(t *testing.T) {
 	}, "a", "b")
 }
 
+func TestJsonValueArrayEach(t *testing.T) {
+	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
+	count := 0
+
+	json, err := ParseJson(mock, "a", "b")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	json.ArrayEach(func(jsonValue *JsonValue) error {
+		count++
+		value, _ := jsonValue.ParseString()
+
+		switch count {
+		case 1:
+			if value != `{"x": 1}` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 2:
+			if value != `{"x":2}` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+		case 3:
+			if value != `{ "x":3}` {
+				t.Errorf("Wrong third item: %s", string(value))
+			}
+		case 4:
+			if value != `{"x":4}` {
+				t.Errorf("Wrong forth item: %s", string(value))
+			}
+		default:
+			t.Errorf("Should process only 4 items")
+		}
+		return nil
+	})
+}
+
 type keyValueEntry struct {
 	key       string
 	value     string
@@ -780,7 +854,7 @@ var objectEachTests = []ObjectEachTest{
 		desc: "single key-value object",
 		json: `{"key": "value"}`,
 		entries: []keyValueEntry{
-			{"key", "value", String},
+			{`key`, `"value"`, String},
 		},
 	},
 	{
@@ -797,7 +871,7 @@ var objectEachTests = []ObjectEachTest{
 			{"key1", "", Null},
 			{"key2", "true", Boolean},
 			{"key3", "1.23", Number},
-			{"key4", "string value", String},
+			{"key4", `"string value"`, String},
 			{"key5", "[1,2,3]", Array},
 			{"key6", `{"a":"b"}`, Object},
 		},
@@ -806,7 +880,7 @@ var objectEachTests = []ObjectEachTest{
 		desc: "escaped key",
 		json: `{"key\"\\\/\b\f\n\r\t\u00B0": "value"}`,
 		entries: []keyValueEntry{
-			{"key\"\\/\b\f\n\r\t\u00B0", "value", String},
+			{"key\"\\/\b\f\n\r\t\u00B0", `"value"`, String},
 		},
 	},
 	// Error cases
@@ -935,15 +1009,15 @@ func TestEachKey(t *testing.T) {
 
 		switch idx {
 		case 0:
-			if string(value) != "Name" {
+			if string(value) != `"Name"` {
 				t.Error("Should find 1 key", string(value))
 			}
 		case 1:
-			if string(value) != "Order" {
+			if string(value) != `"Order"` {
 				t.Errorf("Should find 2 key")
 			}
 		case 2:
-			if string(value) != "test" {
+			if string(value) != `"test"` {
 				t.Errorf("Should find 3 key")
 			}
 		case 3:
@@ -951,7 +1025,7 @@ func TestEachKey(t *testing.T) {
 				t.Errorf("Should find 4 key")
 			}
 		case 4:
-			if string(value) != "test2" {
+			if string(value) != `"test2"` {
 				t.Error("Should find 5 key", string(value))
 			}
 		case 5:

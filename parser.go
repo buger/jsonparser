@@ -185,7 +185,7 @@ func searchKeys(data []byte, keys ...string) int {
 				var valueOffset int
 
 				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					if (curIdx == aIdx) {
+					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
 					}
@@ -344,7 +344,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					continue
 				}
 
-				aIdx, _ := strconv.Atoi(p[level][1: len(p[level]) - 1])
+				aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
 				arrIdxFlags |= bitwiseFlags[aIdx+1]
 				pIdxFlags |= bitwiseFlags[pi+1]
 			}
@@ -354,10 +354,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 				var curIdx int
 				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					if (arrIdxFlags&bitwiseFlags[curIdx+1] != 0) {
+					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
 						for pi, p := range paths {
 							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
-								aIdx, _ := strconv.Atoi(p[level-1][1: len(p[level-1]) - 1])
+								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
 
 								if curIdx == aIdx {
 									of := searchKeys(value, p[level:]...)
@@ -505,17 +505,17 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 			return nil, dataType, offset, MalformedValueError
 		}
 
-		value := data[offset : endOffset+end]
+		constant := data[offset : endOffset+end]
 
 		switch data[offset] {
 		case 't', 'f': // true or false
-			if bytes.Equal(value, trueLiteral) || bytes.Equal(value, falseLiteral) {
+			if bytes.Equal(constant, trueLiteral) || bytes.Equal(constant, falseLiteral) {
 				dataType = Boolean
 			} else {
 				return nil, Unknown, offset, UnknownValueTypeError
 			}
 		case 'u', 'n': // undefined or null
-			if bytes.Equal(value, nullLiteral) {
+			if bytes.Equal(constant, nullLiteral) {
 				dataType = Null
 			} else {
 				return nil, Unknown, offset, UnknownValueTypeError
@@ -530,11 +530,6 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 	}
 
 	value = data[offset:endOffset]
-
-	// Strip quotes from string values
-	if dataType == String {
-		value = value[1 : len(value)-1]
-	}
 
 	if dataType == Null {
 		value = []byte{}
@@ -583,7 +578,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if t != NotExist {
-			cb(v, t, offset + o - len(v), e)
+			cb(v, t, offset+o-len(v), e)
 		}
 
 		if e != nil {
@@ -743,6 +738,11 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return "", fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
+	//strip quotes
+	if len(v) > 0 && v[0] == '"' {
+		v = v[1 : len(v)-1]
+	}
+
 	// If no escapes return raw conten
 	if bytes.IndexByte(v, '\\') == -1 {
 		return string(v), nil
@@ -815,6 +815,11 @@ func ParseBoolean(b []byte) (bool, error) {
 
 // ParseString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
 func ParseString(b []byte) (string, error) {
+	//strip quotes
+	if len(b) > 0 && b[0] == '"' {
+		b = b[1 : len(b)-1]
+	}
+
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	if bU, err := Unescape(b, stackbuf[:]); err != nil {
 		return "", nil
@@ -839,4 +844,96 @@ func ParseInt(b []byte) (int64, error) {
 	} else {
 		return v, nil
 	}
+}
+
+type JsonValue struct {
+	data []byte
+	Type ValueType
+}
+
+func ParseJson(data []byte, keys ...string) (*JsonValue, error) {
+	v, t, _, e := Get(data, keys...)
+	if e != nil {
+		return nil, e
+	}
+
+	return &JsonValue{data: v, Type: t}, nil
+}
+
+func (jv *JsonValue) Get(keys ...string) (*JsonValue, error) {
+	v, t, _, e := Get(jv.data, keys...)
+	if e != nil {
+		return nil, e
+	}
+
+	return &JsonValue{data: v, Type: t}, nil
+}
+
+func (jv *JsonValue) Index(indices ...int) (*JsonValue, error) {
+	if jv.Type != Array {
+		return nil, fmt.Errorf("Index only supported for Array not %v", jv.Type.String())
+	}
+
+	var keys []string
+	for _, index := range indices {
+		keys = append(keys, fmt.Sprintf("[%v]", index))
+	}
+
+	v, t, _, e := Get(jv.data, keys...)
+	if e != nil {
+		return nil, e
+	}
+
+	return &JsonValue{data: v, Type: t}, nil
+}
+
+func (jv *JsonValue) ArrayEach(cb func(jsonValue *JsonValue) error) error {
+	var cbErr error
+	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+		if cbErr == nil {
+			return //TODO: rewrite this method so it does not use arrayeach, so we can escape out of this mess ...
+		}
+
+		if err != nil {
+			cbErr = err
+			return
+		}
+
+		cbErr = cb(&JsonValue{data: value, Type: dataType})
+	})
+
+	if cbErr != nil {
+		return cbErr
+	}
+
+	return err
+}
+
+func isFloat(b []byte) bool {
+	//TODO: faster/better implementation
+	return bytes.IndexByte(b, '.') != -1 || bytes.IndexByte(b, 'e') != -1
+}
+
+func (jv *JsonValue) IsInt() bool {
+	return jv.Type == Number && !isFloat(jv.data)
+}
+
+func (jv *JsonValue) IsFloat() bool {
+	return jv.Type == Number && isFloat(jv.data)
+}
+
+func (jv *JsonValue) ParseBoolean() (bool, error) {
+	return ParseBoolean(jv.data)
+}
+
+func (jv *JsonValue) ParseInt() (int64, error) {
+	return ParseInt(jv.data)
+}
+
+func (jv *JsonValue) ParseFloat() (float64, error) {
+	return ParseFloat(jv.data)
+}
+
+func (jv *JsonValue) ParseString() (string, error) {
+	return ParseString(jv.data)
 }
