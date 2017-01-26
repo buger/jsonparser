@@ -869,6 +869,14 @@ func (jv *JsonValue) Get(keys ...string) (*JsonValue, error) {
 	return &JsonValue{data: v, Type: t}, nil
 }
 
+func (jv *JsonValue) IsObject() bool {
+	return jv.Type == Object
+}
+
+func (jv *JsonValue) IsArray() bool {
+	return jv.Type == Array
+}
+
 func (jv *JsonValue) Index(indices ...int) (*JsonValue, error) {
 	if jv.Type != Array {
 		return nil, fmt.Errorf("Index only supported for Array not %v", jv.Type.String())
@@ -887,7 +895,7 @@ func (jv *JsonValue) Index(indices ...int) (*JsonValue, error) {
 	return &JsonValue{data: v, Type: t}, nil
 }
 
-func (jv *JsonValue) ArrayEach(cb func(jsonValue *JsonValue)) error {
+func (jv *JsonValue) ArrayEach(cb func(value *JsonValue)) error {
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		cb(&JsonValue{data: value, Type: dataType})
 	})
@@ -895,7 +903,7 @@ func (jv *JsonValue) ArrayEach(cb func(jsonValue *JsonValue)) error {
 	return err
 }
 
-func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, jsonValue *JsonValue)) error {
+func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, value *JsonValue)) error {
 	idx := 0
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		cb(idx, &JsonValue{data: value, Type: dataType})
@@ -905,7 +913,7 @@ func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, jsonValue *JsonValue)) 
 	return err
 }
 
-func (jv *JsonValue) ArrayEachWithError(cb func(jsonValue *JsonValue) error) error {
+func (jv *JsonValue) ArrayEachWithError(cb func(value *JsonValue) error) error {
 	var cbErr error
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		if cbErr == nil {
@@ -957,8 +965,8 @@ func (jv *JsonValue) IsFloat() bool {
 	return jv.Type == Number && isFloat(jv.data)
 }
 
-func (jv *JsonValue) ParseBoolean() (bool, error) {
-	return ParseBoolean(jv.data)
+func (jv *JsonValue) IsNumber() bool {
+	return jv.Type == Number
 }
 
 func (jv *JsonValue) ParseInt() (int64, error) {
@@ -967,6 +975,18 @@ func (jv *JsonValue) ParseInt() (int64, error) {
 
 func (jv *JsonValue) ParseFloat() (float64, error) {
 	return ParseFloat(jv.data)
+}
+
+func (jv *JsonValue) IsBoolean() bool {
+	return jv.Type == Boolean
+}
+
+func (jv *JsonValue) ParseBoolean() (bool, error) {
+	return ParseBoolean(jv.data)
+}
+
+func (jv *JsonValue) IsString() bool {
+	return jv.Type == String
 }
 
 func (jv *JsonValue) ParseString() (string, error) {
