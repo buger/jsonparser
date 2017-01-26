@@ -791,38 +791,35 @@ func TestArrayEach(t *testing.T) {
 
 func TestJsonValueArrayEach(t *testing.T) {
 	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
-	count := 0
 
 	json, err := ParseJson(mock, "a", "b")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	json.ArrayEach(func(jsonValue *JsonValue) error {
-		count++
+	json.ArrayEachWithIndex(func(idx int, jsonValue *JsonValue) {
 		value, _ := jsonValue.ParseString()
 
-		switch count {
-		case 1:
+		switch idx {
+		case 0:
 			if value != `{"x": 1}` {
 				t.Errorf("Wrong first item: %s", string(value))
 			}
-		case 2:
+		case 1:
 			if value != `{"x":2}` {
 				t.Errorf("Wrong second item: %s", string(value))
 			}
-		case 3:
+		case 2:
 			if value != `{ "x":3}` {
 				t.Errorf("Wrong third item: %s", string(value))
 			}
-		case 4:
+		case 3:
 			if value != `{"x":4}` {
 				t.Errorf("Wrong forth item: %s", string(value))
 			}
 		default:
 			t.Errorf("Should process only 4 items")
 		}
-		return nil
 	})
 }
 

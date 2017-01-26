@@ -887,7 +887,25 @@ func (jv *JsonValue) Index(indices ...int) (*JsonValue, error) {
 	return &JsonValue{data: v, Type: t}, nil
 }
 
-func (jv *JsonValue) ArrayEach(cb func(jsonValue *JsonValue) error) error {
+func (jv *JsonValue) ArrayEach(cb func(jsonValue *JsonValue)) error {
+	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+		cb(&JsonValue{data: value, Type: dataType})
+	})
+
+	return err
+}
+
+func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, jsonValue *JsonValue)) error {
+	idx := 0
+	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+		cb(idx, &JsonValue{data: value, Type: dataType})
+		idx++
+	})
+
+	return err
+}
+
+func (jv *JsonValue) ArrayEachWithError(cb func(jsonValue *JsonValue) error) error {
 	var cbErr error
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		if cbErr == nil {
@@ -907,6 +925,23 @@ func (jv *JsonValue) ArrayEach(cb func(jsonValue *JsonValue) error) error {
 	}
 
 	return err
+}
+
+func (jv *JsonValue) ToArray() ([]*JsonValue, error) {
+	var res []*JsonValue
+	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+		res = append(res, &JsonValue{data: value, Type: dataType})
+	})
+
+	return res, err
+}
+
+func (jv *JsonValue) String() string {
+	return string(jv.data)
+}
+
+func (jv *JsonValue) RawBytes() []byte {
+	return jv.data
 }
 
 func isFloat(b []byte) bool {
