@@ -680,8 +680,8 @@ func TestJsonValueGet(t *testing.T) {
 	runGetTests(t, "JsonValue.Get()", getTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			//two steps to explicitly test JsonValue.Get(). (we could just pass the keys to ParseJson)
-			if json, err := ParseJson([]byte(test.json), test.path...); err != nil {
-				return nil, Unknown, err
+			if json := ParseJson([]byte(test.json), test.path...); json.Err() != nil {
+				return nil, Unknown, json.Err()
 			} else {
 				return json.data, json.Type, err
 			}
@@ -792,9 +792,9 @@ func TestArrayEach(t *testing.T) {
 func TestJsonValueArrayEach(t *testing.T) {
 	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
 
-	json, err := ParseJson(mock, "a", "b")
-	if err != nil {
-		t.Error(err)
+	json := ParseJson(mock, "a", "b")
+	if json.Err() != nil {
+		t.Error(json.Err())
 		return
 	}
 	json.ArrayEachWithIndex(func(idx int, jsonValue *JsonValue) {

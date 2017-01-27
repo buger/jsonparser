@@ -849,24 +849,32 @@ func ParseInt(b []byte) (int64, error) {
 type JsonValue struct {
 	data []byte
 	Type ValueType
+	err  error
 }
 
-func ParseJson(data []byte, keys ...string) (*JsonValue, error) {
+func (jv *JsonValue) Err() error {
+	return jv.err
+}
+
+func (jv *JsonValue) Error() string {
+	if jv.err != nil {
+		return jv.Error()
+	} else {
+		return ""
+	}
+}
+
+func ParseJson(data []byte, keys ...string) *JsonValue {
 	v, t, _, e := Get(data, keys...)
-	if e != nil {
-		return nil, e
-	}
-
-	return &JsonValue{data: v, Type: t}, nil
+	return &JsonValue{data: v, Type: t, err: e}
 }
 
-func (jv *JsonValue) Get(keys ...string) (*JsonValue, error) {
-	v, t, _, e := Get(jv.data, keys...)
-	if e != nil {
-		return nil, e
+func (jv *JsonValue) Get(keys ...string) *JsonValue {
+	if jv.Err() != nil {
+		return jv
 	}
-
-	return &JsonValue{data: v, Type: t}, nil
+	v, t, _, e := Get(jv.data, keys...)
+	return &JsonValue{data: v, Type: t, err: e}
 }
 
 func (jv *JsonValue) IsObject() bool {
@@ -877,9 +885,14 @@ func (jv *JsonValue) IsArray() bool {
 	return jv.Type == Array
 }
 
-func (jv *JsonValue) Index(indices ...int) (*JsonValue, error) {
+func (jv *JsonValue) Index(indices ...int) *JsonValue {
+	if jv.Err() != nil {
+		return jv
+	}
+
 	if jv.Type != Array {
-		return nil, fmt.Errorf("Index only supported for Array not %v", jv.Type.String())
+		jv.err = fmt.Errorf("Index only supported for Array not %v", jv.Type.String())
+		return jv
 	}
 
 	var keys []string
@@ -888,14 +901,14 @@ func (jv *JsonValue) Index(indices ...int) (*JsonValue, error) {
 	}
 
 	v, t, _, e := Get(jv.data, keys...)
-	if e != nil {
-		return nil, e
-	}
-
-	return &JsonValue{data: v, Type: t}, nil
+	return &JsonValue{data: v, Type: t, err: e}
 }
 
 func (jv *JsonValue) ArrayEach(cb func(value *JsonValue)) error {
+	if jv.Err() != nil {
+		return jv
+	}
+
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		cb(&JsonValue{data: value, Type: dataType})
 	})
@@ -904,6 +917,10 @@ func (jv *JsonValue) ArrayEach(cb func(value *JsonValue)) error {
 }
 
 func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, value *JsonValue)) error {
+	if jv.Err() != nil {
+		return jv
+	}
+
 	idx := 0
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		cb(idx, &JsonValue{data: value, Type: dataType})
@@ -914,6 +931,10 @@ func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, value *JsonValue)) erro
 }
 
 func (jv *JsonValue) ArrayEachWithError(cb func(value *JsonValue) error) error {
+	if jv.Err() != nil {
+		return jv
+	}
+
 	var cbErr error
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		if cbErr == nil {
@@ -936,6 +957,9 @@ func (jv *JsonValue) ArrayEachWithError(cb func(value *JsonValue) error) error {
 }
 
 func (jv *JsonValue) ToArray() ([]*JsonValue, error) {
+	if jv.Err() != nil {
+		return nil, jv
+	}
 	var res []*JsonValue
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		res = append(res, &JsonValue{data: value, Type: dataType})
