@@ -993,11 +993,27 @@ func (jv *JsonValue) IsNumber() bool {
 	return jv.Type == Number
 }
 
-func (jv *JsonValue) ParseInt() (int64, error) {
+func (jv *JsonValue) GetInt(keys ...string) (int64, error) {
+	if len(keys) == 0 {
+		return jv.parseInt()
+	} else {
+		return jv.Get(keys...).parseInt()
+	}
+}
+
+func (jv *JsonValue) parseInt() (int64, error) {
 	return ParseInt(jv.data)
 }
 
-func (jv *JsonValue) ParseFloat() (float64, error) {
+func (jv *JsonValue) GetFloat(keys ...string) (float64, error) {
+	if len(keys) == 0 {
+		return jv.parseFloat()
+	} else {
+		return jv.Get(keys...).parseFloat()
+	}
+}
+
+func (jv *JsonValue) parseFloat() (float64, error) {
 	return ParseFloat(jv.data)
 }
 
@@ -1005,7 +1021,15 @@ func (jv *JsonValue) IsBoolean() bool {
 	return jv.Type == Boolean
 }
 
-func (jv *JsonValue) ParseBoolean() (bool, error) {
+func (jv *JsonValue) GetBool(keys ...string) (bool, error) {
+	if len(keys) == 0 {
+		return jv.parseBool()
+	} else {
+		return jv.Get(keys...).parseBool()
+	}
+}
+
+func (jv *JsonValue) parseBool() (bool, error) {
 	return ParseBoolean(jv.data)
 }
 
@@ -1013,6 +1037,106 @@ func (jv *JsonValue) IsString() bool {
 	return jv.Type == String
 }
 
-func (jv *JsonValue) ParseString() (string, error) {
+func (jv *JsonValue) GetString(keys ...string) (string, error) {
+	if len(keys) == 0 {
+		return jv.parseString()
+	} else {
+		return jv.Get(keys...).parseString()
+	}
+}
+
+func (jv *JsonValue) parseString() (string, error) {
 	return ParseString(jv.data)
+}
+
+func (jv *JsonValue) GetStringArray(keys ...string) ([]string, error) {
+	if len(keys) == 0 {
+		return jv.parseStringArray()
+	} else {
+		return jv.Get(keys...).parseStringArray()
+	}
+}
+
+func (jv *JsonValue) parseStringArray() (res []string, err error) {
+	if jv.Type != Array {
+		return nil, fmt.Errorf("parseStringArray can only be executed on an Array not on a '%v'", jv.Type.String())
+	}
+	err = jv.ArrayEachWithError(func(value *JsonValue) error {
+		if val, err := value.GetString(); err != nil {
+			return err
+		} else {
+			res = append(res, val)
+		}
+		return nil
+	})
+	return
+}
+
+func (jv *JsonValue) GetIntArray(keys ...string) ([]int64, error) {
+	if len(keys) == 0 {
+		return jv.parseIntArray()
+	} else {
+		return jv.Get(keys...).parseIntArray()
+	}
+}
+
+func (jv *JsonValue) parseIntArray() (res []int64, err error) {
+	if jv.Type != Array {
+		return nil, fmt.Errorf("parseIntArray can only be executed on an Array not on a '%v'", jv.Type.String())
+	}
+	err = jv.ArrayEachWithError(func(value *JsonValue) error {
+		if val, err := value.GetInt(); err != nil {
+			return err
+		} else {
+			res = append(res, val)
+		}
+		return nil
+	})
+	return
+}
+
+func (jv *JsonValue) GetFloatArray(keys ...string) ([]float64, error) {
+	if len(keys) == 0 {
+		return jv.parseFloatArray()
+	} else {
+		return jv.Get(keys...).parseFloatArray()
+	}
+}
+
+func (jv *JsonValue) parseFloatArray() (res []float64, err error) {
+	if jv.Type != Array {
+		return nil, fmt.Errorf("parseFloatArray can only be executed on an Array not on a '%v'", jv.Type.String())
+	}
+	err = jv.ArrayEachWithError(func(value *JsonValue) error {
+		if val, err := value.GetFloat(); err != nil {
+			return err
+		} else {
+			res = append(res, val)
+		}
+		return nil
+	})
+	return
+}
+
+func (jv *JsonValue) GetBoolArray(keys ...string) ([]bool, error) {
+	if len(keys) == 0 {
+		return jv.parseBoolArray()
+	} else {
+		return jv.Get(keys...).parseBoolArray()
+	}
+}
+
+func (jv *JsonValue) parseBoolArray() (res []bool, err error) {
+	if jv.Type != Array {
+		return nil, fmt.Errorf("parseBoolArray can only be executed on an Array not on a '%v'", jv.Type.String())
+	}
+	err = jv.ArrayEachWithError(func(value *JsonValue) error {
+		if val, err := value.GetBool(); err != nil {
+			return err
+		} else {
+			res = append(res, val)
+		}
+		return nil
+	})
+	return
 }

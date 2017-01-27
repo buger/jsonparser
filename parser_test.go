@@ -798,7 +798,7 @@ func TestJsonValueArrayEach(t *testing.T) {
 		return
 	}
 	json.ArrayEachWithIndex(func(idx int, jsonValue *JsonValue) {
-		value, _ := jsonValue.ParseString()
+		value, _ := jsonValue.GetString()
 
 		switch idx {
 		case 0:
