@@ -185,7 +185,7 @@ func searchKeys(data []byte, keys ...string) int {
 				var valueOffset int
 
 				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					if (curIdx == aIdx) {
+					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
 					}
@@ -344,7 +344,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					continue
 				}
 
-				aIdx, _ := strconv.Atoi(p[level][1: len(p[level]) - 1])
+				aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
 				arrIdxFlags |= bitwiseFlags[aIdx+1]
 				pIdxFlags |= bitwiseFlags[pi+1]
 			}
@@ -354,10 +354,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 				var curIdx int
 				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					if (arrIdxFlags&bitwiseFlags[curIdx+1] != 0) {
+					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
 						for pi, p := range paths {
 							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
-								aIdx, _ := strconv.Atoi(p[level-1][1: len(p[level-1]) - 1])
+								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
 
 								if curIdx == aIdx {
 									of := searchKeys(value, p[level:]...)
@@ -571,6 +571,17 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		offset++
 	}
 
+	nO := nextToken(data[offset:])
+	if nO == -1 {
+		return offset, MalformedJsonError
+	}
+
+	offset += nO
+
+	if data[offset] == ']' {
+		return offset, nil
+	}
+
 	for true {
 		v, t, o, e := Get(data[offset:])
 
@@ -583,7 +594,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if t != NotExist {
-			cb(v, t, offset + o - len(v), e)
+			cb(v, t, offset+o-len(v), e)
 		}
 
 		if e != nil {
