@@ -752,6 +752,41 @@ func TestArrayEach(t *testing.T) {
 	}, "a", "b")
 }
 
+func TestArrayEachEmpty(t *testing.T) {
+	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+
+	type args struct {
+		data []byte
+		cb   func(value []byte, dataType ValueType, offset int, err error)
+		keys []string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantOffset int
+		wantErr    bool
+	}{
+		{"Empty array", args{[]byte("[]"), funcError, []string{}}, 1, false},
+		{"Empty array with space", args{[]byte("[ ]"), funcError, []string{}}, 2, false},
+		{"Empty array with \n", args{[]byte("[\n]"), funcError, []string{}}, 2, false},
+		{"Empty field array", args{[]byte("{\"data\": []}"), funcError, []string{"data"}}, 10, false},
+		{"Empty field array with space", args{[]byte("{\"data\": [ ]}"), funcError, []string{"data"}}, 11, false},
+		{"Empty field array with \n", args{[]byte("{\"data\": [\n]}"), funcError, []string{"data"}}, 11, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOffset, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotOffset != tt.wantOffset {
+				t.Errorf("ArrayEach() = %v, want %v", gotOffset, tt.wantOffset)
+			}
+		})
+	}
+}
+
 type keyValueEntry struct {
 	key       string
 	value     string

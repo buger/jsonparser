@@ -571,6 +571,17 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		offset++
 	}
 
+	nO := nextToken(data[offset:])
+	if nO == -1 {
+		return offset, MalformedJsonError
+	}
+
+	offset += nO
+
+	if data[offset] == ']' {
+		return offset, nil
+	}
+
 	for true {
 		v, t, o, e := Get(data[offset:])
 
