@@ -569,12 +569,12 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 	for true {
 		v, t, o, e := Get(data[offset:])
 
-		if e != nil {
-			return offset, e
-		}
-
 		if o == 0 {
 			break
+		}
+
+		if e != nil {
+			return offset, e
 		}
 
 		if t != NotExist {
@@ -858,7 +858,7 @@ func (jv *JsonValue) Err() error {
 
 func (jv *JsonValue) Error() string {
 	if jv.err != nil {
-		return jv.Error()
+		return jv.err.Error()
 	} else {
 		return ""
 	}
@@ -937,7 +937,7 @@ func (jv *JsonValue) ArrayEachWithError(cb func(value *JsonValue) error) error {
 
 	var cbErr error
 	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
-		if cbErr == nil {
+		if cbErr != nil {
 			return //TODO: rewrite this method so it does not use arrayeach, so we can escape out of this mess ...
 		}
 
