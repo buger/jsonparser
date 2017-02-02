@@ -237,6 +237,11 @@ func sameTree(p1, p2 []string) bool {
 }
 
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
+	return eachKey(false, data, cb, paths...)
+}
+
+//eachKey, getfix specifies if we want the old or the new functionality of the get function
+func eachKey(getfix bool, data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
 	var pathFlags int64
 	var level, pathsMatched, i int
 	ln := len(data)
@@ -302,7 +307,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 						pathsMatched++
 						pathFlags |= bitwiseFlags[pi+1]
 
-						v, dt, of, e := Get(data[i:])
+						v, dt, of, e := get(getfix, data[i:])
 						cb(pi, v, dt, e)
 
 						if of != -1 {
@@ -366,7 +371,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 									pathFlags |= bitwiseFlags[pi+1]
 
 									if of != -1 {
-										v, dt, _, e := Get(value[of:])
+										v, dt, _, e := get(getfix, value[of:])
 										cb(pi, v, dt, e)
 									}
 								}
@@ -453,7 +458,12 @@ Returns:
 Accept multiple keys to specify path to JSON value (in case of quering nested structures).
 If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 */
+//Get calls the internal get function, but will strip quotes from strings returned. (breaks abstraction, but kept for compatibility)
 func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset int, err error) {
+	return get(false, data, keys...)
+}
+
+func get(getfix bool, data []byte, keys ...string) (value []byte, dataType ValueType, offset int, err error) {
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
 			return []byte{}, NotExist, -1, KeyPathNotFoundError
@@ -531,6 +541,11 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 
 	value = data[offset:endOffset]
 
+	// Strip quotes from string values
+	if !getfix && dataType == String {
+		value = value[1 : len(value)-1]
+	}
+
 	if dataType == Null {
 		value = []byte{}
 	}
@@ -540,6 +555,10 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
 func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (offset int, err error) {
+	return arrayEach(false, data, cb, keys...)
+}
+
+func arrayEach(getfix bool, data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (offset int, err error) {
 	if len(data) == 0 {
 		return -1, MalformedObjectError
 	}
@@ -567,7 +586,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 	}
 
 	for true {
-		v, t, o, e := Get(data[offset:])
+		v, t, o, e := get(getfix, data[offset:])
 
 		if o == 0 {
 			break
@@ -609,6 +628,10 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 
 // ObjectEach iterates over the key-value pairs of a JSON object, invoking a given callback for each such entry
 func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error) {
+	return objectEach(false, data, callback, keys...)
+}
+
+func objectEach(getfix bool, data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error) {
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	offset := 0
 
@@ -680,7 +703,7 @@ func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType Va
 		}
 
 		// Step 3: find the associated value, then invoke the callback
-		if value, valueType, off, err := Get(data[offset:]); err != nil {
+		if value, valueType, off, err := get(getfix, data[offset:]); err != nil {
 			return err
 		} else if err := callback(key, value, valueType, offset+off); err != nil { // Invoke the callback here!
 			return err
@@ -716,7 +739,7 @@ func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType Va
 
 // GetUnsafeString returns the value retrieved by `Get`, use creates string without memory allocation by mapping string to slice memory. It does not handle escape symbols.
 func GetUnsafeString(data []byte, keys ...string) (val string, err error) {
-	v, _, _, e := Get(data, keys...)
+	v, _, _, e := get(false, data, keys...)
 
 	if e != nil {
 		return "", e
@@ -728,7 +751,7 @@ func GetUnsafeString(data []byte, keys ...string) (val string, err error) {
 // GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
 // If key data type do not match, it will return an error.
 func GetString(data []byte, keys ...string) (val string, err error) {
-	v, t, _, e := Get(data, keys...)
+	v, t, _, e := get(true, data, keys...)
 
 	if e != nil {
 		return "", e
@@ -755,7 +778,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return an error.
 func GetFloat(data []byte, keys ...string) (val float64, err error) {
-	v, t, _, e := Get(data, keys...)
+	v, t, _, e := get(true, data, keys...)
 
 	if e != nil {
 		return 0, e
@@ -771,7 +794,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 // GetInt returns the value retrieved by `Get`, cast to a int64 if possible.
 // If key data type do not match, it will return an error.
 func GetInt(data []byte, keys ...string) (val int64, err error) {
-	v, t, _, e := Get(data, keys...)
+	v, t, _, e := get(true, data, keys...)
 
 	if e != nil {
 		return 0, e
@@ -788,7 +811,7 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 // The offset is the same as in `Get`.
 // If key data type do not match, it will return error.
 func GetBoolean(data []byte, keys ...string) (val bool, err error) {
-	v, t, _, e := Get(data, keys...)
+	v, t, _, e := get(true, data, keys...)
 
 	if e != nil {
 		return false, e
@@ -865,7 +888,7 @@ func (jv *JsonValue) Error() string {
 }
 
 func ParseJson(data []byte, keys ...string) *JsonValue {
-	v, t, _, e := Get(data, keys...)
+	v, t, _, e := get(true, data, keys...)
 	return &JsonValue{data: v, Type: t, err: e}
 }
 
@@ -873,7 +896,7 @@ func (jv *JsonValue) Get(keys ...string) *JsonValue {
 	if jv.Err() != nil {
 		return jv
 	}
-	v, t, _, e := Get(jv.data, keys...)
+	v, t, _, e := get(true, jv.data, keys...)
 	return &JsonValue{data: v, Type: t, err: e}
 }
 
@@ -900,7 +923,7 @@ func (jv *JsonValue) Index(indices ...int) *JsonValue {
 		keys = append(keys, fmt.Sprintf("[%v]", index))
 	}
 
-	v, t, _, e := Get(jv.data, keys...)
+	v, t, _, e := get(true, jv.data, keys...)
 	return &JsonValue{data: v, Type: t, err: e}
 }
 
