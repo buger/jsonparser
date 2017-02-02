@@ -40,31 +40,31 @@ type GetTest struct {
 
 var getTests = []GetTest{
 	// Trivial tests
-	GetTest{
+	{
 		desc:    "read string",
 		json:    `""`,
 		isFound: true,
 		data:    ``,
 	},
-	GetTest{
+	{
 		desc:    "read number",
 		json:    `0`,
 		isFound: true,
 		data:    `0`,
 	},
-	GetTest{
+	{
 		desc:    "read object",
 		json:    `{}`,
 		isFound: true,
 		data:    `{}`,
 	},
-	GetTest{
+	{
 		desc:    "read array",
 		json:    `[]`,
 		isFound: true,
 		data:    `[]`,
 	},
-	GetTest{
+	{
 		desc:    "read boolean",
 		json:    `true`,
 		isFound: true,
@@ -72,126 +72,126 @@ var getTests = []GetTest{
 	},
 
 	// Found key tests
-	GetTest{
+	{
 		desc:    "handling multiple nested keys with same name",
 		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
 		path:    []string{"c", "c"},
 		isFound: true,
 		data:    `[1,2]`,
 	},
-	GetTest{
+	{
 		desc:    "read basic key",
 		json:    `{"a":"b"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	{
 		desc:    "read basic key with space",
 		json:    `{"a": "b"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	{
 		desc:    "read composite key",
 		json:    `{"a": { "b":{"c":"d" }}}`,
 		path:    []string{"a", "b", "c"},
 		isFound: true,
 		data:    `d`,
 	},
-	GetTest{
+	{
 		desc:    `read numberic value as string`,
 		json:    `{"a": "b", "c": 1}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	{
 		desc:    `handle multiple nested keys with same name`,
 		json:    `{"a":[{"b":1},{"b":2},3],"c":{"c":[1,2]}} }`,
 		path:    []string{"c", "c"},
 		isFound: true,
 		data:    `[1,2]`,
 	},
-	GetTest{
+	{
 		desc:    `read string values with quotes`,
 		json:    `{"a": "string\"with\"quotes"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `string\"with\"quotes`,
 	},
-	GetTest{
+	{
 		desc:    `read object`,
 		json:    `{"a": { "b":{"c":"d" }}}`,
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    `{"c":"d" }`,
 	},
-	GetTest{
+	{
 		desc:    `empty path`,
 		json:    `{"c":"d" }`,
 		path:    []string{},
 		isFound: true,
 		data:    `{"c":"d" }`,
 	},
-	GetTest{
+	{
 		desc:    `formatted JSON value`,
 		json:    "{\n  \"a\": \"b\"\n}",
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	{
 		desc:    `formatted JSON value 2`,
 		json:    "{\n  \"a\":\n    {\n\"b\":\n   {\"c\":\"d\",\n\"e\": \"f\"}\n}\n}",
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    "{\"c\":\"d\",\n\"e\": \"f\"}",
 	},
-	GetTest{
+	{
 		desc:    `whitespace`,
 		json:    " \n\r\t{ \n\r\t\"whitespace\" \n\r\t: \n\r\t333 \n\r\t} \n\r\t",
 		path:    []string{"whitespace"},
 		isFound: true,
 		data:    "333",
 	},
-	GetTest{
+	{
 		desc:    `escaped backslash quote`,
 		json:    `{"a": "\\\""}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `\\\"`,
 	},
-	GetTest{
+	{
 		desc:    `unescaped backslash quote`,
 		json:    `{"a": "\\"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `\\`,
 	},
-	GetTest{
+	{
 		desc:    `unicode in JSON`,
 		json:    `{"a": "15°C"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `15°C`,
 	},
-	GetTest{
+	{
 		desc:    `no padding + nested`,
 		json:    `{"a":{"a":"1"},"b":2}`,
 		path:    []string{"b"},
 		isFound: true,
 		data:    `2`,
 	},
-	GetTest{
+	{
 		desc:    `no padding + nested + array`,
 		json:    `{"a":{"b":[1,2]},"c":3}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `3`,
 	},
-	GetTest{
+	{
 		desc:    `empty key`,
 		json:    `{"":{"":{"":true}}}`,
 		path:    []string{"", "", ""},
@@ -200,28 +200,28 @@ var getTests = []GetTest{
 	},
 
 	// Escaped key tests
-	GetTest{
+	{
 		desc:    `key with simple escape`,
 		json:    `{"a\\b":1}`,
 		path:    []string{"a\\b"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	{
 		desc:    `key and value with whitespace escapes`,
 		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
 		path:    []string{"key\b\f\n\r\tkey"},
 		isFound: true,
 		data:    `value\b\f\n\r\tvalue`, // value is not unescaped since this is Get(), but the key should work correctly
 	},
-	GetTest{
+	{
 		desc:    `key with Unicode escape`,
 		json:    `{"a\u00B0b":1}`,
 		path:    []string{"a\u00B0b"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	{
 		desc:    `key with complex escape`,
 		json:    `{"a\uD83D\uDE03b":1}`,
 		path:    []string{"a\U0001F603b"},
@@ -229,14 +229,14 @@ var getTests = []GetTest{
 		data:    `1`,
 	},
 
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
+	{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    `malformed with trailing whitespace`,
 		json:    `{"a":1 `,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
+	{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    `malformed with wrong closing bracket`,
 		json:    `{"a":1]`,
 		path:    []string{"a"},
@@ -245,55 +245,55 @@ var getTests = []GetTest{
 	},
 
 	// Not found key tests
-	GetTest{
+	{
 		desc:    `empty input`,
 		json:    ``,
 		path:    []string{"a"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    "non-existent key 1",
 		json:    `{"a":"b"}`,
 		path:    []string{"c"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    "non-existent key 2",
 		json:    `{"a":"b"}`,
 		path:    []string{"b"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    "non-existent key 3",
 		json:    `{"aa":"b"}`,
 		path:    []string{"a"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    "apply scope of parent when search for nested key",
 		json:    `{"a": { "b": 1}, "c": 2 }`,
 		path:    []string{"a", "b", "c"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    `apply scope to key level`,
 		json:    `{"a": { "b": 1}, "c": 2 }`,
 		path:    []string{"b"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    `handle escaped quote in key name in JSON`,
 		json:    `{"key\"key": 1}`,
 		path:    []string{"key"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    "handling multiple keys with different name",
 		json:    `{"a":{"a":1},"b":{"a":3,"c":[1,2]}}`,
 		path:    []string{"a", "c"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    "handling nested json",
 		json:    `{"a":{"b":{"c":1},"d":4}}`,
 		path:    []string{"a", "d"},
@@ -302,76 +302,76 @@ var getTests = []GetTest{
 	},
 
 	// Error/invalid tests
-	GetTest{
+	{
 		desc:    `handle escaped quote in key name in JSON`,
 		json:    `{"key\"key": 1}`,
 		path:    []string{"key"},
 		isFound: false,
 	},
-	GetTest{
+	{
 		desc:    `missing closing brace, but can still find key`,
 		json:    `{"a":"b"`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    `b`,
 	},
-	GetTest{
+	{
 		desc:  `missing value closing quote`,
 		json:  `{"a":"b`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:  `missing value closing curly brace`,
 		json:  `{"a": { "b": "c"`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:  `missing value closing square bracket`,
 		json:  `{"a": [1, 2, 3 }`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:  `missing value 1`,
 		json:  `{"a":`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:  `missing value 2`,
 		json:  `{"a": `,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:  `missing value 3`,
 		json:  `{"a":}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:    `malformed array (no closing brace)`,
 		json:    `{"a":[, "b":123}`,
 		path:    []string{"b"},
 		isFound: false,
 	},
 
-	GetTest{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
+	{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    "malformed key (followed by comma followed by colon)",
 		json:    `{"a",:1}`,
 		path:    []string{"a"},
 		isFound: false,
 	},
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+	{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup first string",
 		json:    `{"a":"b":"c"}`,
 		path:    []string{"a"},
 		isFound: true,
 		data:    "b",
 	},
-	GetTest{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+	{ // This test returns a match instead of a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
 		desc:    "malformed 'colon chain', lookup second string",
 		json:    `{"a":"b":"c"}`,
 		path:    []string{"b"},
@@ -380,21 +380,21 @@ var getTests = []GetTest{
 	},
 
 	// Array index paths
-	GetTest{
+	{
 		desc:    "last key in path is index",
 		json:    `{"a":[{"b":1},{"b":"2"}, 3],"c":{"c":[1,2]}}`,
 		path:    []string{"a", "[1]"},
 		isFound: true,
 		data:    `{"b":"2"}`,
 	},
-	GetTest{
+	{
 		desc:    "key in path is index",
 		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
 		path:    []string{"a", "[0]", "b"},
 		isFound: true,
 		data:    `1`,
 	},
-	GetTest{
+	{
 		desc: "last key in path is an index to value in array (formatted json)",
 		json: `{
 		    "a": [
@@ -415,7 +415,7 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    `{"b":"2"}`,
 	},
-	GetTest{
+	{
 		desc: "key in path is index (formatted json)",
 		json: `{
 		    "a": [
@@ -437,14 +437,14 @@ var getTests = []GetTest{
 }
 
 var getIntTests = []GetTest{
-	GetTest{
+	{
 		desc:    `read numeric value as number`,
 		json:    `{"a": "b", "c": 1}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    int64(1),
 	},
-	GetTest{
+	{
 		desc:    `read numeric value as number in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": 1 \n}",
 		path:    []string{"c"},
@@ -454,14 +454,14 @@ var getIntTests = []GetTest{
 }
 
 var getFloatTests = []GetTest{
-	GetTest{
+	{
 		desc:    `read numeric value as number`,
 		json:    `{"a": "b", "c": 1.123}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    float64(1.123),
 	},
-	GetTest{
+	{
 		desc:    `read numeric value as number in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": 23.41323 \n}",
 		path:    []string{"c"},
@@ -471,35 +471,35 @@ var getFloatTests = []GetTest{
 }
 
 var getStringTests = []GetTest{
-	GetTest{
+	{
 		desc:    `Translate Unicode symbols`,
 		json:    `{"c": "test"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `test`,
 	},
-	GetTest{
+	{
 		desc:    `Translate Unicode symbols`,
 		json:    `{"c": "15\u00b0C"}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `15°C`,
 	},
-	GetTest{
+	{
 		desc:    `Translate supplementary Unicode symbols`,
 		json:    `{"c": "\uD83D\uDE03"}`, // Smiley face (UTF16 surrogate pair)
 		path:    []string{"c"},
 		isFound: true,
 		data:    "\U0001F603", // Smiley face
 	},
-	GetTest{
+	{
 		desc:    `Translate escape symbols`,
 		json:    `{"c": "\\\""}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    `\"`,
 	},
-	GetTest{
+	{
 		desc:    `key and value with whitespace escapes`,
 		json:    `{"key\b\f\n\r\tkey":"value\b\f\n\r\tvalue"}`,
 		path:    []string{"key\b\f\n\r\tkey"},
@@ -509,47 +509,47 @@ var getStringTests = []GetTest{
 }
 
 var getBoolTests = []GetTest{
-	GetTest{
+	{
 		desc:    `read boolean true as boolean`,
 		json:    `{"a": "b", "c": true}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    true,
 	},
-	GetTest{
+	{
 		desc:    `boolean true in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": true \n}",
 		path:    []string{"c"},
 		isFound: true,
 		data:    true,
 	},
-	GetTest{
+	{
 		desc:    `read boolean false as boolean`,
 		json:    `{"a": "b", "c": false}`,
 		path:    []string{"c"},
 		isFound: true,
 		data:    false,
 	},
-	GetTest{
+	{
 		desc:    `boolean true in formatted JSON`,
 		json:    "{\"a\": \"b\", \"c\": false \n}",
 		path:    []string{"c"},
 		isFound: true,
 		data:    false,
 	},
-	GetTest{
+	{
 		desc:  `read fake boolean true`,
 		json:  `{"a": txyz}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:  `read fake boolean false`,
 		json:  `{"a": fwxyz}`,
 		path:  []string{"a"},
 		isErr: true,
 	},
-	GetTest{
+	{
 		desc:    `read boolean true with whitespace and another key`,
 		json:    "{\r\t\n \"a\"\r\t\n :\r\t\n true\r\t\n ,\r\t\n \"b\": 1}",
 		path:    []string{"a"},
@@ -559,28 +559,28 @@ var getBoolTests = []GetTest{
 }
 
 var getArrayTests = []GetTest{
-	GetTest{
+	{
 		desc:    `read array of simple values`,
 		json:    `{"a": { "b":[1,2,3,4]}}`,
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    []string{`1`, `2`, `3`, `4`},
 	},
-	GetTest{
+	{
 		desc:    `read array via empty path`,
 		json:    `[1,2,3,4]`,
 		path:    []string{},
 		isFound: true,
 		data:    []string{`1`, `2`, `3`, `4`},
 	},
-	GetTest{
+	{
 		desc:    `read array of objects`,
 		json:    `{"a": { "b":[{"x":1},{"x":2},{"x":3},{"x":4}]}}`,
 		path:    []string{"a", "b"},
 		isFound: true,
 		data:    []string{`{"x":1}`, `{"x":2}`, `{"x":3}`, `{"x":4}`},
 	},
-	GetTest{
+	{
 		desc:    `read nested array`,
 		json:    `{"a": [[[1]],[[2]]]}`,
 		path:    []string{"a"},
@@ -814,6 +814,42 @@ func TestJsonValueArrayEach(t *testing.T) {
 	})
 }
 
+
+func TestArrayEachEmpty(t *testing.T) {
+	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+
+	type args struct {
+		data []byte
+		cb   func(value []byte, dataType ValueType, offset int, err error)
+		keys []string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantOffset int
+		wantErr    bool
+	}{
+		{"Empty array", args{[]byte("[]"), funcError, []string{}}, 1, false},
+		{"Empty array with space", args{[]byte("[ ]"), funcError, []string{}}, 2, false},
+		{"Empty array with \n", args{[]byte("[\n]"), funcError, []string{}}, 2, false},
+		{"Empty field array", args{[]byte("{\"data\": []}"), funcError, []string{"data"}}, 10, false},
+		{"Empty field array with space", args{[]byte("{\"data\": [ ]}"), funcError, []string{"data"}}, 11, false},
+		{"Empty field array with \n", args{[]byte("{\"data\": [\n]}"), funcError, []string{"data"}}, 11, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOffset, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotOffset != tt.wantOffset {
+				t.Errorf("ArrayEach() = %v, want %v", gotOffset, tt.wantOffset)
+			}
+		})
+	}
+}
+
 type keyValueEntry struct {
 	key       string
 	value     string
@@ -979,15 +1015,15 @@ var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12,
 
 func TestEachKey(t *testing.T) {
 	paths := [][]string{
-		[]string{"name"},
-		[]string{"order"},
-		[]string{"nested", "a"},
-		[]string{"nested", "b"},
-		[]string{"nested2", "a"},
-		[]string{"nested", "nested3", "b"},
-		[]string{"arr", "[1]", "b"},
-		[]string{"arrInt", "[3]"},
-		[]string{"arrInt", "[5]"}, // Should not find last key
+		{"name"},
+		{"order"},
+		{"nested", "a"},
+		{"nested", "b"},
+		{"nested2", "a"},
+		{"nested", "nested3", "b"},
+		{"arr", "[1]", "b"},
+		{"arrInt", "[3]"},
+		{"arrInt", "[5]"}, // Should not find last key
 	}
 
 	keysFound := 0
@@ -1046,32 +1082,32 @@ type ParseTest struct {
 }
 
 var parseBoolTests = []ParseTest{
-	ParseTest{
+	{
 		in:     "true",
 		intype: Boolean,
 		out:    true,
 	},
-	ParseTest{
+	{
 		in:     "false",
 		intype: Boolean,
 		out:    false,
 	},
-	ParseTest{
+	{
 		in:     "foo",
 		intype: Boolean,
 		isErr:  true,
 	},
-	ParseTest{
+	{
 		in:     "trux",
 		intype: Boolean,
 		isErr:  true,
 	},
-	ParseTest{
+	{
 		in:     "truex",
 		intype: Boolean,
 		isErr:  true,
 	},
-	ParseTest{
+	{
 		in:     "",
 		intype: Boolean,
 		isErr:  true,
@@ -1079,57 +1115,57 @@ var parseBoolTests = []ParseTest{
 }
 
 var parseFloatTest = []ParseTest{
-	ParseTest{
+	{
 		in:     "0",
 		intype: Number,
 		out:    float64(0),
 	},
-	ParseTest{
+	{
 		in:     "0.0",
 		intype: Number,
 		out:    float64(0.0),
 	},
-	ParseTest{
+	{
 		in:     "1",
 		intype: Number,
 		out:    float64(1),
 	},
-	ParseTest{
+	{
 		in:     "1.234",
 		intype: Number,
 		out:    float64(1.234),
 	},
-	ParseTest{
+	{
 		in:     "1.234e5",
 		intype: Number,
 		out:    float64(1.234e5),
 	},
-	ParseTest{
+	{
 		in:     "-1.234e5",
 		intype: Number,
 		out:    float64(-1.234e5),
 	},
-	ParseTest{
+	{
 		in:     "+1.234e5", // Note: + sign not allowed under RFC7159, but our parser accepts it since it uses strconv.ParseFloat
 		intype: Number,
 		out:    float64(1.234e5),
 	},
-	ParseTest{
+	{
 		in:     "1.2.3",
 		intype: Number,
 		isErr:  true,
 	},
-	ParseTest{
+	{
 		in:     "1..1",
 		intype: Number,
 		isErr:  true,
 	},
-	ParseTest{
+	{
 		in:     "1a",
 		intype: Number,
 		isErr:  true,
 	},
-	ParseTest{
+	{
 		in:     "",
 		intype: Number,
 		isErr:  true,
