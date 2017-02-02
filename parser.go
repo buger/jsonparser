@@ -769,17 +769,12 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 	}
 
 	if t != String {
-		return "", fmt.Errorf("Value is not a number: %s", string(v))
-	}
-
-	//strip quotes
-	if len(v) > 0 && v[0] == '"' {
-		v = v[1 : len(v)-1]
+		return "", fmt.Errorf("Value is not a string: %s", string(v))
 	}
 
 	// If no escapes return raw conten
 	if bytes.IndexByte(v, '\\') == -1 {
-		return string(v), nil
+		return string(stripQuotes(v)), nil
 	}
 
 	return ParseString(v)
@@ -849,16 +844,11 @@ func ParseBoolean(b []byte) (bool, error) {
 
 // ParseString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
 func ParseString(b []byte) (string, error) {
-	//strip quotes
-	if len(b) > 0 && b[0] == '"' {
-		b = b[1 : len(b)-1]
-	}
-
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	if bU, err := Unescape(b, stackbuf[:]); err != nil {
 		return "", nil
 	} else {
-		return string(bU), nil
+		return string(stripQuotes(bU)), nil
 	}
 }
 
@@ -943,7 +933,7 @@ func (jv *JsonValue) ArrayEach(cb func(value *JsonValue)) error {
 		return jv
 	}
 
-	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+	_, err := arrayEach(true, jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		cb(&JsonValue{data: value, Type: dataType})
 	})
 
@@ -956,7 +946,7 @@ func (jv *JsonValue) ArrayEachWithIndex(cb func(idx int, value *JsonValue)) erro
 	}
 
 	idx := 0
-	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+	_, err := arrayEach(true, jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		cb(idx, &JsonValue{data: value, Type: dataType})
 		idx++
 	})
@@ -970,7 +960,7 @@ func (jv *JsonValue) ArrayEachWithError(cb func(value *JsonValue) error) error {
 	}
 
 	var cbErr error
-	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+	_, err := arrayEach(true, jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		if cbErr != nil {
 			return //TODO: rewrite this method so it does not use arrayeach, so we can escape out of this mess ...
 		}
@@ -995,11 +985,58 @@ func (jv *JsonValue) ToArray() ([]*JsonValue, error) {
 		return nil, jv
 	}
 	var res []*JsonValue
-	_, err := ArrayEach(jv.data, func(value []byte, dataType ValueType, offset int, err error) {
+	_, err := arrayEach(true, jv.data, func(value []byte, dataType ValueType, offset int, err error) {
 		res = append(res, &JsonValue{data: value, Type: dataType})
 	})
 
 	return res, err
+}
+
+func (jv *JsonValue) ObjectEach(cb func(key string, value *JsonValue)) error {
+	if jv.Err() != nil {
+		return jv
+	}
+	return objectEach(true, jv.data, func(key []byte, value []byte, dataType ValueType, offset int) error {
+		cb(string(stripQuotes(key)), &JsonValue{data: value, Type: dataType})
+		return nil
+	})
+}
+
+func (jv *JsonValue) ToMap() (res map[string]*JsonValue, err error) {
+	res = make(map[string]*JsonValue)
+	if jv.Err() != nil {
+		return res, jv
+	}
+
+	err = objectEach(true, jv.data, func(key []byte, value []byte, dataType ValueType, offset int) error {
+		res[string(stripQuotes(key))] = &JsonValue{data: value, Type: dataType}
+		return nil
+	})
+
+	return res, err
+}
+
+func (jv *JsonValue) EachKey(cb func(idx int, value *JsonValue), paths ...[]string) error {
+	if jv.Err() != nil {
+		return jv
+	}
+	eachKey(true, jv.data, func(idx int, value []byte, dataType ValueType, err error) {
+		cb(idx, &JsonValue{data: value, Type: dataType})
+	}, paths...)
+
+	return nil
+}
+
+func (jv *JsonValue) AllKeys(paths ...[]string) (res []*JsonValue, err error) {
+	if jv.Err() != nil {
+		return res, jv
+	}
+	res = make([]*JsonValue, len(paths))
+	eachKey(true, jv.data, func(idx int, value []byte, dataType ValueType, err error) {
+		res[idx] = &JsonValue{data: value, Type: dataType}
+	}, paths...)
+
+	return res, nil
 }
 
 func (jv *JsonValue) String() string {
@@ -1028,27 +1065,25 @@ func (jv *JsonValue) IsNumber() bool {
 }
 
 func (jv *JsonValue) GetInt(keys ...string) (int64, error) {
-	if len(keys) == 0 {
-		return jv.parseInt()
-	} else {
-		return jv.Get(keys...).parseInt()
+	if jv.Err() != nil {
+		return 0, jv.Err()
 	}
-}
-
-func (jv *JsonValue) parseInt() (int64, error) {
-	return ParseInt(jv.data)
+	if len(keys) == 0 {
+		return ParseInt(jv.data)
+	} else {
+		return jv.Get(keys...).GetInt()
+	}
 }
 
 func (jv *JsonValue) GetFloat(keys ...string) (float64, error) {
-	if len(keys) == 0 {
-		return jv.parseFloat()
-	} else {
-		return jv.Get(keys...).parseFloat()
+	if jv.Err() != nil {
+		return 0.0, jv.Err()
 	}
-}
-
-func (jv *JsonValue) parseFloat() (float64, error) {
-	return ParseFloat(jv.data)
+	if len(keys) == 0 {
+		return ParseFloat(jv.data)
+	} else {
+		return jv.Get(keys...).GetFloat()
+	}
 }
 
 func (jv *JsonValue) IsBoolean() bool {
@@ -1056,15 +1091,14 @@ func (jv *JsonValue) IsBoolean() bool {
 }
 
 func (jv *JsonValue) GetBool(keys ...string) (bool, error) {
-	if len(keys) == 0 {
-		return jv.parseBool()
-	} else {
-		return jv.Get(keys...).parseBool()
+	if jv.Err() != nil {
+		return false, jv.Err()
 	}
-}
-
-func (jv *JsonValue) parseBool() (bool, error) {
-	return ParseBoolean(jv.data)
+	if len(keys) == 0 {
+		return ParseBoolean(jv.data)
+	} else {
+		return jv.Get(keys...).GetBool()
+	}
 }
 
 func (jv *JsonValue) IsString() bool {
@@ -1072,26 +1106,44 @@ func (jv *JsonValue) IsString() bool {
 }
 
 func (jv *JsonValue) GetString(keys ...string) (string, error) {
+	if jv.Err() != nil {
+		return "", jv.Err()
+	}
 	if len(keys) == 0 {
-		return jv.parseString()
+		return ParseString(jv.data)
 	} else {
-		return jv.Get(keys...).parseString()
+		return jv.Get(keys...).GetString()
 	}
 }
 
-func (jv *JsonValue) parseString() (string, error) {
-	return ParseString(jv.data)
-}
+func (jv *JsonValue) GetStringUnsafe(keys ...string) (string, error) {
+	if jv.Err() != nil {
+		return "", jv.Err()
+	}
 
-func (jv *JsonValue) GetStringArray(keys ...string) ([]string, error) {
 	if len(keys) == 0 {
-		return jv.parseStringArray()
+		return string(stripQuotes(jv.data)), nil
 	} else {
-		return jv.Get(keys...).parseStringArray()
+		return jv.Get(keys...).GetStringUnsafe()
 	}
 }
 
-func (jv *JsonValue) parseStringArray() (res []string, err error) {
+func stripQuotes(b []byte) []byte {
+	if len(b) > 1 && b[0] == '"' {
+		return b[1 : len(b)-1]
+	} else {
+		return b
+	}
+}
+
+func (jv *JsonValue) GetStringArray(keys ...string) (res []string, err error) {
+	if jv.Err() != nil {
+		return nil, jv.Err()
+	}
+
+	if len(keys) > 0 {
+		return jv.Get(keys...).GetStringArray()
+	}
 	if jv.Type != Array {
 		return nil, fmt.Errorf("parseStringArray can only be executed on an Array not on a '%v'", jv.Type.String())
 	}

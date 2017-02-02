@@ -636,10 +636,7 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, jsonValue bool,
 
 			//tests contain string results with quotes already stripped, so do this here
 			if jsonValue && dataType == String {
-				b := value.([]byte)
-				if len(b) > 1 && b[0] == '"' {
-					value = b[1 : len(b)-1]
-				}
+				value = stripQuotes(value.([]byte))
 			}
 
 			if ok, expected := resultChecker(test, value); !ok {
@@ -1035,6 +1032,17 @@ var objectEachTests = []ObjectEachTest{
 }
 
 func TestObjectEach(t *testing.T) {
+
+}
+
+func TestJsonValueObjectEach(t *testing.T) {
+	runObjectEach(t, 1)
+	runObjectEach(t, 2)
+	runObjectEach(t, 3)
+}
+
+func runObjectEach(t *testing.T, testNum int) {
+
 	for _, test := range objectEachTests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
@@ -1042,14 +1050,43 @@ func TestObjectEach(t *testing.T) {
 
 		// Execute ObjectEach and capture all of the entries visited, in order
 		var entries []keyValueEntry
-		err := ObjectEach([]byte(test.json), func(key, value []byte, valueType ValueType, off int) error {
-			entries = append(entries, keyValueEntry{
-				key:       string(key),
-				value:     string(value),
-				valueType: valueType,
+		var err error
+		switch testNum {
+		case 1:
+			fmt.Println("Running: ObjectEach " + test.desc)
+			err = ObjectEach([]byte(test.json), func(key, value []byte, valueType ValueType, off int) error {
+				entries = append(entries, keyValueEntry{
+					key:       string(key),
+					value:     string(value),
+					valueType: valueType,
+				})
+				return nil
 			})
-			return nil
-		})
+		case 2:
+			fmt.Println("Running: JsonValue.ObjectEach " + test.desc)
+			err = ParseJson([]byte(test.json)).ObjectEach(func(key string, value *JsonValue) {
+				str, _ := value.GetStringUnsafe()
+				entries = append(entries, keyValueEntry{
+					key:       key,
+					value:     str,
+					valueType: value.Type,
+				})
+			})
+		case 3:
+			fmt.Println("Running: JsonValue.ToMap " + test.desc)
+			var objMap map[string]*JsonValue
+			objMap, err = ParseJson([]byte(test.json)).ToMap()
+			for key, value := range objMap {
+				str, _ := value.GetStringUnsafe()
+				entries = append(entries, keyValueEntry{
+					key:       key,
+					value:     str,
+					valueType: value.Type,
+				})
+			}
+		default:
+			t.Error("test not found")
+		}
 
 		// Check the correctness of the result
 		isErr := (err != nil)
@@ -1095,49 +1132,79 @@ func TestEachKey(t *testing.T) {
 		{"arrInt", "[5]"}, // Should not find last key
 	}
 
-	keysFound := 0
-
-	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
-		keysFound++
-
+	checkFun := func(t *testing.T, idx int, val string) {
 		switch idx {
 		case 0:
-			if string(value) != "Name" {
-				t.Error("Should find 1 key", string(value))
+			if val != "Name" {
+				t.Error("Should find 1 key", val)
 			}
 		case 1:
-			if string(value) != "Order" {
+			if val != "Order" {
 				t.Errorf("Should find 2 key")
 			}
 		case 2:
-			if string(value) != "test" {
+			if val != "test" {
 				t.Errorf("Should find 3 key")
 			}
 		case 3:
-			if string(value) != "2" {
-				t.Errorf("Should find 4 key")
+			if val != "2" {
+				t.Errorf("Should find 4 key ")
 			}
 		case 4:
-			if string(value) != "test2" {
-				t.Error("Should find 5 key", string(value))
+			if val != "test2" {
+				t.Error("Should find 5 key ", val)
 			}
 		case 5:
-			if string(value) != "4" {
+			if val != "4" {
 				t.Errorf("Should find 6 key")
 			}
 		case 6:
-			if string(value) != "2" {
+			if val != "2" {
 				t.Errorf("Should find 7 key")
 			}
 		case 7:
-			if string(value) != "4" {
-				t.Error("Should find 8 key", string(value))
+			if val != "4" {
+				t.Error("Should find 8 key", val)
 			}
 		default:
 			t.Errorf("Should found only 8 keys")
 		}
-	}, paths...)
+	}
 
+	keysFound := 0
+	fmt.Println("Running: EachKey")
+	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
+		keysFound++
+		// /checkFun(t, idx, string(value))
+
+	}, paths...)
+	if keysFound != 8 {
+		t.Errorf("Should find 8 keys: %d", keysFound)
+	}
+
+	fmt.Println("Running: JsonValue.EachKey")
+	keysFound = 0
+	ParseJson(testJson).EachKey(func(idx int, value *JsonValue) {
+		keysFound++
+
+		val, _ := value.GetString()
+		checkFun(t, idx, val)
+
+	}, paths...)
+	if keysFound != 8 {
+		t.Errorf("Should find 8 keys: %d", keysFound)
+	}
+
+	fmt.Println("Running: JsonValue.EachKey (2)")
+	keysFound = 0
+	vals, _ := ParseJson(testJson).AllKeys(paths...)
+	for idx, value := range vals {
+		if value != nil {
+			val, _ := value.GetString()
+			checkFun(t, idx, val)
+			keysFound++
+		}
+	}
 	if keysFound != 8 {
 		t.Errorf("Should find 8 keys: %d", keysFound)
 	}
