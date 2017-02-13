@@ -1,7 +1,7 @@
 SOURCE = parser.go
 CONTAINER = jsonparser
-SOURCE_PATH = /go/src/github.com/buger/jsonparser
-BENCHMARK = JsonParser
+SOURCE_PATH = /go/src/github.com/stverhae/jsonparser
+BENCHMARK = JsonValue
 BENCHTIME = 5s
 TEST = .
 DRUN = docker run -v `pwd`:$(SOURCE_PATH) -i -t $(CONTAINER)
