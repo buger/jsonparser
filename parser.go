@@ -751,7 +751,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 	}
 
 	if t != String {
-		return "", fmt.Errorf("Value is not a number: %s", string(v))
+		return "", fmt.Errorf("Value is not a string: %s", string(v))
 	}
 
 	// If no escapes return raw conten
