@@ -289,6 +289,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				}
 
 				if maxPath >= level {
+					if level < 1 {
+						cb(-1, []byte{}, Unknown, MalformedJsonError)
+						return -1
+					}
 					pathsBuf[level-1] = bytesToString(&keyUnesc)
 
 					for pi, p := range paths {
