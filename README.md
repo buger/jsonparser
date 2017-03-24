@@ -246,19 +246,19 @@ Each test processes 190 bytes of http log as a JSON record.
 It should read multiple fields.
 https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payload_test.go
 
-| Library | time/op | bytes/op | allocs/op |
-| --- | --- | --- | --- | --- |
-| encoding/json struct | 7879 | 880 | 18 |
-| encoding/json interface{} | 8946 | 1521 | 38|
-| Jeffail/gabs | 10053 | 1649 | 46 |
-| bitly/go-simplejson | 10128 | 2241 | 36 |
-| antonholmquist/jason | 27152 | 7237 | 101 |
-| github.com/ugorji/go/codec | 8806 | 2176 | 31 |
-| mreiferson/go-ujson | **7008** | **1409** | 37 |
-| pquerna/ffjson | **3769** | **624** | **15** |
-| mailru/easyjson | **2002** | **192** | **9** |
-| buger/jsonparser | **1367** | **0** | **0** |
-| buger/jsonparser (EachKey API) | **809** | **0** | **0** |
+Library | time/op | bytes/op | allocs/op 
+ ------ | ------- | -------- | -------
+encoding/json struct | 7879 | 880 | 18 
+encoding/json interface{} | 8946 | 1521 | 38
+Jeffail/gabs | 10053 | 1649 | 46 
+bitly/go-simplejson | 10128 | 2241 | 36 
+antonholmquist/jason | 27152 | 7237 | 101 
+github.com/ugorji/go/codec | 8806 | 2176 | 31 
+mreiferson/go-ujson | **7008** | **1409** | 37 
+pquerna/ffjson | **3769** | **624** | **15** 
+mailru/easyjson | **2002** | **192** | **9** 
+buger/jsonparser | **1367** | **0** | **0** 
+buger/jsonparser (EachKey API) | **809** | **0** | **0** 
 
 Winners are ffjson, easyjson and jsonparser, where jsonparser is up to 9.8x faster than encoding/json and 4.6x faster than ffjson, and slightly faster than easyjson.
 If you look at memory allocation, jsonparser has no rivals, as it makes no data copy and operates with raw []byte structures and pointers to it.
@@ -271,7 +271,7 @@ It should read multiple nested fields and 1 array.
 https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_payload_test.go
 
 | Library | time/op | bytes/op | allocs/op |
-| --- | --- | --- | --- | --- |
+| ------- | ------- | -------- | --------- |
 | encoding/json struct | 57749 | 1336 | 29 |
 | encoding/json interface{} | 79297 | 10627 | 215 |
 | Jeffail/gabs | 83807 | 11202 | 235 |
@@ -299,7 +299,7 @@ Basically it means processing a full JSON file.
 https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payload_test.go
 
 | Library | time/op | bytes/op | allocs/op |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | encoding/json struct | 748336 | 8272 | 307 |
 | encoding/json interface{} | 1224271 | 215425 | 3395 |
 | pquerna/ffjson | **312271** | **7792** | **298** |
