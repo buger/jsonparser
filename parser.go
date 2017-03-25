@@ -122,6 +122,7 @@ func searchKeys(data []byte, keys ...string) int {
 	}
 
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+
 	for i < ln {
 		switch data[i] {
 		case '"':

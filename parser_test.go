@@ -632,6 +632,7 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 		if activeTest != "" && test.desc != activeTest {
 			continue
 		}
+
 		fmt.Println("Running:", test.desc)
 
 		value, dataType, err := runner(test)
