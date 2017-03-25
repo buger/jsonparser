@@ -357,7 +357,19 @@ var getTests = []GetTest{
 		path:    []string{"b"},
 		isFound: false,
 	},
-
+	{ // Issue #81
+		desc:	`missing key in object in array`,
+		json: 	`{"p":{"a":[{"u":"abc","t":"th"}]}}`,
+		path: 	[]string{"p", "a", "[0]", "x"},
+		isFound: false,
+	},
+	{ // Issue #81 counter test
+		desc:	`existing key in object in array`,
+		json: 	`{"p":{"a":[{"u":"abc","t":"th"}]}}`,
+		path: 	[]string{"p", "a", "[0]", "u"},
+		isFound: true,
+		data:	"abc",
+	},
 	{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    "malformed key (followed by comma followed by colon)",
 		json:    `{"a",:1}`,

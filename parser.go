@@ -195,7 +195,11 @@ func searchKeys(data []byte, keys ...string) int {
 				if valueFound == nil {
 					return -1
 				} else {
-					return i + valueOffset + searchKeys(valueFound, keys[level+1:]...)
+					subIndex := searchKeys(valueFound, keys[level+1:]...)
+					if subIndex < 0 {
+						return -1
+					}
+					return i + valueOffset + subIndex
 				}
 			} else {
 				// Do not search for keys inside arrays
