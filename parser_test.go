@@ -38,6 +38,93 @@ type GetTest struct {
 	data interface{}
 }
 
+type SetTest struct {
+	desc    string
+	json    string
+	setData string
+	path    []string
+
+	isErr   bool
+	isFound bool
+
+	data interface{}
+}
+
+var getSetTests = []SetTest{
+	{
+		desc:    "set unknown key (string)",
+		json:    `{"test":"input"}`,
+		isFound: false,
+		path:    []string{"new.field"},
+		setData: `"new value"`,
+		data:    `{"test":"input","new.field":"new value"}`,
+	},
+	{
+		desc:    "set known key (string)",
+		json:    `{"test":"input"}`,
+		isFound: false,
+		path:    []string{"test"},
+		setData: `"new value"`,
+		data:    `{"test":"new value"}`,
+	},
+	{
+		desc:    "set unknown key (object)",
+		json:    `{"test":"input"}`,
+		isFound: false,
+		path:    []string{"new.field"},
+		setData: `{"key": "new object"}`,
+		data:    `{"test":"input","new.field":{"key": "new object"}}`,
+	},
+	{
+		desc:    "set known key (object)",
+		json:    `{"test":"input"}`,
+		isFound: false,
+		path:    []string{"test"},
+		setData: `{"key": "new object"}`,
+		data:    `{"test":{"key": "new object"}}`,
+	},
+	{
+		desc:    "set known key (object within array)",
+		json:    `{"test":[{"key":"val-obj1"}]}`,
+		isFound: false,
+		path:    []string{"test", "[0]"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":[{"key":"new object"}]}`,
+	},
+	{
+		desc:    "set unknown key (complex object within nested array)",
+		json:    `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
+		isFound: false,
+		path:    []string{"test", "[0]", "key", "[0]", "newInnerKey"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":[{"key":[{"innerKey":"innerKeyValue","newInnerKey":{"key":"new object"}}]}]}`,
+	},
+	{
+		desc:    "set known key (complex object within nested array)",
+		json:    `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
+		isFound: false,
+		path:    []string{"test", "[0]", "key", "[0]", "innerKey"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":[{"key":[{"innerKey":{"key":"new object"}}]}]}`,
+	},
+	{
+		desc:    "set unknown key (object, partial subtree exists)",
+		json:    `{"test":{"input":"output"}}`,
+		isFound: false,
+		path:    []string{"test", "new.field"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":{"input":"output","new.field":{"key":"new object"}}}`,
+	},
+	{
+		desc:    "set unknown key (object, no subtree exists)",
+		json:    `{"test":"input"}`,
+		isFound: false,
+		path:    []string{"new.field", "nested", "value"},
+		setData: `{"key": "new object"}`,
+		data:    `{"test":"input","new.field":{"nested":{"value":{"key": "new object"}}}}`,
+	},
+}
+
 var getTests = []GetTest{
 	// Trivial tests
 	{
@@ -358,17 +445,17 @@ var getTests = []GetTest{
 		isFound: false,
 	},
 	{ // Issue #81
-		desc:	`missing key in object in array`,
-		json: 	`{"p":{"a":[{"u":"abc","t":"th"}]}}`,
-		path: 	[]string{"p", "a", "[0]", "x"},
+		desc:    `missing key in object in array`,
+		json:    `{"p":{"a":[{"u":"abc","t":"th"}]}}`,
+		path:    []string{"p", "a", "[0]", "x"},
 		isFound: false,
 	},
 	{ // Issue #81 counter test
-		desc:	`existing key in object in array`,
-		json: 	`{"p":{"a":[{"u":"abc","t":"th"}]}}`,
-		path: 	[]string{"p", "a", "[0]", "u"},
+		desc:    `existing key in object in array`,
+		json:    `{"p":{"a":[{"u":"abc","t":"th"}]}}`,
+		path:    []string{"p", "a", "[0]", "u"},
 		isFound: true,
-		data:	"abc",
+		data:    "abc",
 	},
 	{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    "malformed key (followed by comma followed by colon)",
@@ -654,6 +741,37 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 			}
 		}
 	}
+}
+
+func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(SetTest) (interface{}, ValueType, error), resultChecker func(SetTest, interface{}) (bool, interface{})) {
+	for _, test := range tests {
+		if activeTest != "" && test.desc != activeTest {
+			continue
+		}
+
+		fmt.Println("Running:", test.desc)
+
+		value, _, err := runner(test)
+		if string(value.([]byte)) != test.data {
+			t.Errorf("Unexpected result on %s", test.desc)
+			t.Log("Got:     ", string(value.([]byte)))
+			t.Log("Expected:", test.data)
+			t.Log("Error:   ", err)
+		}
+	}
+}
+
+func TestSet(t *testing.T) {
+	runSetTests(t, "Set()", getSetTests,
+		func(test SetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = Set([]byte(test.json), []byte(test.setData), test.path...)
+			return
+		},
+		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
 }
 
 func TestGet(t *testing.T) {

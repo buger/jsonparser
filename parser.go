@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 // Errors
@@ -445,34 +446,80 @@ var (
 	nullLiteral  = []byte("null")
 )
 
+func createInsertComponent(keys []string, setValue []byte) []byte {
+	var buffer bytes.Buffer
+	buffer.WriteString(",\"")
+	buffer.WriteString(keys[0])
+	buffer.WriteString("\":")
+	for i := 1; i < len(keys); i++ {
+		buffer.WriteString("{\"")
+		buffer.WriteString(keys[i])
+		buffer.WriteString("\":")
+	}
+	buffer.Write(setValue)
+	buffer.WriteString(strings.Repeat("}", len(keys)-1))
+	return buffer.Bytes()
+}
+
 /*
-Get - Receives data structure, and key path to extract value from.
+
+Set - Receives existing data structure, path to set, and data to set at that key.
 
 Returns:
-`value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
-`dataType` -    Can be: `NotExist`, `String`, `Number`, `Object`, `Array`, `Boolean` or `Null`
-`offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
-`err` - If key not found or any other parsing issue it should return error. If key not found it also sets `dataType` to `NotExist`
+`value` - modified byte array
+`err` - On any parsing error
 
-Accept multiple keys to specify path to JSON value (in case of quering nested structures).
-If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
 */
-func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset int, err error) {
-	if len(keys) > 0 {
-		if offset = searchKeys(data, keys...); offset == -1 {
-			return []byte{}, NotExist, -1, KeyPathNotFoundError
+func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error) {
+	// ensure keys are set
+	if len(keys) == 0 {
+		return nil, KeyPathNotFoundError
+	}
+
+	_, _, startOffset, endOffset, err := internalGet(data, keys...)
+	if err != nil {
+		if err != KeyPathNotFoundError {
+			// problem parsing the data
+			return []byte{}, err
 		}
+		// full path doesnt exist
+		// does any subpath exist?
+		var depth int
+		for i := range keys {
+			_, _, _, end, sErr := internalGet(data, keys[:i+1]...)
+			if sErr != nil {
+				break
+			} else {
+				endOffset = end
+				depth++
+			}
+		}
+		if endOffset == -1 {
+			endOffset = len(data) - 1
+		}
+		depthOffset := endOffset
+		if depth != 0 {
+			depthOffset--
+		}
+		value = append(data[:depthOffset], append(createInsertComponent(keys[depth:], setValue), data[depthOffset:]...)...)
+	} else {
+		// path currently exists
+		startComponent := data[:startOffset]
+		endComponent := data[endOffset:]
+
+		value = make([]byte, len(startComponent)+len(endComponent)+len(setValue))
+		newEndOffset := startOffset + len(setValue)
+		copy(value[0:startOffset], startComponent)
+		copy(value[startOffset:newEndOffset], setValue)
+		copy(value[newEndOffset:], endComponent)
 	}
+	return value, nil
+}
 
-	// Go to closest value
-	nO := nextToken(data[offset:])
-	if nO == -1 {
-		return []byte{}, NotExist, -1, MalformedJsonError
-	}
-
-	offset += nO
-
+func getType(data []byte, offset int) ([]byte, ValueType, int, error) {
+	var dataType ValueType
 	endOffset := offset
+
 	// if string value
 	if data[offset] == '"' {
 		dataType = String
@@ -532,8 +579,44 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 
 		endOffset += end
 	}
+	return data[offset:endOffset], dataType, endOffset, nil
+}
 
-	value = data[offset:endOffset]
+/*
+Get - Receives data structure, and key path to extract value from.
+
+Returns:
+`value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
+`dataType` -    Can be: `NotExist`, `String`, `Number`, `Object`, `Array`, `Boolean` or `Null`
+`offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
+`err` - If key not found or any other parsing issue it should return error. If key not found it also sets `dataType` to `NotExist`
+
+Accept multiple keys to specify path to JSON value (in case of quering nested structures).
+If no keys provided it will try to extract closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
+*/
+func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset int, err error) {
+	a, b, _, d, e := internalGet(data, keys...)
+	return a, b, d, e
+}
+
+func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType, offset, endOffset int, err error) {
+	if len(keys) > 0 {
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return []byte{}, NotExist, -1, -1, KeyPathNotFoundError
+		}
+	}
+
+	// Go to closest value
+	nO := nextToken(data[offset:])
+	if nO == -1 {
+		return []byte{}, NotExist, offset, -1, MalformedJsonError
+	}
+
+	offset += nO
+	value, dataType, endOffset, err = getType(data, offset)
+	if err != nil {
+		return value, dataType, offset, endOffset, err
+	}
 
 	// Strip quotes from string values
 	if dataType == String {
@@ -544,7 +627,7 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 		value = []byte{}
 	}
 
-	return value, dataType, endOffset, nil
+	return value, dataType, offset, endOffset, nil
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
