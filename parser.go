@@ -183,11 +183,14 @@ func searchKeys(data []byte, keys ...string) int {
 				var curIdx int
 				var valueFound []byte
 				var valueOffset int
-
 				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
 					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
+                                                if dataType == String {
+							valueOffset = valueOffset - 2
+							valueFound = data[i + valueOffset:i + valueOffset + len(value) + 2]
+                                                }
 					}
 					curIdx += 1
 				})

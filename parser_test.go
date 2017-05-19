@@ -400,6 +400,13 @@ var getTests = []GetTest{
 		data:    `{"b":"2"}`,
 	},
 	{
+                desc:    "get string from array",
+                json:    `{"a":[{"b":1},"foo", 3],"c":{"c":[1,2]}}`,
+                path:    []string{"a", "[1]"},
+                isFound: true,
+                data:    "foo",
+        },
+	{
 		desc:    "key in path is index",
 		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
 		path:    []string{"a", "[0]", "b"},
