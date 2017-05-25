@@ -832,7 +832,7 @@ func ParseBoolean(b []byte) (bool, error) {
 func ParseString(b []byte) (string, error) {
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	if bU, err := Unescape(b, stackbuf[:]); err != nil {
-		return "", nil
+		return "", MalformedValueError
 	} else {
 		return string(bU), nil
 	}

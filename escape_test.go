@@ -44,12 +44,14 @@ var singleUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
 	{in: `\uD83D`, out: 0xD83D, len: 6},
 	{in: `\uDE03`, out: 0xDE03, len: 6},
 	{in: `\uFFFF`, out: 0xFFFF, len: 6},
+	{in: `\uFF11`, out: '１', len: 6},
 }, commonUnicodeEscapeTests...)
 
 var multiUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
 	{in: `\uD83D`, isErr: true},
 	{in: `\uDE03`, isErr: true},
-	{in: `\uFFFF`, isErr: true},
+	{in: `\uFFFF`, out: '\uFFFF', len: 6},
+	{in: `\uFF11`, out: '１', len: 6},
 
 	{in: `\uD83D\uDE03`, out: '\U0001F603', len: 12},
 	{in: `\uD800\uDC00`, out: '\U00010000', len: 12},
@@ -109,13 +111,14 @@ var unescapeTests = []unescapeTest{
 	{in: `ab\\de`, out: `ab\de`, canAlloc: true},
 	{in: `ab\"de`, out: `ab"de`, canAlloc: true},
 	{in: `ab \u00B0 de`, out: `ab ° de`, canAlloc: true},
+	{in: `ab \uFF11 de`, out: `ab １ de`, canAlloc: true},
+	{in: `\uFFFF`, out: "\uFFFF", canAlloc: true},
 	{in: `ab \uD83D\uDE03 de`, out: "ab \U0001F603 de", canAlloc: true},
 	{in: `\u0000\u0000\u0000\u0000\u0000`, out: "\u0000\u0000\u0000\u0000\u0000", canAlloc: true},
 	{in: `\u0000 \u0000 \u0000 \u0000 \u0000`, out: "\u0000 \u0000 \u0000 \u0000 \u0000", canAlloc: true},
 	{in: ` \u0000 \u0000 \u0000 \u0000 \u0000 `, out: " \u0000 \u0000 \u0000 \u0000 \u0000 ", canAlloc: true},
 
 	{in: `\uD800`, isErr: true},
-	{in: `\uFFFF`, isErr: true},
 	{in: `abcde\`, isErr: true},
 	{in: `abcde\x`, isErr: true},
 	{in: `abcde\u`, isErr: true},
