@@ -7,6 +7,7 @@ package benchmark
 import (
 	"encoding/json"
 	"github.com/Jeffail/gabs"
+	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
 	"github.com/buger/jsonparser"
@@ -279,6 +280,26 @@ func BenchmarkUjsonMedium(b *testing.B) {
 		}
 
 		nothing()
+	}
+}
+
+/*
+   github.com/a8m/djson
+*/
+func BenchmarkDjsonMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		m, _ := djson.DecodeObject(mediumFixture)
+		person := m["person"].(map[string]interface{})
+		name := person["name"].(map[string]interface{})
+		github := person["github"].(map[string]interface{})
+		company := m["company"]
+		gravatar := person["gravatar"].(map[string]interface{})
+		avatars := gravatar["avatars"].([]interface{})
+
+		nothing(name["fullName"].(string), github["followers"].(float64), company)
+		for _, a := range avatars {
+			nothing(a.(map[string]interface{})["url"])
+		}
 	}
 }
 
