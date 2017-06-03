@@ -218,6 +218,7 @@ Benchmarks run on standard Linode 1024 box.
 Compared libraries:
 * https://golang.org/pkg/encoding/json
 * https://github.com/Jeffail/gabs
+* https://github.com/a8m/djson
 * https://github.com/bitly/go-simplejson
 * https://github.com/antonholmquist/jason
 * https://github.com/mreiferson/go-ujson
@@ -250,11 +251,12 @@ Library | time/op | bytes/op | allocs/op
  ------ | ------- | -------- | -------
 encoding/json struct | 7879 | 880 | 18 
 encoding/json interface{} | 8946 | 1521 | 38
-Jeffail/gabs | 10053 | 1649 | 46 
+Jeffail/gabs | 10053 | 1649 | 46
 bitly/go-simplejson | 10128 | 2241 | 36 
 antonholmquist/jason | 27152 | 7237 | 101 
 github.com/ugorji/go/codec | 8806 | 2176 | 31 
 mreiferson/go-ujson | **7008** | **1409** | 37 
+a8m/djson | 3862 | 1249 | 30 
 pquerna/ffjson | **3769** | **624** | **15** 
 mailru/easyjson | **2002** | **192** | **9** 
 buger/jsonparser | **1367** | **0** | **0** 
@@ -279,6 +281,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_medium_paylo
 | antonholmquist/jason | 94099 | 19013 | 247 |
 | github.com/ugorji/go/codec | 114719 | 6712 | 152 |
 | mreiferson/go-ujson | **56972** | 11547 | 270 |
+| a8m/djson | 28525 | 10196 | 198 | 
 | pquerna/ffjson | **20298** | **856** | **20** |
 | mailru/easyjson | **10512** | **336** | **12** |
 | buger/jsonparser | **15955** | **0** | **0** |
@@ -302,6 +305,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | --- | --- | --- | --- |
 | encoding/json struct | 748336 | 8272 | 307 |
 | encoding/json interface{} | 1224271 | 215425 | 3395 |
+| a8m/djson | 510082 | 213682 | 2845 |
 | pquerna/ffjson | **312271** | **7792** | **298** |
 | mailru/easyjson | **154186** | **6992** | **288** |
 | buger/jsonparser | **85308** | **0** | **0** |
