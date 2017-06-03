@@ -627,13 +627,16 @@ func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jt
 	}
 }
 
-func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(GetTest) (interface{}, ValueType, error), resultChecker func(GetTest, interface{}) (bool, interface{})) {
+func runGetTests(t *testing.T, testKind string, tests []GetTest, jsonValue bool, runner func(GetTest) (interface{}, ValueType, error), resultChecker func(GetTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
 		}
-
-		fmt.Println("Running:", test.desc)
+		if jsonValue {
+			fmt.Println("Running: JsonValue", test.desc)
+		} else {
+			fmt.Println("Running:", test.desc)
+		}
 
 		value, dataType, err := runner(test)
 
@@ -641,6 +644,11 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 			if test.data == nil {
 				t.Errorf("MALFORMED TEST: %v", test)
 				continue
+			}
+
+			//tests contain string results with quotes already stripped, so do this here
+			if jsonValue && dataType == String {
+				value = stripQuotes(value.([]byte))
 			}
 
 			if ok, expected := resultChecker(test, value); !ok {
@@ -657,7 +665,7 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 }
 
 func TestGet(t *testing.T) {
-	runGetTests(t, "Get()", getTests,
+	runGetTests(t, "Get()", getTests, false,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, dataType, _, err = Get([]byte(test.json), test.path...)
 			return
@@ -669,8 +677,25 @@ func TestGet(t *testing.T) {
 	)
 }
 
+func TestJsonValueGet(t *testing.T) {
+	runGetTests(t, "JsonValue.Get()", getTests, true,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			//two steps to explicitly test JsonValue.Get(). (we could just pass the keys to ParseJson)
+			if json := ParseJson([]byte(test.json), test.path...); json.Err() != nil {
+				return nil, Unknown, json.Err()
+			} else {
+				return json.data, json.Type, nil
+			}
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
 func TestGetString(t *testing.T) {
-	runGetTests(t, "GetString()", getStringTests,
+	runGetTests(t, "GetString()", getStringTests, false,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetString([]byte(test.json), test.path...)
 			return value, String, err
@@ -682,8 +707,24 @@ func TestGetString(t *testing.T) {
 	)
 }
 
+func TestJsonValueGetString(t *testing.T) {
+	runGetTests(t, "JsonValue.GetString()", getStringTests, true,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			if str, err := ParseJson([]byte(test.json)).GetString(test.path...); err != nil {
+				return nil, Unknown, err
+			} else {
+				return str, Unknown, err
+			}
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := test.data.(string)
+			return expected == value.(string), expected
+		},
+	)
+}
+
 func TestGetInt(t *testing.T) {
-	runGetTests(t, "GetInt()", getIntTests,
+	runGetTests(t, "GetInt()", getIntTests, false,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetInt([]byte(test.json), test.path...)
 			return value, Number, err
@@ -695,8 +736,21 @@ func TestGetInt(t *testing.T) {
 	)
 }
 
+func TestJsonValueGetInt(t *testing.T) {
+	runGetTests(t, "JsonValueGetInt()", getIntTests, true,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = ParseJson([]byte(test.json)).GetInt(test.path...)
+			return value, Number, err
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := test.data.(int64)
+			return expected == value.(int64), expected
+		},
+	)
+}
+
 func TestGetFloat(t *testing.T) {
-	runGetTests(t, "GetFloat()", getFloatTests,
+	runGetTests(t, "GetFloat()", getFloatTests, false,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetFloat([]byte(test.json), test.path...)
 			return value, Number, err
@@ -708,8 +762,21 @@ func TestGetFloat(t *testing.T) {
 	)
 }
 
+func TestJsonValueGetFloat(t *testing.T) {
+	runGetTests(t, "JsonValue.GetFloat()", getFloatTests, true,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = ParseJson([]byte(test.json)).GetFloat(test.path...)
+			return value, Number, err
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := test.data.(float64)
+			return expected == value.(float64), expected
+		},
+	)
+}
+
 func TestGetBoolean(t *testing.T) {
-	runGetTests(t, "GetBoolean()", getBoolTests,
+	runGetTests(t, "GetBoolean()", getBoolTests, false,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetBoolean([]byte(test.json), test.path...)
 			return value, Boolean, err
@@ -721,8 +788,21 @@ func TestGetBoolean(t *testing.T) {
 	)
 }
 
+func TestJsonValueGetBoolean(t *testing.T) {
+	runGetTests(t, "JsonValue.GetBoolean()", getBoolTests, true,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = ParseJson([]byte(test.json)).GetBool(test.path...)
+			return value, Number, err
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := test.data.(bool)
+			return expected == value.(bool), expected
+		},
+	)
+}
+
 func TestGetSlice(t *testing.T) {
-	runGetTests(t, "Get()-for-arrays", getArrayTests,
+	runGetTests(t, "Get()-for-arrays", getArrayTests, false,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, dataType, _, err = Get([]byte(test.json), test.path...)
 			return
@@ -764,6 +844,40 @@ func TestArrayEach(t *testing.T) {
 	}, "a", "b")
 }
 
+func TestJsonValueArrayEach(t *testing.T) {
+	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
+
+	json := ParseJson(mock, "a", "b")
+	if json.Err() != nil {
+		t.Error(json.Err())
+		return
+	}
+	json.ArrayEachWithIndex(func(idx int, jsonValue *JsonValue) {
+		value, _ := jsonValue.GetString()
+
+		switch idx {
+		case 0:
+			if value != `{"x": 1}` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 1:
+			if value != `{"x":2}` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+		case 2:
+			if value != `{ "x":3}` {
+				t.Errorf("Wrong third item: %s", string(value))
+			}
+		case 3:
+			if value != `{"x":4}` {
+				t.Errorf("Wrong forth item: %s", string(value))
+			}
+		default:
+			t.Errorf("Should process only 4 items")
+		}
+	})
+}
+
 func TestArrayEachEmpty(t *testing.T) {
 	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
 
@@ -780,12 +894,13 @@ func TestArrayEachEmpty(t *testing.T) {
 	}{
 		{"Empty array", args{[]byte("[]"), funcError, []string{}}, 1, false},
 		{"Empty array with space", args{[]byte("[ ]"), funcError, []string{}}, 2, false},
-		{"Empty array with \n", args{[]byte("[\n]"), funcError, []string{}}, 2, false},
+		{"Empty array with \\n", args{[]byte("[\n]"), funcError, []string{}}, 2, false},
 		{"Empty field array", args{[]byte("{\"data\": []}"), funcError, []string{"data"}}, 10, false},
 		{"Empty field array with space", args{[]byte("{\"data\": [ ]}"), funcError, []string{"data"}}, 11, false},
-		{"Empty field array with \n", args{[]byte("{\"data\": [\n]}"), funcError, []string{"data"}}, 11, false},
+		{"Empty field array with \\n", args{[]byte("{\"data\": [\n]}"), funcError, []string{"data"}}, 11, false},
 	}
 	for _, tt := range tests {
+		fmt.Println("Running: " + tt.name)
 		t.Run(tt.name, func(t *testing.T) {
 			gotOffset, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
 			if (err != nil) != tt.wantErr {
@@ -794,6 +909,20 @@ func TestArrayEachEmpty(t *testing.T) {
 			}
 			if gotOffset != tt.wantOffset {
 				t.Errorf("ArrayEach() = %v, want %v", gotOffset, tt.wantOffset)
+			}
+		})
+	}
+
+	//JsonValue
+	for _, tt := range tests {
+		fmt.Println("Running: JsonValue " + tt.name)
+		t.Run("JsonValue "+tt.name, func(t *testing.T) {
+			err := ParseJson(tt.args.data).Get(tt.args.keys...).ArrayEach(func(value *JsonValue) {
+				tt.args.cb(value.data, value.Type, 0, nil)
+			})
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}
@@ -915,6 +1044,17 @@ var objectEachTests = []ObjectEachTest{
 }
 
 func TestObjectEach(t *testing.T) {
+
+}
+
+func TestJsonValueObjectEach(t *testing.T) {
+	runObjectEach(t, 1)
+	runObjectEach(t, 2)
+	runObjectEach(t, 3)
+}
+
+func runObjectEach(t *testing.T, testNum int) {
+
 	for _, test := range objectEachTests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
@@ -922,14 +1062,43 @@ func TestObjectEach(t *testing.T) {
 
 		// Execute ObjectEach and capture all of the entries visited, in order
 		var entries []keyValueEntry
-		err := ObjectEach([]byte(test.json), func(key, value []byte, valueType ValueType, off int) error {
-			entries = append(entries, keyValueEntry{
-				key:       string(key),
-				value:     string(value),
-				valueType: valueType,
+		var err error
+		switch testNum {
+		case 1:
+			fmt.Println("Running: ObjectEach " + test.desc)
+			err = ObjectEach([]byte(test.json), func(key, value []byte, valueType ValueType, off int) error {
+				entries = append(entries, keyValueEntry{
+					key:       string(key),
+					value:     string(value),
+					valueType: valueType,
+				})
+				return nil
 			})
-			return nil
-		})
+		case 2:
+			fmt.Println("Running: JsonValue.ObjectEach " + test.desc)
+			err = ParseJson([]byte(test.json)).ObjectEach(func(key string, value *JsonValue) {
+				str, _ := value.GetStringUnsafe()
+				entries = append(entries, keyValueEntry{
+					key:       key,
+					value:     str,
+					valueType: value.Type,
+				})
+			})
+		case 3:
+			fmt.Println("Running: JsonValue.ToMap " + test.desc)
+			var objMap map[string]*JsonValue
+			objMap, err = ParseJson([]byte(test.json)).ToMap()
+			for key, value := range objMap {
+				str, _ := value.GetStringUnsafe()
+				entries = append(entries, keyValueEntry{
+					key:       key,
+					value:     str,
+					valueType: value.Type,
+				})
+			}
+		default:
+			t.Error("test not found")
+		}
 
 		// Check the correctness of the result
 		isErr := (err != nil)
@@ -975,49 +1144,79 @@ func TestEachKey(t *testing.T) {
 		{"arrInt", "[5]"}, // Should not find last key
 	}
 
-	keysFound := 0
-
-	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
-		keysFound++
-
+	checkFun := func(t *testing.T, idx int, val string) {
 		switch idx {
 		case 0:
-			if string(value) != "Name" {
-				t.Error("Should find 1 key", string(value))
+			if val != "Name" {
+				t.Error("Should find 1 key", val)
 			}
 		case 1:
-			if string(value) != "Order" {
+			if val != "Order" {
 				t.Errorf("Should find 2 key")
 			}
 		case 2:
-			if string(value) != "test" {
+			if val != "test" {
 				t.Errorf("Should find 3 key")
 			}
 		case 3:
-			if string(value) != "2" {
-				t.Errorf("Should find 4 key")
+			if val != "2" {
+				t.Errorf("Should find 4 key ")
 			}
 		case 4:
-			if string(value) != "test2" {
-				t.Error("Should find 5 key", string(value))
+			if val != "test2" {
+				t.Error("Should find 5 key ", val)
 			}
 		case 5:
-			if string(value) != "4" {
+			if val != "4" {
 				t.Errorf("Should find 6 key")
 			}
 		case 6:
-			if string(value) != "2" {
+			if val != "2" {
 				t.Errorf("Should find 7 key")
 			}
 		case 7:
-			if string(value) != "4" {
-				t.Error("Should find 8 key", string(value))
+			if val != "4" {
+				t.Error("Should find 8 key", val)
 			}
 		default:
 			t.Errorf("Should found only 8 keys")
 		}
-	}, paths...)
+	}
 
+	keysFound := 0
+	fmt.Println("Running: EachKey")
+	EachKey(testJson, func(idx int, value []byte, vt ValueType, err error) {
+		keysFound++
+		// /checkFun(t, idx, string(value))
+
+	}, paths...)
+	if keysFound != 8 {
+		t.Errorf("Should find 8 keys: %d", keysFound)
+	}
+
+	fmt.Println("Running: JsonValue.EachKey")
+	keysFound = 0
+	ParseJson(testJson).EachKey(func(idx int, value *JsonValue) {
+		keysFound++
+
+		val, _ := value.GetString()
+		checkFun(t, idx, val)
+
+	}, paths...)
+	if keysFound != 8 {
+		t.Errorf("Should find 8 keys: %d", keysFound)
+	}
+
+	fmt.Println("Running: JsonValue.EachKey (2)")
+	keysFound = 0
+	vals, _ := ParseJson(testJson).AllKeys(paths...)
+	for idx, value := range vals {
+		if value != nil {
+			val, _ := value.GetString()
+			checkFun(t, idx, val)
+			keysFound++
+		}
+	}
 	if keysFound != 8 {
 		t.Errorf("Should find 8 keys: %d", keysFound)
 	}

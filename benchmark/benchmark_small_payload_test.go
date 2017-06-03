@@ -10,7 +10,7 @@ import (
 	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
-	"github.com/buger/jsonparser"
+	"github.com/stverhae/jsonparser"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
@@ -38,6 +38,19 @@ func BenchmarkJsonParserSmall(b *testing.B) {
 	}
 }
 
+func BenchmarkJsonValueSmall(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		json := jsonparser.ParseJson(smallFixture)
+		json.Get("uuid")
+		json.GetInt("tz")
+		json.Get("ua")
+		json.GetInt("st")
+
+		nothing()
+	}
+}
+
+
 func BenchmarkJsonParserEachKeyManualSmall(b *testing.B) {
 	paths := [][]string{
 		[]string{"uuid"},
@@ -57,6 +70,31 @@ func BenchmarkJsonParserEachKeyManualSmall(b *testing.B) {
 				// jsonparser.ParseString(value)
 			case 3:
 				jsonparser.ParseInt(value)
+			}
+		}, paths...)
+	}
+}
+
+func BenchmarkJsonValueEachKeyManualSmall(b *testing.B) {
+	paths := [][]string{
+		[]string{"uuid"},
+		[]string{"tz"},
+		[]string{"ua"},
+		[]string{"st"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		json := jsonparser.ParseJson(smallFixture)
+		json.EachKey(func(idx int, value *jsonparser.JsonValue) {
+			switch idx {
+			case 0:
+			// jsonparser.ParseString(value)
+			case 1:
+				value.GetInt()
+			case 2:
+			// jsonparser.ParseString(value)
+			case 3:
+				value.GetInt()
 			}
 		}, paths...)
 	}
@@ -84,6 +122,37 @@ func BenchmarkJsonParserEachKeyStructSmall(b *testing.B) {
 				data.Ua, _ = jsonparser.ParseString(value)
 			case 3:
 				v, _ := jsonparser.ParseInt(value)
+				data.St = int(v)
+			}
+		}, paths...)
+
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
+}
+
+func BenchmarkJsonValueEachKeyStructSmall(b *testing.B) {
+	paths := [][]string{
+		[]string{"uuid"},
+		[]string{"tz"},
+		[]string{"ua"},
+		[]string{"st"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		var data SmallPayload
+
+		json := jsonparser.ParseJson(smallFixture)
+		json.EachKey(func(idx int, value *jsonparser.JsonValue) {
+			switch idx {
+			case 0:
+				data.Uuid, _ = value.GetString()
+			case 1:
+				v, _ := value.GetInt()
+				data.Tz = int(v)
+			case 2:
+				data.Ua, _ = value.GetString()
+			case 3:
+				v, _ := value.GetInt()
 				data.St = int(v)
 			}
 		}, paths...)
@@ -124,6 +193,38 @@ func BenchmarkJsonParserObjectEachStructSmall(b *testing.B) {
 			} else {
 				return nil
 			}
+		})
+
+		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
+}
+
+func BenchmarkJsonValueObjectEachStructSmall(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var data SmallPayload
+
+		missing := 4
+
+		json := jsonparser.ParseJson(smallFixture)
+		json.ObjectEach(func(key string, value *jsonparser.JsonValue) {
+			switch {
+			case key == "uuid":
+				data.Uuid, _ = value.GetString()
+				missing--
+			case key == "tz":
+				v, _ := value.GetInt()
+				data.Tz = int(v)
+				missing--
+			case key == "ua":
+				data.Ua, _ = value.GetString()
+				missing--
+			case key == "st":
+				v, _ := value.GetInt()
+				data.St = int(v)
+				missing--
+			}
+
+			//Keeps going until the full object is parsed, unlike the base version
 		})
 
 		nothing(data.Uuid, data.Tz, data.Ua, data.St)

@@ -1,5 +1,7 @@
 package jsonparser
 
+import "math"
+
 // About 3x faster then strconv.ParseInt because does not check for range error and support only base 10, which is enough for JSON
 func parseInt(bytes []byte) (v int64, ok bool) {
 	if len(bytes) == 0 {
@@ -18,6 +20,11 @@ func parseInt(bytes []byte) (v int64, ok bool) {
 		} else {
 			return 0, false
 		}
+	}
+
+	//check for overflows!
+	if len(bytes) >= 20 && v != 0 && math.Pow10(len(bytes)-1) > float64(v) {
+		return 0, false
 	}
 
 	if neg {

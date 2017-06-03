@@ -5,11 +5,15 @@ It does not require you to know the structure of the payload (eg. create structs
 
 ## Rationale
 Originally I made this for a project that relies on a lot of 3rd party APIs that can be unpredictable and complex.
-I love simplicity and prefer to avoid external dependecies. `encoding/json` requires you to know exactly your data structures, or if you prefer to use `map[string]interface{}` instead, it will be very slow and hard to manage.
+I love simplicity and prefer to avoid external dependecies. `encoding/json` requires you to know your data structures exactly, or forces you to use `map[string]interface{}` instead, which is very slow and hard to manage.
 I investigated what's on the market and found that most libraries are just wrappers around `encoding/json`, there is few options with own parsers (`ffjson`, `easyjson`), but they still requires you to create data structures.
 
+Goal of this project is to push JSON parser performance and not sacrifice compliance and developer user experience.
 
-Goal of this project is to push JSON parser to the performance limits and not sucrifice with compliance and developer user experience.
+## JsonValue Abstraction
+JsonValue is a small abstraction built on top of the extremely fast base functions (Get, ArrayEach, ObjectEach). Instead of dealing with byte arrays it allows you to parse your json in a simpler OO style. We were also able to fix and improve some functionality which could not be changed before because of backward-compatibity. These abstractions were made to make parsing unknown, deeply nested json structures easy and error free. The raw base functions have some caveats which the abstractions fix/hide. The JsonValue API does require a few small mem allocs for the wrapper structs, but still extremely minimal.
+
+The examples below will document both the raw and the OO way of parsing.
 
 ## Example
 For the given JSON our goal is to extract the user's full name, number of github followers and avatar.
@@ -38,7 +42,9 @@ data := []byte(`{
     "name": "Acme"
   }
 }`)
-
+```
+### Raw base
+```go
 // You can specify key path by providing arguments to Get function
 jsonparser.Get(data, "person", "name", "fullName")
 
@@ -61,7 +67,7 @@ jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, off
 }, "person", "avatars")
 
 // Or use can access fields by index!
-jsonparser.GetInt("person", "avatars", "[0]", "url")
+jsonparser.GetString(data, "person", "avatars", "[0]", "url")
 
 // You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
 jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
@@ -86,6 +92,86 @@ jsonparser.EachKey(data, func(idx int, value []byte, vt jsonparser.ValueType, er
     ...
   }
 }, paths...)
+
+// For more information see docs below
+```
+
+### With JsonValue
+```go
+//always start by callig ParseJson of your json data, this wraps your data and provides an easy to use API
+json := jsonparser.ParseJson(data)
+
+// You can specify key path by providing arguments to Get function (or directly to ParseJson, result is identical)
+//this returns a *JsonValue object containing the data you requested
+jsonName := json.Get("person", "name", "fullName")
+
+//you can easily check the type of data you got and retrieve it
+if jsonName.IsString() {
+    fmt.Println(jsonName.GetString())
+} else {
+    //complain when name is not a string
+    fmt.Printf("Help I got an %v!", jsonName.Type)
+}
+
+// Instead of using `Get` you can immediately use `GetSting`, `GetInt`, `GetFloat`, `GetBool`, etc. with a path if you know what kind of data type to expect
+json.GetInt("person", "github", "followers")
+
+// When you give the path to an object, you get a JsonValue (as always) which you can use to further parse the json object
+company := json.Get("company") // `company` => `{"name": "Acme"}`
+company.GetString("name")
+//this is identical to
+json.GetString("company", "name")
+//also identical to (you get the idea..)
+name := json.Get("company", "name").GetString()
+
+// if at any point the parsing fails because your json is malformed or you provided an invalid path the JsonValue will contain an error
+//use `JsonValue.Err()` to check this. `JsonValue` implements `Error()` so it is a valid go `error`
+test := json.Get("company", "doesnotexist").Get("nono")
+if test.Err() != nil {
+    fmt.Println("Parsing failed: ", test) //will print the error
+}
+//if you use a `GetXYZ` function on a JsonValue with a parse error, it will simply return an error.
+var size int64
+if value, _, err := json.GetInt("company", "size"); err == nil {
+  size = value
+}
+
+// You can use `ArrayEach` helper to iterate items in a jsonArray [item1, item2 .... itemN]
+json.Get("person", "avatars").ArrayEach(func(avatar *JsonValue) {
+	fmt.Println(avatar.GetString("url"))
+})
+
+// Or use can access fields by index!
+json.GetString("person", "avatars", "[0]", "url")
+
+
+// Or parse the whole array and convert it to a go array (of JsonValues)
+avatars := json.Get("person", "avatars")
+if avatars.IsArray() {
+    for _, avatar := range avatars.ToArray() {
+        fmt.Println(avatar.GetString("url"))
+    }
+}
+
+// You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
+json.Get("person", "name").ObjectEach(func(key string, value *JsonValue) {
+        fmt.Printf("Key: '%s' Value: '%s' Type: %s\n", key, value.String(), value.Type)
+})
+
+// Or use `ToMap` to concvert the whole object to a go map
+for key, value := range json.Get("person", "name").ToMap {
+        fmt.Printf("Key: '%s' Value: '%s' Type: %s\n", key, value.String(), value.Type)
+})
+
+// The most efficient way to extract multiple keys is `AllKeys`
+paths := [][]string{
+  {"person", "name", "fullName"},
+  {"person", "avatars", "[0]", "url"},
+  {"company", "url"},
+}
+for _, value := range json.AllKeys(paths...) {
+    fmt.Println(value.String())
+})
 
 // For more information see docs below
 ```

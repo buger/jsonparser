@@ -6,7 +6,7 @@
 package benchmark
 
 import (
-	"github.com/buger/jsonparser"
+	"github.com/stverhae/jsonparser"
 	"testing"
 	// "github.com/Jeffail/gabs"
 	// "github.com/bitly/go-simplejson"
@@ -33,6 +33,21 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 			jsonparser.Get(value, "slug")
 			nothing()
 		}, "topics", "topics")
+	}
+}
+
+func BenchmarkJsonValueLarge(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		json := jsonparser.ParseJson(largeFixture)
+		json.Get("users").ArrayEach(func(value *jsonparser.JsonValue) {
+			value.Get("username")
+			nothing()
+		})
+		json.Get("topics", "topics").ArrayEach(func(value *jsonparser.JsonValue) {
+			value.GetInt("id")
+			value.Get("slug")
+			nothing()
+		})
 	}
 }
 

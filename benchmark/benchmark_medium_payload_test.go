@@ -10,7 +10,7 @@ import (
 	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
-	"github.com/buger/jsonparser"
+	"github.com/stverhae/jsonparser"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
@@ -34,6 +34,20 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 			jsonparser.Get(value, "url")
 			nothing()
 		}, "person", "gravatar", "avatars")
+	}
+}
+
+func BenchmarkJsonValueMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		json := jsonparser.ParseJson(mediumFixture)
+		json.Get("person", "name", "fullName")
+		json.GetInt("person", "github", "followers")
+		json.Get("company")
+
+		json.Get("person", "gravatar", "avatars").ArrayEach(func(value *jsonparser.JsonValue) {
+			value.Get("url")
+			nothing()
+		})
 	}
 }
 
@@ -62,6 +76,34 @@ func BenchmarkJsonParserEachKeyManualMedium(b *testing.B) {
 		}, paths...)
 	}
 }
+
+func BenchmarkJsonValueEachKeyManualMedium(b *testing.B) {
+	paths := [][]string{
+		[]string{"person", "name", "fullName"},
+		[]string{"person", "github", "followers"},
+		[]string{"company"},
+		[]string{"person", "gravatar", "avatars"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		json := jsonparser.ParseJson(mediumFixture)
+		json.EachKey(func(idx int, value *jsonparser.JsonValue) {
+			switch idx {
+			case 0:
+			// jsonparser.ParseString(value)
+			case 1:
+				value.GetInt()
+			case 2:
+			// jsonparser.ParseString(value)
+			case 3:
+				value.ArrayEach(func(value2 *jsonparser.JsonValue) {
+					value2.Get("url")
+				})
+			}
+		}, paths...)
+	}
+}
+
 
 func BenchmarkJsonParserEachKeyStructMedium(b *testing.B) {
 	paths := [][]string{
@@ -93,6 +135,45 @@ func BenchmarkJsonParserEachKeyStructMedium(b *testing.B) {
 				var avatars []*CBAvatar
 				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
 					url, _ := jsonparser.ParseString(avalue)
+					avatars = append(avatars, &CBAvatar{Url: url})
+				})
+				data.Person.Gravatar.Avatars = avatars
+			}
+		}, paths...)
+	}
+}
+
+func BenchmarkJsonValueEachKeyStructMedium(b *testing.B) {
+	paths := [][]string{
+		[]string{"person", "name", "fullName"},
+		[]string{"person", "github", "followers"},
+		[]string{"company"},
+		[]string{"person", "gravatar", "avatars"},
+	}
+
+	for i := 0; i < b.N; i++ {
+		data := MediumPayload{
+			Person: &CBPerson{
+				Name:     &CBName{},
+				Github:   &CBGithub{},
+				Gravatar: &CBGravatar{},
+			},
+		}
+
+		json := jsonparser.ParseJson(mediumFixture)
+		json.EachKey(func(idx int, value *jsonparser.JsonValue) {
+			switch idx {
+			case 0:
+				data.Person.Name.FullName, _ = value.GetString()
+			case 1:
+				v, _ := value.GetInt()
+				data.Person.Github.Followers = int(v)
+			case 2:
+				value.ToMap()
+			case 3:
+				var avatars []*CBAvatar
+				value.ArrayEach(func(value2 *jsonparser.JsonValue) {
+					url, _ := value2.GetString()
 					avatars = append(avatars, &CBAvatar{Url: url})
 				})
 				data.Person.Gravatar.Avatars = avatars
@@ -144,6 +225,38 @@ func BenchmarkJsonParserObjectEachStructMedium(b *testing.B) {
 
 		cv, _, _, _ := jsonparser.Get(mediumFixture, "company")
 		json.Unmarshal(cv, &data.Company)
+	}
+}
+
+func BenchmarkJsonValueObjectEachStructMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		data := MediumPayload{
+			Person: &CBPerson{
+				Name:     &CBName{},
+				Github:   &CBGithub{},
+				Gravatar: &CBGravatar{},
+			},
+		}
+
+		json := jsonparser.ParseJson(mediumFixture)
+		json.Get("person").ObjectEach(func(key string, value *jsonparser.JsonValue) {
+			switch(key) {
+			case "name":
+				data.Person.Name.FullName, _ = value.GetString("fullName")
+			case "github":
+				x, _ := value.GetInt("followers")
+				data.Person.Github.Followers = int(x)
+			case "gravatar":
+				var avatars []*CBAvatar
+				value.Get("avatars").ArrayEach(func(avatar *jsonparser.JsonValue) {
+					url, _ := avatar.GetString()
+					avatars = append(avatars, &CBAvatar{Url: url})
+				})
+				data.Person.Gravatar.Avatars = avatars
+			}
+		})
+
+		json.Get("company").ToMap()
 	}
 }
 
