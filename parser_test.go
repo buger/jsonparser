@@ -358,17 +358,17 @@ var getTests = []GetTest{
 		isFound: false,
 	},
 	{ // Issue #81
-		desc:	`missing key in object in array`,
-		json: 	`{"p":{"a":[{"u":"abc","t":"th"}]}}`,
-		path: 	[]string{"p", "a", "[0]", "x"},
+		desc:    `missing key in object in array`,
+		json:    `{"p":{"a":[{"u":"abc","t":"th"}]}}`,
+		path:    []string{"p", "a", "[0]", "x"},
 		isFound: false,
 	},
 	{ // Issue #81 counter test
-		desc:	`existing key in object in array`,
-		json: 	`{"p":{"a":[{"u":"abc","t":"th"}]}}`,
-		path: 	[]string{"p", "a", "[0]", "u"},
+		desc:    `existing key in object in array`,
+		json:    `{"p":{"a":[{"u":"abc","t":"th"}]}}`,
+		path:    []string{"p", "a", "[0]", "u"},
 		isFound: true,
-		data:	"abc",
+		data:    "abc",
 	},
 	{ // This test returns not found instead of a parse error, as checking for the malformed JSON would reduce performance
 		desc:    "malformed key (followed by comma followed by colon)",
@@ -1180,6 +1180,36 @@ func TestParseFloat(t *testing.T) {
 		func(test ParseTest, obtained interface{}) (bool, interface{}) {
 			expected := test.out.(float64)
 			return obtained.(float64) == expected, expected
+		},
+	)
+}
+
+var parseStringTest = []ParseTest{
+	{
+		in:     `\uFF11`,
+		intype: String,
+		out:    "\uFF11",
+	},
+	{
+		in:     `\uFFFF`,
+		intype: String,
+		out:    "\uFFFF",
+	},
+	{
+		in:     `\uDF00`,
+		intype: String,
+		isErr:  true,
+	},
+}
+
+func TestParseString(t *testing.T) {
+	runParseTests(t, "ParseString()", parseStringTest,
+		func(test ParseTest) (value interface{}, err error) {
+			return ParseString([]byte(test.in))
+		},
+		func(test ParseTest, obtained interface{}) (bool, interface{}) {
+			expected := test.out.(string)
+			return obtained.(string) == expected, expected
 		},
 	)
 }
