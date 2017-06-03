@@ -201,6 +201,20 @@ jsonparser.EachKey(smallFixture, func(idx int, value []byte, vt jsonparser.Value
 }, paths...)
 ```
 
+### **`Set`**
+```go
+func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
+```
+Receives existing data structure, key path to set, and value to set at that key. *This functionality is experimental.*
+
+Returns:
+* `value` - Pointer to original data structure with updated or added key value.
+* `err` - If any parsing issue, it should return error.
+
+Accepts multiple keys to specify path to JSON value (in case of updating or creating  nested structures).
+
+Note that keys can be an array indexes: `jsonparser.Set(data, []byte("http://github.com"), "person", "avatars", "[0]", "url")`
+
 
 ## What makes it so fast?
 * It does not rely on `encoding/json`, `reflection` or `interface{}`, the only real package dependency is `bytes`.
