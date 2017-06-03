@@ -295,6 +295,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				}
 
 				if maxPath >= level {
+					if level < 1 {
+						cb(-1, []byte{}, Unknown, MalformedJsonError)
+						return -1
+					}
 					pathsBuf[level-1] = bytesToString(&keyUnesc)
 
 					for pi, p := range paths {
@@ -345,6 +349,12 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '[':
 			var arrIdxFlags int64
 			var pIdxFlags int64
+
+			if level < 0 {
+				cb(-1, []byte{}, Unknown, MalformedJsonError)
+				return -1
+			}
+
 			for pi, p := range paths {
 				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
