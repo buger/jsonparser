@@ -11,6 +11,9 @@ const supplementalPlanesOffset = 0x10000
 const highSurrogateOffset = 0xD800
 const lowSurrogateOffset = 0xDC00
 
+const basicMultilingualPlaneReservedOffset = 0xDFFF
+const basicMultilingualPlaneOffset = 0xFFFF
+
 func combineUTF16Surrogates(high, low rune) rune {
 	return supplementalPlanesOffset + (high-highSurrogateOffset)<<10 + (low - lowSurrogateOffset)
 }
@@ -49,11 +52,18 @@ func decodeSingleUnicodeEscape(in []byte) (rune, bool) {
 	return rune(h1<<12 + h2<<8 + h3<<4 + h4), true
 }
 
+// isUTF16EncodedRune checks if a rune is in the range for non-BMP characters,
+// which is used to describe UTF16 chars.
+// Source: https://en.wikipedia.org/wiki/Plane_(Unicode)#Basic_Multilingual_Plane
+func isUTF16EncodedRune(r rune) bool {
+	return highSurrogateOffset <= r && r <= basicMultilingualPlaneReservedOffset
+}
+
 func decodeUnicodeEscape(in []byte) (rune, int) {
 	if r, ok := decodeSingleUnicodeEscape(in); !ok {
 		// Invalid Unicode escape
 		return utf8.RuneError, -1
-	} else if r < highSurrogateOffset {
+	} else if r <= basicMultilingualPlaneOffset && !isUTF16EncodedRune(r) {
 		// Valid Unicode escape in Basic Multilingual Plane
 		return r, 6
 	} else if r2, ok := decodeSingleUnicodeEscape(in[6:]); !ok { // Note: previous decodeSingleUnicodeEscape success guarantees at least 6 bytes remain
@@ -66,7 +76,6 @@ func decodeUnicodeEscape(in []byte) (rune, int) {
 		// Valid UTF16 surrogate pair
 		return combineUTF16Surrogates(r, r2), 12
 	}
-
 }
 
 // backslashCharEscapeTable: when '\X' is found for some byte X, it is to be replaced with backslashCharEscapeTable[X]

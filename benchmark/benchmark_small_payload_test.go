@@ -7,6 +7,7 @@ package benchmark
 import (
 	"encoding/json"
 	"github.com/Jeffail/gabs"
+	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
 	"github.com/buger/jsonparser"
@@ -242,7 +243,6 @@ func BenchmarkJasonSmall(b *testing.B) {
 /*
    github.com/mreiferson/go-ujson
 */
-
 func BenchmarkUjsonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		json, _ := ujson.NewFromBytes(smallFixture)
@@ -253,6 +253,16 @@ func BenchmarkUjsonSmall(b *testing.B) {
 		json.Get("st").Float64()
 
 		nothing()
+	}
+}
+
+/*
+   github.com/a8m/djson
+*/
+func BenchmarkDjsonSmall(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		m, _ := djson.DecodeObject(smallFixture)
+		nothing(m["uuid"].(string), m["tz"].(float64), m["ua"].(string), m["st"].(float64))
 	}
 }
 

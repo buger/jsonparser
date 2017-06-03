@@ -567,6 +567,13 @@ var getTests = []GetTest{
 		data:    `{"b":"2"}`,
 	},
 	{
+                desc:    "get string from array",
+                json:    `{"a":[{"b":1},"foo", 3],"c":{"c":[1,2]}}`,
+                path:    []string{"a", "[1]"},
+                isFound: true,
+                data:    "foo",
+        },
+	{
 		desc:    "key in path is index",
 		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
 		path:    []string{"a", "[0]", "b"},
@@ -1410,6 +1417,36 @@ func TestParseFloat(t *testing.T) {
 		func(test ParseTest, obtained interface{}) (bool, interface{}) {
 			expected := test.out.(float64)
 			return obtained.(float64) == expected, expected
+		},
+	)
+}
+
+var parseStringTest = []ParseTest{
+	{
+		in:     `\uFF11`,
+		intype: String,
+		out:    "\uFF11",
+	},
+	{
+		in:     `\uFFFF`,
+		intype: String,
+		out:    "\uFFFF",
+	},
+	{
+		in:     `\uDF00`,
+		intype: String,
+		isErr:  true,
+	},
+}
+
+func TestParseString(t *testing.T) {
+	runParseTests(t, "ParseString()", parseStringTest,
+		func(test ParseTest) (value interface{}, err error) {
+			return ParseString([]byte(test.in))
+		},
+		func(test ParseTest, obtained interface{}) (bool, interface{}) {
+			expected := test.out.(string)
+			return obtained.(string) == expected, expected
 		},
 	)
 }

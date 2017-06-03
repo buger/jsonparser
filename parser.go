@@ -193,16 +193,21 @@ func searchKeys(data []byte, keys ...string) int {
 		case '[':
 			// If we want to get array element by index
 			if keyLevel == level && keys[level][0] == '[' {
-				aIdx, _ := strconv.Atoi(keys[level][1 : len(keys[level])-1])
-
+				aIdx, err := strconv.Atoi(keys[level][1 : len(keys[level])-1])
+				if err != nil {
+					return -1
+				}
 				var curIdx int
 				var valueFound []byte
 				var valueOffset int
-
 				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
 					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
+                                                if dataType == String {
+							valueOffset = valueOffset - 2
+							valueFound = data[i + valueOffset:i + valueOffset + len(value) + 2]
+                                                }
 					}
 					curIdx += 1
 				})
@@ -308,6 +313,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				}
 
 				if maxPath >= level {
+					if level < 1 {
+						cb(-1, []byte{}, Unknown, MalformedJsonError)
+						return -1
+					}
 					pathsBuf[level-1] = bytesToString(&keyUnesc)
 
 					for pi, p := range paths {
@@ -358,6 +367,12 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '[':
 			var arrIdxFlags int64
 			var pIdxFlags int64
+
+			if level < 0 {
+				cb(-1, []byte{}, Unknown, MalformedJsonError)
+				return -1
+			}
+
 			for pi, p := range paths {
 				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
@@ -671,10 +686,6 @@ func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType,
 		value = value[1 : len(value)-1]
 	}
 
-	if dataType == Null {
-		value = []byte{}
-	}
-
 	return value, dataType, offset, endOffset, nil
 }
 
@@ -963,7 +974,7 @@ func ParseBoolean(b []byte) (bool, error) {
 func ParseString(b []byte) (string, error) {
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	if bU, err := Unescape(b, stackbuf[:]); err != nil {
-		return "", nil
+		return "", MalformedValueError
 	} else {
 		return string(bU), nil
 	}
