@@ -27,7 +27,7 @@ func bytesEqualStrUnsafeSlower(abytes *[]byte, bstr string) bool {
 }
 
 func TestEqual(t *testing.T) {
-	if !equalStr(&[]byte{}, "") {
+	if !equalStr([]byte{}, "") {
 		t.Errorf(`equalStr("", ""): expected true, obtained false`)
 		return
 	}
@@ -37,11 +37,11 @@ func TestEqual(t *testing.T) {
 		s1, s2 := longstr[:i]+"1", longstr[:i]+"2"
 		b1 := []byte(s1)
 
-		if !equalStr(&b1, s1) {
+		if !equalStr(b1, s1) {
 			t.Errorf(`equalStr("a"*%d + "1", "a"*%d + "1"): expected true, obtained false`, i, i)
 			break
 		}
-		if equalStr(&b1, s2) {
+		if equalStr(b1, s2) {
 			t.Errorf(`equalStr("a"*%d + "1", "a"*%d + "2"): expected false, obtained true`, i, i)
 			break
 		}
@@ -50,7 +50,7 @@ func TestEqual(t *testing.T) {
 
 func BenchmarkEqualStr(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		equalStr(&benchmarkBytes, benchmarkString)
+		equalStr(benchmarkBytes, benchmarkString)
 	}
 }
 

@@ -36,6 +36,28 @@ func tokenEnd(data []byte) int {
 	return len(data)
 }
 
+func findLastTokenEnd(data []byte, token byte) int {
+	for i := len(data) - 1; i >= 0; i-- {
+		switch data[i] {
+		case token:
+			return i
+		}
+	}
+
+	return 0
+}
+
+func lastTokenEnd(data []byte) int {
+	for i := len(data) - 1; i >= 0; i-- {
+		switch data[i] {
+		case ' ', '\n', '\r', '\t', ',', '}', ']':
+			return i
+		}
+	}
+
+	return 0
+}
+
 // Find position of next character which is not whitespace
 func nextToken(data []byte) int {
 	for i, c := range data {
@@ -173,7 +195,7 @@ func searchKeys(data []byte, keys ...string) int {
 					keyUnesc = ku
 				}
 
-				if equalStr(&keyUnesc, keys[level-1]) {
+				if equalStr(keyUnesc, keys[level-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -200,14 +222,15 @@ func searchKeys(data []byte, keys ...string) int {
 				var curIdx int
 				var valueFound []byte
 				var valueOffset int
+				var curI = i
 				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
 					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
-                                                if dataType == String {
+						if dataType == String {
 							valueOffset = valueOffset - 2
-							valueFound = data[i + valueOffset:i + valueOffset + len(value) + 2]
-                                                }
+							valueFound = data[curI+valueOffset : curI+valueOffset+len(value)+2]
+						}
 					}
 					curIdx += 1
 				})
@@ -314,13 +337,13 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 				if maxPath >= level {
 					if level < 1 {
-						cb(-1, []byte{}, Unknown, MalformedJsonError)
+						cb(-1, nil, Unknown, MalformedJsonError)
 						return -1
 					}
-					pathsBuf[level-1] = bytesToString(&keyUnesc)
 
+					pathsBuf[level-1] = bytesToString(keyUnesc)
 					for pi, p := range paths {
-						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
 							continue
 						}
 
@@ -338,8 +361,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 						}
 
 						if pathsMatched == len(paths) {
-							return i
+							break
 						}
+					}
+					if pathsMatched == len(paths) {
+						return i
 					}
 				}
 
@@ -369,7 +395,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			var pIdxFlags int64
 
 			if level < 0 {
-				cb(-1, []byte{}, Unknown, MalformedJsonError)
+				cb(-1, nil, Unknown, MalformedJsonError)
 				return -1
 			}
 
@@ -501,6 +527,68 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 
 /*
 
+Del - Receives existing data structure, path to delete.
+
+Returns:
+`data` - return modified data
+
+*/
+func Del(data []byte, keys ...string) []byte {
+	lk := len(keys)
+	if lk == 0 {
+		return data[:0]
+	}
+
+	array := false
+	if len(keys[lk-1]) > 0 && string(keys[lk-1][0]) == "[" {
+		array = true
+	}
+
+	_, _, startOffset, endOffset, err := internalGet(data, keys...)
+	if err == nil {
+		if !array {
+			lastTok := lastTokenEnd(data[:startOffset])
+			keyOffset, _ := stringEnd(data[:lastTok])
+			lastTokEnd := tokenEnd(data[endOffset:])
+
+			if keyOffset == -1 {
+				keyOffset = 0
+			} else {
+				keyOffset--
+			}
+			if lastTok != 0 {
+				startOffset = lastTok + keyOffset
+			}
+
+			if lastTokEnd >= len(data[endOffset:])-1 {
+				lastTokEnd = 0
+				startOffset = lastTok
+			} else {
+				lastTokEnd++
+			}
+			endOffset = endOffset + lastTokEnd
+		} else {
+			tokEnd := tokenEnd(data[endOffset:])
+			tokStart := findLastTokenEnd(data[:startOffset], ","[0])
+
+			if data[endOffset+tokEnd] == ","[0] {
+				endOffset += tokEnd + 1
+			} else if data[endOffset+tokEnd] == "]"[0] && data[tokStart] == ","[0] {
+				startOffset = tokStart
+			}
+		}
+
+		copy(data[startOffset:], data[endOffset:])
+		for k, n := len(data)-endOffset+startOffset, len(data); k < n; k++ {
+			data[k] = 0 // or the zero value of T
+		}
+		data = data[:len(data)-endOffset+startOffset]
+	}
+	return data
+}
+
+/*
+
 Set - Receives existing data structure, path to set, and data to set at that key.
 
 Returns:
@@ -518,7 +606,7 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 	if err != nil {
 		if err != KeyPathNotFoundError {
 			// problem parsing the data
-			return []byte{}, err
+			return nil, err
 		}
 		// full path doesnt exist
 		// does any subpath exist?
@@ -553,10 +641,10 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		depthOffset := endOffset
 		if depth != 0 {
 			// if subpath is a non-empty object, add to it
-			if data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])]!='}' {
+			if data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}' {
 				depthOffset--
 				startOffset = depthOffset
-			// otherwise, over-write it with a new object
+				// otherwise, over-write it with a new object
 			} else {
 				comma = false
 				object = true
@@ -589,7 +677,7 @@ func getType(data []byte, offset int) ([]byte, ValueType, int, error) {
 		if idx, _ := stringEnd(data[offset+1:]); idx != -1 {
 			endOffset += idx + 1
 		} else {
-			return []byte{}, dataType, offset, MalformedStringError
+			return nil, dataType, offset, MalformedStringError
 		}
 	} else if data[offset] == '[' { // if array value
 		dataType = Array
@@ -597,7 +685,7 @@ func getType(data []byte, offset int) ([]byte, ValueType, int, error) {
 		endOffset = blockEnd(data[offset:], '[', ']')
 
 		if endOffset == -1 {
-			return []byte{}, dataType, offset, MalformedArrayError
+			return nil, dataType, offset, MalformedArrayError
 		}
 
 		endOffset += offset
@@ -607,7 +695,7 @@ func getType(data []byte, offset int) ([]byte, ValueType, int, error) {
 		endOffset = blockEnd(data[offset:], '{', '}')
 
 		if endOffset == -1 {
-			return []byte{}, dataType, offset, MalformedObjectError
+			return nil, dataType, offset, MalformedObjectError
 		}
 
 		endOffset += offset
@@ -665,14 +753,14 @@ func Get(data []byte, keys ...string) (value []byte, dataType ValueType, offset 
 func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType, offset, endOffset int, err error) {
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
-			return []byte{}, NotExist, -1, -1, KeyPathNotFoundError
+			return nil, NotExist, -1, -1, KeyPathNotFoundError
 		}
 	}
 
 	// Go to closest value
 	nO := nextToken(data[offset:])
 	if nO == -1 {
-		return []byte{}, NotExist, offset, -1, MalformedJsonError
+		return nil, NotExist, offset, -1, MalformedJsonError
 	}
 
 	offset += nO
@@ -884,7 +972,7 @@ func GetUnsafeString(data []byte, keys ...string) (val string, err error) {
 		return "", e
 	}
 
-	return bytesToString(&v), nil
+	return bytesToString(v), nil
 }
 
 // GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
@@ -982,7 +1070,7 @@ func ParseString(b []byte) (string, error) {
 
 // ParseNumber parses a Number ValueType into a Go float64
 func ParseFloat(b []byte) (float64, error) {
-	if v, err := parseFloat(&b); err != nil {
+	if v, err := parseFloat(b); err != nil {
 		return 0, MalformedValueError
 	} else {
 		return v, nil
