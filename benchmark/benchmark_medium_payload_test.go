@@ -6,6 +6,8 @@ package benchmark
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/Jeffail/gabs"
 	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
@@ -15,7 +17,6 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
-	"testing"
 	// "fmt"
 	"bytes"
 	"errors"
@@ -34,6 +35,19 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 			jsonparser.Get(value, "url")
 			nothing()
 		}, "person", "gravatar", "avatars")
+	}
+}
+
+func BenchmarkJsonParserDelMedium(b *testing.B) {
+	fixture := make([]byte, 0, len(mediumFixture))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		fixture = append(fixture[:0], mediumFixture...)
+		fixture = jsonparser.Del(fixture, "person", "name", "fullName")
+		fixture = jsonparser.Del(fixture, "person", "github", "followers")
+		fixture = jsonparser.Del(fixture, "company")
+
+		nothing()
 	}
 }
 

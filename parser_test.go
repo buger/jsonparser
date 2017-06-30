@@ -50,6 +50,101 @@ type SetTest struct {
 	data interface{}
 }
 
+type DelTest struct {
+	desc string
+	json string
+	path []string
+
+	data interface{}
+}
+
+var delTests = []DelTest{
+	{
+		desc: "Delete test key",
+		json: `{"test":"input"}`,
+		path: []string{"test"},
+		data: `{}`,
+	},
+	{
+		desc: "Delete object",
+		json: `{"test":"input"}`,
+		path: []string{},
+		data: ``,
+	},
+	{
+		desc: "Delete a nested object",
+		json: `{"test":"input","new.field":{"key": "new object"}}`,
+		path: []string{"new.field", "key"},
+		data: `{"test":"input","new.field":{}}`,
+	},
+	{
+		desc: "Deleting a key that doesn't exist should return the same object",
+		json: `{"test":"input"}`,
+		path: []string{"test2"},
+		data: `{"test":"input"}`,
+	},
+	{
+		desc: "Delete object in an array",
+		json: `{"test":[{"key":"val-obj1"}]}`,
+		path: []string{"test", "[0]"},
+		data: `{"test":[]}`,
+	},
+	{
+		desc: "Deleting a object in an array that doesn't exists should return the same object",
+		json: `{"test":[{"key":"val-obj1"}]}`,
+		path: []string{"test", "[1]"},
+		data: `{"test":[{"key":"val-obj1"}]}`,
+	},
+	{
+		desc: "Delete a complex object in a nested array",
+		json: `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
+		path: []string{"test", "[0]", "key", "[0]"},
+		data: `{"test":[{"key":[]}]}`,
+	},
+	{
+		desc: "Delete known key (simple type within nested array)",
+		json: `{"test":[{"key":["innerKey"]}]}`,
+		path: []string{"test", "[0]", "key", "[0]"},
+		data: `{"test":[{"key":[]}]}`,
+	},
+	{
+		desc: "Delete in empty json",
+		json: `{}`,
+		path: []string{},
+		data: ``,
+	},
+	{
+		desc: "Delete empty array",
+		json: `[]`,
+		path: []string{},
+		data: ``,
+	},
+	{
+		desc: "Deleting non json should return the same value",
+		json: `1.323`,
+		path: []string{"foo"},
+		data: `1.323`,
+	},
+	{
+		desc: "Delete known key (top level array)",
+		json: `[{"key":"val-obj1"}]`,
+		path: []string{"[0]"},
+		data: `[]`,
+	},
+	{ // This test deletes the key instead of returning a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc: `malformed with trailing whitespace`,
+		json: `{"a":1 `,
+		path: []string{"a"},
+		data: `{ `,
+	},
+	{ // This test dels the key instead of returning a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc: "malformed 'colon chain', delete b",
+		json: `{"a":"b":"c"}`,
+		path: []string{"b"},
+		data: `{"a":}`,
+	},
+}
+
 var setTests = []SetTest{
 	{
 		desc:    "set unknown key (string)",
@@ -92,13 +187,13 @@ var setTests = []SetTest{
 		data:    `{"test":[{"key":"new object"}]}`,
 	},
 	{
-                desc:    "set unknown key (replace object)",
-                json:    `{"test":[{"key":"val-obj1"}]}`,
-                isFound: true,
-                path:    []string{"test", "newKey"},
-                setData: `"new object"`,
-                data:    `{"test":{"newKey":"new object"}}`,
-        },
+		desc:    "set unknown key (replace object)",
+		json:    `{"test":[{"key":"val-obj1"}]}`,
+		isFound: true,
+		path:    []string{"test", "newKey"},
+		setData: `"new object"`,
+		data:    `{"test":{"newKey":"new object"}}`,
+	},
 	{
 		desc:    "set unknown key (complex object within nested array)",
 		json:    `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
@@ -123,14 +218,14 @@ var setTests = []SetTest{
 		setData: `{"key":"new object"}`,
 		data:    `{"test":{"input":"output","new.field":{"key":"new object"}}}`,
 	},
-        {
-                desc:    "set unknown key (object, empty partial subtree exists)",
-                json:    `{"test":{}}`,
-                isFound: true,
-                path:    []string{"test", "new.field"},
-                setData: `{"key":"new object"}`,
-                data:    `{"test":{"new.field":{"key":"new object"}}}`,
-        },
+	{
+		desc:    "set unknown key (object, empty partial subtree exists)",
+		json:    `{"test":{}}`,
+		isFound: true,
+		path:    []string{"test", "new.field"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":{"new.field":{"key":"new object"}}}`,
+	},
 	{
 		desc:    "set unknown key (object, no subtree exists)",
 		json:    `{"test":"input"}`,
@@ -567,12 +662,12 @@ var getTests = []GetTest{
 		data:    `{"b":"2"}`,
 	},
 	{
-                desc:    "get string from array",
-                json:    `{"a":[{"b":1},"foo", 3],"c":{"c":[1,2]}}`,
-                path:    []string{"a", "[1]"},
-                isFound: true,
-                data:    "foo",
-        },
+		desc:    "get string from array",
+		json:    `{"a":[{"b":1},"foo", 3],"c":{"c":[1,2]}}`,
+		path:    []string{"a", "[1]"},
+		isFound: true,
+		data:    "foo",
+	},
 	{
 		desc:    "key in path is index",
 		json:    `{"a":[{"b":"1"},{"b":"2"},3],"c":{"c":[1,2]}}`,
@@ -880,6 +975,33 @@ func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(Set
 	}
 }
 
+func runDelTests(t *testing.T, testKind string, tests []DelTest, runner func(DelTest) interface{}, resultChecker func(DelTest, interface{}) (bool, interface{})) {
+	for _, test := range tests {
+		if activeTest != "" && test.desc != activeTest {
+			continue
+		}
+
+		fmt.Println("Running:", test.desc)
+
+		value := runner(test)
+
+		if test.data == nil {
+			t.Errorf("MALFORMED TEST: %v", test)
+			continue
+		}
+
+		if ok, expected := resultChecker(test, value); !ok {
+			if expectedBytes, ok := expected.([]byte); ok {
+				expected = string(expectedBytes)
+			}
+			if valueBytes, ok := value.([]byte); ok {
+				value = string(valueBytes)
+			}
+			t.Errorf("%s test '%s' expected to return value %v, but did returned %v instead", testKind, test.desc, expected, value)
+		}
+	}
+}
+
 func TestSet(t *testing.T) {
 	runSetTests(t, "Set()", setTests,
 		func(test SetTest) (value interface{}, dataType ValueType, err error) {
@@ -887,6 +1009,18 @@ func TestSet(t *testing.T) {
 			return
 		},
 		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+func TestDel(t *testing.T) {
+	runDelTests(t, "Del()", delTests,
+		func(test DelTest) interface{} {
+			return Del([]byte(test.json), test.path...)
+		},
+		func(test DelTest, value interface{}) (bool, interface{}) {
 			expected := []byte(test.data.(string))
 			return bytes.Equal(expected, value.([]byte)), expected
 		},
@@ -1078,7 +1212,7 @@ var objectEachTests = []ObjectEachTest{
 		  "key6": {"a":"b"}
 		}`,
 		entries: []keyValueEntry{
-			{"key1", "", Null},
+			{"key1", "null", Null},
 			{"key2", "true", Boolean},
 			{"key3", "1.23", Number},
 			{"key4", "string value", String},

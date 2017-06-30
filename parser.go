@@ -36,21 +36,75 @@ func tokenEnd(data []byte) int {
 	return len(data)
 }
 
-func findLastTokenEnd(data []byte, token byte) int {
+func findTokenStart(data []byte, token byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		switch data[i] {
 		case token:
 			return i
+		case '[', '{':
+			return 0
 		}
 	}
 
 	return 0
 }
 
-func lastTokenEnd(data []byte) int {
+func findKeyStart(data []byte, key string) (int, error) {
+	i := 0
+	ln := len(data)
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+
+	if ku, err := Unescape(StringToBytes(key), stackbuf[:]); err == nil {
+		key = bytesToString(&ku)
+	}
+
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd, keyEscaped := stringEnd(data[i:])
+			if strEnd == -1 {
+				break
+			}
+			i += strEnd
+			keyEnd := i - 1
+
+			valueOffset := nextToken(data[i:])
+			if valueOffset == -1 {
+				break
+			}
+
+			i += valueOffset
+
+			// if string is a key, and key level match
+			k := data[keyBegin:keyEnd]
+			// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+			// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+			if keyEscaped {
+				if ku, err := Unescape(k, stackbuf[:]); err != nil {
+					break
+				} else {
+					k = ku
+				}
+			}
+
+			if data[i] == ':' && len(key) == len(k) && bytesToString(&k) == key {
+				return keyBegin - 1, nil
+			}
+
+		}
+		i++
+	}
+
+	return -1, KeyPathNotFoundError
+}
+
+func tokenStart(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		switch data[i] {
-		case ' ', '\n', '\r', '\t', ',', '}', ']':
+		case '\n', '\r', '\t', ',', '{', '[':
 			return i
 		}
 	}
@@ -195,7 +249,7 @@ func searchKeys(data []byte, keys ...string) int {
 					keyUnesc = ku
 				}
 
-				if equalStr(keyUnesc, keys[level-1]) {
+				if equalStr(&keyUnesc, keys[level-1]) {
 					keyLevel++
 					// If we found all keys in path
 					if keyLevel == lk {
@@ -341,9 +395,9 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 						return -1
 					}
 
-					pathsBuf[level-1] = bytesToString(keyUnesc)
+					pathsBuf[level-1] = bytesToString(&keyUnesc)
 					for pi, p := range paths {
-						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
 							continue
 						}
 
@@ -544,46 +598,52 @@ func Del(data []byte, keys ...string) []byte {
 		array = true
 	}
 
-	_, _, startOffset, endOffset, err := internalGet(data, keys...)
-	if err == nil {
-		if !array {
-			lastTok := lastTokenEnd(data[:startOffset])
-			keyOffset, _ := stringEnd(data[:lastTok])
-			lastTokEnd := tokenEnd(data[endOffset:])
-
-			if keyOffset == -1 {
-				keyOffset = 0
-			} else {
-				keyOffset--
-			}
-			if lastTok != 0 {
-				startOffset = lastTok + keyOffset
-			}
-
-			if lastTokEnd >= len(data[endOffset:])-1 {
-				lastTokEnd = 0
-				startOffset = lastTok
-			} else {
-				lastTokEnd++
-			}
-			endOffset = endOffset + lastTokEnd
-		} else {
-			tokEnd := tokenEnd(data[endOffset:])
-			tokStart := findLastTokenEnd(data[:startOffset], ","[0])
-
-			if data[endOffset+tokEnd] == ","[0] {
-				endOffset += tokEnd + 1
-			} else if data[endOffset+tokEnd] == "]"[0] && data[tokStart] == ","[0] {
-				startOffset = tokStart
+	var startOffset, keyOffset int
+	endOffset := len(data)
+	var err error
+	if !array {
+		if len(keys) > 1 {
+			_, _, startOffset, endOffset, err = internalGet(data, keys[:lk-1]...)
+			if err == KeyPathNotFoundError {
+				// problem parsing the data
+				return data
 			}
 		}
 
-		copy(data[startOffset:], data[endOffset:])
-		for k, n := len(data)-endOffset+startOffset, len(data); k < n; k++ {
-			data[k] = 0 // or the zero value of T
+		keyOffset, err = findKeyStart(data[startOffset:endOffset], keys[lk-1])
+		if err == KeyPathNotFoundError {
+			// problem parsing the data
+			return data
 		}
-		data = data[:len(data)-endOffset+startOffset]
+		keyOffset += startOffset
+		_, _, _, subEndOffset, _ := internalGet(data[startOffset:endOffset], keys[lk-1])
+		endOffset = startOffset + subEndOffset
+		tokEnd := tokenEnd(data[endOffset:])
+		tokStart := findTokenStart(data[:keyOffset], ","[0])
+
+		if data[endOffset+tokEnd] == ","[0] {
+			endOffset += tokEnd + 1
+		} else if data[endOffset+tokEnd] == "}"[0] && data[tokStart] == ","[0] {
+			keyOffset = tokStart
+		}
+	} else {
+		_, _, keyOffset, endOffset, err = internalGet(data, keys...)
+		if err == KeyPathNotFoundError {
+			// problem parsing the data
+			return data
+		}
+
+		tokEnd := tokenEnd(data[endOffset:])
+		tokStart := findTokenStart(data[:keyOffset], ","[0])
+
+		if data[endOffset+tokEnd] == ","[0] {
+			endOffset += tokEnd + 1
+		} else if data[endOffset+tokEnd] == "]"[0] && data[tokStart] == ","[0] {
+			keyOffset = tokStart
+		}
 	}
+
+	data = append(data[:keyOffset], data[endOffset:]...)
 	return data
 }
 
@@ -972,7 +1032,7 @@ func GetUnsafeString(data []byte, keys ...string) (val string, err error) {
 		return "", e
 	}
 
-	return bytesToString(v), nil
+	return bytesToString(&v), nil
 }
 
 // GetString returns the value retrieved by `Get`, cast to a string if possible, trying to properly handle escape and utf8 symbols
@@ -1070,7 +1130,7 @@ func ParseString(b []byte) (string, error) {
 
 // ParseNumber parses a Number ValueType into a Go float64
 func ParseFloat(b []byte) (float64, error) {
-	if v, err := parseFloat(b); err != nil {
+	if v, err := parseFloat(&b); err != nil {
 		return 0, MalformedValueError
 	} else {
 		return v, nil
