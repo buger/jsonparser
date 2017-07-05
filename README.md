@@ -215,6 +215,19 @@ Accepts multiple keys to specify path to JSON value (in case of updating or crea
 
 Note that keys can be an array indexes: `jsonparser.Set(data, []byte("http://github.com"), "person", "avatars", "[0]", "url")`
 
+### **`Delete`**
+```go
+func Delete(data []byte, keys ...string) value []byte
+```
+Receives existing data structure, and key path to delete. *This functionality is experimental.*
+
+Returns:
+* `value` - Pointer to original data structure with key path deleted if it can be found. If there is no key path, then the whole data structure is deleted.
+
+Accepts multiple keys to specify path to JSON value (in case of updating or creating  nested structures).
+
+Note that keys can be an array indexes: `jsonparser.Delete(data, "person", "avatars", "[0]", "url")`
+
 
 ## What makes it so fast?
 * It does not rely on `encoding/json`, `reflection` or `interface{}`, the only real package dependency is `bytes`.
@@ -248,7 +261,7 @@ If you want to skip next sections we have 2 winner: `jsonparser` and `easyjson`.
 
 It's hard to fully compare `jsonparser` and `easyjson` (or `ffson`), they a true parsers and fully process record, unlike `jsonparser` which parse only keys you specified.
 
-If you searching for replacement of `encoding/json` while keeping structs, `easyjson` is an amazing choise. If you want to process dynamic JSON, have memory constrains, or more control over your data you should try `jsonparser`.
+If you searching for replacement of `encoding/json` while keeping structs, `easyjson` is an amazing choice. If you want to process dynamic JSON, have memory constrains, or more control over your data you should try `jsonparser`.
 
 `jsonparser` performance heavily depends on usage, and it works best when you do not need to process full record, only some keys. The more calls you need to make, the slower it will be, in contrast `easyjson` (or `ffjson`, `encoding/json`) parser record only 1 time, and then you can make as many calls as you want.
 
@@ -324,7 +337,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_large_payloa
 | mailru/easyjson | **154186** | **6992** | **288** |
 | buger/jsonparser | **85308** | **0** | **0** |
 
-`jsonparser` now is a winner, but do not forget that it is way more lighweight parser than `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
+`jsonparser` now is a winner, but do not forget that it is way more lightweight parser than `ffson` or `easyjson`, and they have to parser all the data, while `jsonparser` parse only what you need. All `ffjson`, `easysjon` and `jsonparser` have their own parsing code, and does not depend on `encoding/json` or `interface{}`, thats one of the reasons why they are so fast. `easyjson` also use a bit of `unsafe` package to reduce memory consuption (in theory it can lead to some unexpected GC issue, but i did not tested enough)
 
 Also last benchmark did not included `EachKey` test, because in this particular case we need to read lot of Array values, and using `ArrayEach` is more efficient. 
 

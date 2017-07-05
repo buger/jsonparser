@@ -147,10 +147,10 @@ func BenchmarkJsonParserDelSmall(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		fixture = append(fixture[:0], smallFixture...)
-		fixture = jsonparser.Del(fixture, "uuid")
-		fixture = jsonparser.Del(fixture, "tz")
-		fixture = jsonparser.Del(fixture, "ua")
-		fixture = jsonparser.Del(fixture, "stt")
+		fixture = jsonparser.Delete(fixture, "uuid")
+		fixture = jsonparser.Delete(fixture, "tz")
+		fixture = jsonparser.Delete(fixture, "ua")
+		fixture = jsonparser.Delete(fixture, "stt")
 
 		nothing()
 	}

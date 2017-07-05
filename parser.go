@@ -587,7 +587,7 @@ Returns:
 `data` - return modified data
 
 */
-func Del(data []byte, keys ...string) []byte {
+func Delete(data []byte, keys ...string) []byte {
 	lk := len(keys)
 	if lk == 0 {
 		return data[:0]

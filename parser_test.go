@@ -50,7 +50,7 @@ type SetTest struct {
 	data interface{}
 }
 
-type DelTest struct {
+type DeleteTest struct {
 	desc string
 	json string
 	path []string
@@ -58,7 +58,7 @@ type DelTest struct {
 	data interface{}
 }
 
-var delTests = []DelTest{
+var deleteTests = []DeleteTest{
 	{
 		desc: "Delete test key",
 		json: `{"test":"input"}`,
@@ -975,7 +975,7 @@ func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(Set
 	}
 }
 
-func runDelTests(t *testing.T, testKind string, tests []DelTest, runner func(DelTest) interface{}, resultChecker func(DelTest, interface{}) (bool, interface{})) {
+func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner func(DeleteTest) interface{}, resultChecker func(DeleteTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
@@ -1015,12 +1015,12 @@ func TestSet(t *testing.T) {
 	)
 }
 
-func TestDel(t *testing.T) {
-	runDelTests(t, "Del()", delTests,
-		func(test DelTest) interface{} {
-			return Del([]byte(test.json), test.path...)
+func TestDelete(t *testing.T) {
+	runDeleteTests(t, "Delete()", deleteTests,
+		func(test DeleteTest) interface{} {
+			return Delete([]byte(test.json), test.path...)
 		},
-		func(test DelTest, value interface{}) (bool, interface{}) {
+		func(test DeleteTest, value interface{}) (bool, interface{}) {
 			expected := []byte(test.data.(string))
 			return bytes.Equal(expected, value.([]byte)), expected
 		},

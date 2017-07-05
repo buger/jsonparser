@@ -38,14 +38,14 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonParserDelMedium(b *testing.B) {
+func BenchmarkJsonParserDeleteMedium(b *testing.B) {
 	fixture := make([]byte, 0, len(mediumFixture))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		fixture = append(fixture[:0], mediumFixture...)
-		fixture = jsonparser.Del(fixture, "person", "name", "fullName")
-		fixture = jsonparser.Del(fixture, "person", "github", "followers")
-		fixture = jsonparser.Del(fixture, "company")
+		fixture = jsonparser.Delete(fixture, "person", "name", "fullName")
+		fixture = jsonparser.Delete(fixture, "person", "github", "followers")
+		fixture = jsonparser.Delete(fixture, "company")
 
 		nothing()
 	}
