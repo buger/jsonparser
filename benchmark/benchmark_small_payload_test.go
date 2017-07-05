@@ -6,6 +6,8 @@ package benchmark
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/Jeffail/gabs"
 	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
@@ -15,7 +17,6 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
-	"testing"
 	// "fmt"
 	"bytes"
 	"errors"
@@ -136,6 +137,20 @@ func BenchmarkJsonParserSetSmall(b *testing.B) {
 		jsonparser.Set(smallFixture, []byte("-3"), "tz")
 		jsonparser.Set(smallFixture, []byte(`"server_agent"`), "ua")
 		jsonparser.Set(smallFixture, []byte("3"), "st")
+
+		nothing()
+	}
+}
+
+func BenchmarkJsonParserDelSmall(b *testing.B) {
+	fixture := make([]byte, 0, len(smallFixture))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		fixture = append(fixture[:0], smallFixture...)
+		fixture = jsonparser.Delete(fixture, "uuid")
+		fixture = jsonparser.Delete(fixture, "tz")
+		fixture = jsonparser.Delete(fixture, "ua")
+		fixture = jsonparser.Delete(fixture, "stt")
 
 		nothing()
 	}
