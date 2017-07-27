@@ -51,7 +51,7 @@ jsonparser.Get(data, "company")
 
 // If the key doesn't exist it will throw an error
 var size int64
-if value, _, err := jsonparser.GetInt(data, "company", "size"); err == nil {
+if value, err := jsonparser.GetInt(data, "company", "size"); err == nil {
   size = value
 }
 
@@ -145,7 +145,7 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error)
 
 func GetFloat(data []byte, keys ...string) (val float64, err error)
 
-func GetInt(data []byte, keys ...string) (val float64, err error)
+func GetInt(data []byte, keys ...string) (val int64, err error)
 ```
 If you know the key type, you can use the helpers above.
 If key data type do not match, it will return error.
