@@ -9,7 +9,7 @@ I love simplicity and prefer to avoid external dependecies. `encoding/json` requ
 I investigated what's on the market and found that most libraries are just wrappers around `encoding/json`, there is few options with own parsers (`ffjson`, `easyjson`), but they still requires you to create data structures.
 
 
-Goal of this project is to push JSON parser to the performance limits and not sucrifice with compliance and developer user experience.
+Goal of this project is to push JSON parser to the performance limits and not sacrifice with compliance and developer user experience.
 
 ## Example
 For the given JSON our goal is to extract the user's full name, number of github followers and avatar.
