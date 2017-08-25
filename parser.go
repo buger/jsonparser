@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 )
 
 // Errors
@@ -557,23 +556,42 @@ var (
 
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
 	var buffer bytes.Buffer
+	isIndex := string(keys[0][0]) == "["
 	if comma {
 		buffer.WriteString(",")
 	}
-	if object {
-		buffer.WriteString("{")
-	}
-	buffer.WriteString("\"")
-	buffer.WriteString(keys[0])
-	buffer.WriteString("\":")
-	for i := 1; i < len(keys); i++ {
-		buffer.WriteString("{\"")
-		buffer.WriteString(keys[i])
+	if isIndex {
+		buffer.WriteString("[")
+	} else {
+		if object {
+			buffer.WriteString("{")
+		}
+		buffer.WriteString("\"")
+		buffer.WriteString(keys[0])
 		buffer.WriteString("\":")
 	}
+
+	for i := 1; i < len(keys); i++ {
+		if string(keys[i][0]) == "[" {
+			buffer.WriteString("[")
+		} else {
+			buffer.WriteString("{\"")
+			buffer.WriteString(keys[i])
+			buffer.WriteString("\":")
+		}
+	}
 	buffer.Write(setValue)
-	buffer.WriteString(strings.Repeat("}", len(keys)-1))
-	if object {
+	for i := len(keys) - 1; i > 0; i-- {
+		if string(keys[i][0]) == "[" {
+			buffer.WriteString("]")
+		} else {
+			buffer.WriteString("}")
+		}
+	}
+	if isIndex {
+		buffer.WriteString("]")
+	}
+	if object && !isIndex {
 		buffer.WriteString("}")
 	}
 	return buffer.Bytes()

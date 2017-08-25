@@ -298,6 +298,46 @@ var setTests = []SetTest{
 		isFound: true,
 		data:    `{"a":"b":"d"}`,
 	},
+	{
+		desc:    "set indexed path to object on empty JSON",
+		json:    `{}`,
+		path:    []string{"top", "[0]", "middle", "[0]", "bottom"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":[{"bottom":"value"}]}]}`,
+	},
+	{
+		desc:    "set indexed path on existing object with object",
+		json:    `{"top":[{"middle":[]}]}`,
+		path:    []string{"top", "[0]", "middle", "[0]", "bottom"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":[{"bottom":"value"}]}]}`,
+	},
+	{
+		desc:    "set indexed path on existing object with value",
+		json:    `{"top":[{"middle":[]}]}`,
+		path:    []string{"top", "[0]", "middle", "[0]"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":["value"]}]}`,
+	},
+	{
+		desc:    "set indexed path on empty object with value",
+		json:    `{}`,
+		path:    []string{"top", "[0]", "middle", "[0]"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":["value"]}]}`,
+	},
+	{
+		desc:    "set indexed path on object with existing array",
+		json:    `{"top":["one", "two", "three"]}`,
+		path:    []string{"top", "[2]"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":["one", "two", "value"]}`,
+	},
 }
 
 var getTests = []GetTest{
