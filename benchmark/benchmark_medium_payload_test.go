@@ -17,6 +17,7 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
+    "github.com/tidwall/gjson"
 	// "fmt"
 	"bytes"
 	"errors"
@@ -349,5 +350,22 @@ func BenchmarkEasyJsonMedium(b *testing.B) {
 		for _, el := range data.Person.Gravatar.Avatars {
 			nothing(el.Url)
 		}
+	}
+}
+
+/*
+	github.com/tidwall/gjson
+ */
+func BenchmarkGJsonMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gjson.GetBytes(mediumFixture, "person.name.fullName")
+		gjson.GetBytes(mediumFixture, "person.github.followers").Int()
+		gjson.GetBytes(mediumFixture, "company")
+
+		gjson.GetBytes(mediumFixture, "person.gravatar.avatars").ForEach(func(key, value gjson.Result) bool {
+			value.Get("url")
+			nothing()
+			return true
+		})
 	}
 }

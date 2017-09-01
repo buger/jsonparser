@@ -14,6 +14,7 @@ import (
 	"github.com/a8m/djson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/pquerna/ffjson/ffjson"
+    "github.com/tidwall/gjson"
 	// "github.com/antonholmquist/jason"
 	// "fmt"
 )
@@ -127,5 +128,25 @@ func BenchmarkDjsonLarge(b *testing.B) {
 			tI := t.(map[string]interface{})
 			nothing(tI["id"].(float64), tI["slug"].(string))
 		}
+	}
+}
+
+/*
+	github.com/tidwall/gjson
+ */
+func BenchmarkGJsonLarge(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gjson.GetBytes(largeFixture, "users").ForEach(func(key, value gjson.Result) bool {
+			value.Get("username")
+			nothing()
+			return true
+		})
+
+		gjson.GetBytes(largeFixture, "topics.topics").ForEach(func(key, value gjson.Result) bool {
+			value.Get("id").Int()
+			value.Get("slug")
+			nothing()
+			return true
+		})
 	}
 }

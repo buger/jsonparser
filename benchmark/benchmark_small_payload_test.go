@@ -17,6 +17,7 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
+    "github.com/tidwall/gjson"
 	// "fmt"
 	"bytes"
 	"errors"
@@ -304,5 +305,19 @@ func BenchmarkEasyJsonSmall(b *testing.B) {
 		data.UnmarshalEasyJSON(lexer)
 
 		nothing(data.Uuid, data.Tz, data.Ua, data.St)
+	}
+}
+
+/*
+	github.com/tidwall/gjson
+ */
+func BenchmarkGJsonSmall(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gjson.GetBytes(smallFixture, "uuid");
+		gjson.GetBytes(smallFixture, "tz").Int()
+		gjson.GetBytes(smallFixture, "ua")
+		gjson.GetBytes(smallFixture, "st").Int()
+
+		nothing()
 	}
 }
