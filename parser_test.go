@@ -143,6 +143,30 @@ var deleteTests = []DeleteTest{
 		path: []string{"b"},
 		data: `{"a":}`,
 	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": {"b": 1}, "b": 2}`,
+		path: []string{"b"},
+		data: `{"a": {"b": 1}}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": [{"b": 1}], "b": 2}`,
+		path: []string{"b"},
+		data: `{"a": [{"b": 1}]}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": {"c": {"b": 3}, "b": 1}, "b": 2}`,
+		path: []string{"a", "b"},
+		data: `{"a": {"c": {"b": 3}}, "b": 2}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": [{"c": {"b": 3}, "b": 1}], "b": 2}`,
+		path: []string{"a", "[0]", "b"},
+		data: `{"a": [{"c": {"b": 3}}], "b": 2}`,
+	},
 }
 
 var setTests = []SetTest{
