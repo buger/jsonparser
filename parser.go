@@ -648,9 +648,16 @@ func Delete(data []byte, keys ...string) []byte {
 		} else if data[endOffset+tokEnd] == "]"[0] && data[tokStart] == ","[0] {
 			keyOffset = tokStart
 		}
+
 	}
 
-	data = append(data[:keyOffset], data[endOffset:]...)
+	// We need to remove empty row and remaining trailing comma if we delete las element in the objects
+	prevTok := lastToken(data[:keyOffset])
+	if data[nextToken(data[endOffset:])] == '}' && data[prevTok] == ',' {
+		prevTok--
+	}
+
+	data = append(data[:prevTok], data[endOffset:]...)
 	return data
 }
 
