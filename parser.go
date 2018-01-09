@@ -658,7 +658,7 @@ func Delete(data []byte, keys ...string) []byte {
 	if nextToken(remainedValue) > -1 && remainedValue[nextToken(remainedValue)] == '}' && data[prevTok] == ',' {
 		newOffset = prevTok
 	} else {
-		newOffset = keyOffset
+		newOffset = prevTok + 1
 	}
 
 	data = append(data[:newOffset], data[endOffset:]...)
