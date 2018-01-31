@@ -344,7 +344,6 @@ Also last benchmark did not included `EachKey` test, because in this particular 
 ## Questions and support
 
 All bug-reports and suggestions should go though Github Issues.
-If you have some private questions you can send them directly to me: leonsbox@gmail.com
 
 ## Contributing
 
