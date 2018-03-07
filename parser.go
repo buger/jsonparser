@@ -650,7 +650,18 @@ func Delete(data []byte, keys ...string) []byte {
 		}
 	}
 
-	data = append(data[:keyOffset], data[endOffset:]...)
+	// We need to remove remaining trailing comma if we delete las element in the object
+	prevTok := lastToken(data[:keyOffset])
+	remainedValue := data[endOffset:]
+
+	var newOffset int
+	if nextToken(remainedValue) > -1 && remainedValue[nextToken(remainedValue)] == '}' && data[prevTok] == ',' {
+		newOffset = prevTok
+	} else {
+		newOffset = prevTok + 1
+	}
+
+	data = append(data[:newOffset], data[endOffset:]...)
 	return data
 }
 

@@ -167,6 +167,12 @@ var deleteTests = []DeleteTest{
 		path: []string{"a", "[0]", "b"},
 		data: `{"a": [{"c": {"b": 3}}], "b": 2}`,
 	},
+	{
+		desc: "Remove trailing comma if last object is deleted",
+		json: `{"a": "1", "b": "2"}`,
+		path: []string{"b"},
+		data: `{"a": "1"}`,
+	},
 }
 
 var setTests = []SetTest{
