@@ -173,6 +173,18 @@ var deleteTests = []DeleteTest{
 		path: []string{"b"},
 		data: `{"a": "1"}`,
 	},
+	{
+		desc: "Correctly delete first element with space-comma",
+		json: `{"a": "1" ,"b": "2" }`,
+		path: []string{"a"},
+		data: `{"b": "2" }`,
+	},
+	{
+		desc: "Correctly delete middle element with space-comma",
+		json: `{"a": "1" ,"b": "2" , "c": 3}`,
+		path: []string{"b"},
+		data: `{"a": "1" , "c": 3}`,
+	},
 }
 
 var setTests = []SetTest{

@@ -648,6 +648,8 @@ func Delete(data []byte, keys ...string) []byte {
 
 		if data[endOffset+tokEnd] == ","[0] {
 			endOffset += tokEnd + 1
+		} else if data[endOffset+tokEnd] == " "[0] && len(data) > endOffset+tokEnd+1 && data[endOffset+tokEnd+1] == ","[0] {
+			endOffset += tokEnd + 2
 		} else if data[endOffset+tokEnd] == "}"[0] && data[tokStart] == ","[0] {
 			keyOffset = tokStart
 		}
