@@ -152,9 +152,9 @@ If key data type do not match, it will return error.
 
 ### **`ArrayEach`**
 ```go
-func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err error), keys ...string)
+func ArrayEach(data []byte, cb func(value []byte, dataType jsonparser.ValueType, offset int, err *error), keys ...string)
 ```
-Needed for iterating arrays, accepts a callback function with the same return arguments as `Get`.
+Used for iterating arrays, accepts a callback function with the same return arguments as `Get`, except for error. If error is set from within callback, ArrayEach() terminates immediately, returning the same error.
 
 ### **`ObjectEach`**
 ```go

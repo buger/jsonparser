@@ -2,6 +2,7 @@ package jsonparser
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	_ "fmt"
 	"reflect"
@@ -12,7 +13,7 @@ import (
 var activeTest = ""
 
 func toArray(data []byte) (result [][]byte) {
-	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
+	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err *error) {
 		result = append(result, value)
 	})
 
@@ -20,7 +21,7 @@ func toArray(data []byte) (result [][]byte) {
 }
 
 func toStringArray(data []byte) (result []string) {
-	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
+	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err *error) {
 		result = append(result, string(value))
 	})
 
@@ -1191,7 +1192,7 @@ func TestArrayEach(t *testing.T) {
 	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
 	count := 0
 
-	ArrayEach(mock, func(value []byte, dataType ValueType, offset int, err error) {
+	ArrayEach(mock, func(value []byte, dataType ValueType, offset int, err *error) {
 		count++
 
 		switch count {
@@ -1218,11 +1219,11 @@ func TestArrayEach(t *testing.T) {
 }
 
 func TestArrayEachEmpty(t *testing.T) {
-	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+	funcError := func([]byte, ValueType, int, *error) { t.Errorf("Run func not allow") }
 
 	type args struct {
 		data []byte
-		cb   func(value []byte, dataType ValueType, offset int, err error)
+		cb   func(value []byte, dataType ValueType, offset int, err *error)
 		keys []string
 	}
 	tests := []struct {
@@ -1249,6 +1250,26 @@ func TestArrayEachEmpty(t *testing.T) {
 				t.Errorf("ArrayEach() = %v, want %v", gotOffset, tt.wantOffset)
 			}
 		})
+	}
+}
+
+func TestArrayEachEarlyTermination(t *testing.T) {
+	earlyTermError := errors.New("Early termination")
+	mock := []byte(`{"a":[{"x":1},{"x":2},{"x":3},{"x":4}]}`)
+	count := 0
+
+	_, err := ArrayEach(mock, func(value []byte, dataType ValueType, offset int, err *error) {
+		count++
+
+		if count == 2 {
+			*err = earlyTermError
+		} else if count > 2 {
+			t.Errorf("Should never go beyond second item")
+		}
+	}, "a")
+
+	if err != earlyTermError {
+		t.Errorf("Expected error from early termination")
 	}
 }
 
