@@ -242,6 +242,10 @@ func searchKeys(data []byte, keys ...string) int {
 
 			// if string is a key, and key level match
 			if data[i] == ':' && keyLevel == level-1 {
+				if level < 1 {
+					return -1
+				}
+
 				key := data[keyBegin:keyEnd]
 
 				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
@@ -439,9 +443,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					}
 				}
 
-				switch data[i] {
-				case '{', '}', '[', '"':
-					i--
+				if i < ln {
+					switch data[i] {
+					case '{', '}', '[', '"':
+						i--
+					}
 				}
 			} else {
 				i--
