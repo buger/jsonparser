@@ -734,7 +734,6 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    "c",
 	},
-
 	// Array index paths
 	{
 		desc:    "last key in path is index",
@@ -813,6 +812,18 @@ var getIntTests = []GetTest{
 		path:    []string{"c"},
 		isFound: true,
 		data:    int64(1),
+	},
+	{ // Issue #138: overflow detection
+		desc:  `Fails because of overflow`,
+		json:  `{"p":9223372036854775808}`,
+		path:  []string{"p"},
+		isErr: true,
+	},
+	{ // Issue #138: overflow detection
+		desc:  `Fails because of underflow`,
+		json:  `{"p":-9223372036854775809}`,
+		path:  []string{"p"},
+		isErr: true,
 	},
 }
 
