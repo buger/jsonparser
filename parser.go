@@ -214,6 +214,7 @@ func searchKeys(data []byte, keys ...string) int {
 	i := 0
 	ln := len(data)
 	lk := len(keys)
+	lastMatched := true
 
 	if lk == 0 {
 		return 0
@@ -241,8 +242,8 @@ func searchKeys(data []byte, keys ...string) int {
 
 			i += valueOffset
 
-			// if string is a key, and key level match
-			if data[i] == ':' && keyLevel == level-1 {
+			// if string is a key
+			if data[i] == ':' {
 				if level < 1 {
 					return -1
 				}
@@ -261,17 +262,32 @@ func searchKeys(data []byte, keys ...string) int {
 				}
 
 				if equalStr(&keyUnesc, keys[level-1]) {
-					keyLevel++
-					// If we found all keys in path
-					if keyLevel == lk {
-						return i + 1
+					lastMatched = true
+
+					// if key level match
+					if keyLevel == level-1 {
+						keyLevel++
+						// If we found all keys in path
+						if keyLevel == lk {
+							return i + 1
+						}
 					}
+				} else {
+					lastMatched = false
 				}
 			} else {
 				i--
 			}
 		case '{':
-			level++
+
+			// in case parent key is matched then only we will increase the level otherwise can directly
+			// can move to the end of this block
+			if !lastMatched {
+				end := blockEnd(data[i:], '{', '}')
+				i += end - 1
+			} else{
+				level++
+			}
 		case '}':
 			level--
 			if level == keyLevel {

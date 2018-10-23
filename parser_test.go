@@ -644,6 +644,12 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    `4`,
 	},
+	{ // Issue #148
+		desc:    `missing key in different key same level`,
+		json:    `{"s":"s","ic":2,"r":{"o":"invalid"}}`,
+		path:    []string{"ic", "o"},
+		isFound: false,
+	},
 
 	// Error/invalid tests
 	{
