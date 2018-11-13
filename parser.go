@@ -285,7 +285,7 @@ func searchKeys(data []byte, keys ...string) int {
 			if !lastMatched {
 				end := blockEnd(data[i:], '{', '}')
 				i += end - 1
-			} else{
+			} else {
 				level++
 			}
 		case '}':
@@ -304,7 +304,7 @@ func searchKeys(data []byte, keys ...string) int {
 				var valueFound []byte
 				var valueOffset int
 				var curI = i
-				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int) error {
 					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
@@ -314,6 +314,7 @@ func searchKeys(data []byte, keys ...string) int {
 						}
 					}
 					curIdx += 1
+					return nil
 				})
 
 				if valueFound == nil {
@@ -496,7 +497,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				level++
 
 				var curIdx int
-				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int) error {
 					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
 						for pi, p := range paths {
 							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
@@ -518,6 +519,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					}
 
 					curIdx += 1
+					return nil
 				})
 
 				if pathsMatched == len(paths) {
@@ -898,8 +900,8 @@ func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType,
 	return value, dataType, offset, endOffset, nil
 }
 
-// ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
-func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (offset int, err error) {
+// ArrayEach is used when iterating arrays, accepts a callback function with the arguments returned by `Get`. Ends iteration immediately if the callback returns an non-nil error.
+func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int) error, keys ...string) (offset int, err error) {
 	if len(data) == 0 {
 		return -1, MalformedObjectError
 	}
@@ -949,11 +951,11 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if t != NotExist {
-			cb(v, t, offset+o-len(v), e)
+			e = cb(v, t, offset+o-len(v))
 		}
 
 		if e != nil {
-			break
+			return offset, e
 		}
 
 		offset += o

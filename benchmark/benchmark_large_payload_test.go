@@ -23,15 +23,17 @@ import (
 */
 func BenchmarkJsonParserLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int) error {
 			jsonparser.Get(value, "username")
 			nothing()
+			return nil
 		}, "users")
 
-		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int) error {
 			jsonparser.GetInt(value, "id")
 			jsonparser.Get(value, "slug")
 			nothing()
+			return nil
 		}, "topics", "topics")
 	}
 }
