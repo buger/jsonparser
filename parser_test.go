@@ -1074,15 +1074,23 @@ func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(Set
 	}
 }
 
-func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner func(DeleteTest) interface{}, resultChecker func(DeleteTest, interface{}) (bool, interface{})) {
+func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner func(DeleteTest) (interface{}, []byte), resultChecker func(DeleteTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
 			continue
 		}
 
+		original := make([]byte, len(test.json))
+		copy(original, test.json)
+
 		fmt.Println("Running:", test.desc)
 
-		value := runner(test)
+		value, bytes := runner(test)
+
+		if string(original) != string(bytes) {
+			t.Errorf("ORIGINAL DATA MALFORMED: %v, %v", string(original), string(bytes))
+			continue
+		}
 
 		if test.data == nil {
 			t.Errorf("MALFORMED TEST: %v", test)
@@ -1116,8 +1124,9 @@ func TestSet(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	runDeleteTests(t, "Delete()", deleteTests,
-		func(test DeleteTest) interface{} {
-			return Delete([]byte(test.json), test.path...)
+		func(test DeleteTest) (interface{}, []byte) {
+			ba := []byte(test.json)
+			return Delete(ba, test.path...), ba
 		},
 		func(test DeleteTest, value interface{}) (bool, interface{}) {
 			expected := []byte(test.data.(string))
