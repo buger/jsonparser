@@ -706,7 +706,12 @@ func Delete(data []byte, keys ...string) []byte {
 		newOffset = prevTok + 1
 	}
 
-	data = append(data[:newOffset], data[endOffset:]...)
+	// We have to make a copy here if we don't want to mangle the original data, because byte slices are
+	// accessed by reference and not by value
+	dataCopy := make([]byte, len(data))
+	copy(dataCopy, data)
+	data = append(dataCopy[:newOffset], dataCopy[endOffset:]...)
+
 	return data
 }
 
