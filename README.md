@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/buger/jsonparser)](https://goreportcard.com/report/github.com/buger/jsonparser) ![License](https://img.shields.io/dub/l/vibe-d.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/GannettDigital/jsonparser)](https://goreportcard.com/report/github.com/buger/jsonparser) ![License](https://img.shields.io/dub/l/vibe-d.svg)
 # Alternative JSON parser for Go (so far fastest)
 
 It does not require you to know the structure of the payload (eg. create structs), and allows accessing fields by providing the path to them. It is up to **10 times faster** than standard `encoding/json` package (depending on payload size and usage), **allocates no memory**. See benchmarks below.
@@ -15,7 +15,7 @@ Goal of this project is to push JSON parser to the performance limits and not sa
 For the given JSON our goal is to extract the user's full name, number of github followers and avatar.
 
 ```go
-import "github.com/buger/jsonparser"
+import "github.com/GannettDigital/jsonparser"
 
 ...
 
@@ -98,7 +98,7 @@ I'm available for consulting and can help you push your app performance to the l
 
 Library API is really simple. You just need the `Get` method to perform any operation. The rest is just helpers around it.
 
-You also can view API at [godoc.org](https://godoc.org/github.com/buger/jsonparser)
+You also can view API at [godoc.org](https://godoc.org/github.com/GannettDigital/jsonparser)
 
 
 ### **`Get`**

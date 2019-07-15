@@ -1,4 +1,4 @@
-module github.com/buger/jsonparser
+module github.com/GannettDigital/jsonparser
 
 go 1.12
 

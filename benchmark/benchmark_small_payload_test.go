@@ -12,7 +12,7 @@ import (
 	"github.com/a8m/djson"
 	"github.com/antonholmquist/jason"
 	"github.com/bitly/go-simplejson"
-	"github.com/buger/jsonparser"
+	"github.com/GannettDigital/jsonparser"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
@@ -26,7 +26,7 @@ import (
 func nothing(_ ...interface{}) {}
 
 /*
-   github.com/buger/jsonparser
+   github.com/GannettDigital/jsonparser
 */
 func BenchmarkJsonParserSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
