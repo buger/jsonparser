@@ -1,8 +1,17 @@
 language: go
 go:
-    - 1.7.x
-    - 1.8.x
-    - 1.9.x
-    - 1.10.x
-    - 1.11.x
-script: go test -v ./.
+    - "1.11.x"
+
+sudo: false
+
+env:
+    - GO111MODULE="on"
+
+before_install:
+    - go get github.com/mattn/goveralls
+
+script:
+    - go test -v -race -parallel 4 -coverprofile=coverage.txt -covermode=atomic ./...
+
+after_success:
+    - goveralls -coverprofile=coverage.txt -service=travis-ci
