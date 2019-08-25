@@ -980,7 +980,6 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 
 // ObjectEach iterates over the key-value pairs of a JSON object, invoking a given callback for each such entry
 func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error) {
-	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	offset := 0
 
 	// Descend to the desired key, if requested
@@ -1034,6 +1033,7 @@ func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType Va
 
 		// Unescape the string if needed
 		if keyEscaped {
+			var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 			if keyUnescaped, err := Unescape(key, stackbuf[:]); err != nil {
 				return MalformedStringEscapeError
 			} else {
