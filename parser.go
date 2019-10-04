@@ -333,6 +333,8 @@ func searchKeys(data []byte, keys ...string) int {
 					i += arraySkip - 1
 				}
 			}
+		case ':': // If encountered, JSON data is malformed
+			return -1
 		}
 
 		i++
