@@ -887,18 +887,18 @@ var getStringTests = []GetTest{
 		data:    "value\b\f\n\r\tvalue", // value is unescaped since this is GetString()
 	},
 	{ // This test checks we avoid an infinite loop for certain malformed JSON. We don't check for all malformed JSON as it would reduce performance.
-		desc: `malformed with double quotes`,
-		json: `{"a"":1}`,
-		path: []string{"a"},
+		desc:    `malformed with double quotes`,
+		json:    `{"a"":1}`,
+		path:    []string{"a"},
 		isFound: false,
-		data: ``,
+		data:    ``,
 	},
 	{ // More malformed JSON testing, to be sure we avoid an infinite loop.
-		desc: `malformed with double quotes, and path does not exist`,
-		json: `{"z":123,"y":{"x":7,"w":0},"v":{"u":"t","s":"r","q":0,"p":1558051800},"a":"b","c":"2016-11-02T20:10:11Z","d":"e","f":"g","h":{"i":"j""},"k":{"l":"m"}}`,
-		path: []string{"o"},
+		desc:    `malformed with double quotes, and path does not exist`,
+		json:    `{"z":123,"y":{"x":7,"w":0},"v":{"u":"t","s":"r","q":0,"p":1558051800},"a":"b","c":"2016-11-02T20:10:11Z","d":"e","f":"g","h":{"i":"j""},"k":{"l":"m"}}`,
+		path:    []string{"o"},
 		isFound: false,
-		data: ``,
+		data:    ``,
 	},
 }
 
@@ -1453,7 +1453,7 @@ func TestObjectEach(t *testing.T) {
 	}
 }
 
-var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10}`)
+var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10, "arrString": ["a","b","c"]}`)
 
 func TestEachKey(t *testing.T) {
 	paths := [][]string{
@@ -1465,6 +1465,7 @@ func TestEachKey(t *testing.T) {
 		{"nested", "nested3", "b"},
 		{"arr", "[1]", "b"},
 		{"arrInt", "[3]"},
+		{"arrString", "[1]"},
 		{"arrInt", "[5]"}, // Should not find last key
 	}
 
@@ -1506,13 +1507,17 @@ func TestEachKey(t *testing.T) {
 			if string(value) != "4" {
 				t.Error("Should find 8 key", string(value))
 			}
+		case 8:
+			if string(value) != "b" {
+				t.Error("Should find 9 key", string(value))
+			}
 		default:
-			t.Errorf("Should found only 8 keys")
+			t.Errorf("Should found only 9 keys")
 		}
 	}, paths...)
 
-	if keysFound != 8 {
-		t.Errorf("Should find 8 keys: %d", keysFound)
+	if keysFound != 9 {
+		t.Errorf("Should find 9 keys: %d", keysFound)
 	}
 }
 
