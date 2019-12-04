@@ -436,12 +436,8 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 						pathsMatched++
 						pathFlags |= bitwiseFlags[pi+1]
 
-						v, dt, of, e := Get(data[i:])
+						v, dt, _, e := Get(data[i:])
 						cb(pi, v, dt, e)
-
-						if of != -1 {
-							i += of
-						}
 
 						if pathsMatched == len(paths) {
 							break
