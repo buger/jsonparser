@@ -261,19 +261,23 @@ func searchKeys(data []byte, keys ...string) int {
 					keyUnesc = ku
 				}
 
-				if equalStr(&keyUnesc, keys[level-1]) {
-					lastMatched = true
+				if level <= len(keys) {
+					if equalStr(&keyUnesc, keys[level-1]) {
+						lastMatched = true
 
-					// if key level match
-					if keyLevel == level-1 {
-						keyLevel++
-						// If we found all keys in path
-						if keyLevel == lk {
-							return i + 1
+						// if key level match
+						if keyLevel == level-1 {
+							keyLevel++
+							// If we found all keys in path
+							if keyLevel == lk {
+								return i + 1
+							}
 						}
+					} else {
+						lastMatched = false
 					}
 				} else {
-					lastMatched = false
+					return -1
 				}
 			} else {
 				i--
@@ -484,10 +488,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
-
-				aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
-				arrIdxFlags |= bitwiseFlags[aIdx+1]
-				pIdxFlags |= bitwiseFlags[pi+1]
+				if len(p[level]) >= 2 {
+					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
+					arrIdxFlags |= bitwiseFlags[aIdx+1]
+					pIdxFlags |= bitwiseFlags[pi+1]
+				}
 			}
 
 			if arrIdxFlags > 0 {
