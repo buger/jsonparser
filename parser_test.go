@@ -185,6 +185,18 @@ var deleteTests = []DeleteTest{
 		path: []string{"b"},
 		data: `{"a": "1" , "c": 3}`,
 	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@[`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@[`,
+	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@{`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@{`,
+	},
 }
 
 var setTests = []SetTest{
