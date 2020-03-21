@@ -392,6 +392,14 @@ var setTests = []SetTest{
 		isFound: true,
 		data:    `{"top":["one", "two", "value"]}`,
 	},
+	{
+		desc:    "set unknown key (simple object within nested array)",
+		json:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"}]}}`,
+		isFound: true,
+		path:    []string{"test", "key", "[1]", "newInnerKey"},
+		setData: `"new object"`,
+		data:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"},{"newInnerKey":"new object"}]}}`,
+	},
 }
 
 var getTests = []GetTest{

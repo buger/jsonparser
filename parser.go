@@ -599,15 +599,17 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	if comma {
 		buffer.WriteString(",")
 	}
-	if isIndex {
+	if isIndex && !comma {
 		buffer.WriteString("[")
 	} else {
 		if object {
 			buffer.WriteString("{")
 		}
-		buffer.WriteString("\"")
-		buffer.WriteString(keys[0])
-		buffer.WriteString("\":")
+		if !isIndex {
+			buffer.WriteString("\"")
+			buffer.WriteString(keys[0])
+			buffer.WriteString("\":")
+		}
 	}
 
 	for i := 1; i < len(keys); i++ {
@@ -627,7 +629,7 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 			buffer.WriteString("}")
 		}
 	}
-	if isIndex {
+	if isIndex && !comma {
 		buffer.WriteString("]")
 	}
 	if object && !isIndex {
@@ -776,7 +778,9 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		depthOffset := endOffset
 		if depth != 0 {
 			// if subpath is a non-empty object, add to it
-			if data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}' {
+			// or if subpath is a non-empty array, add to it
+			if (data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}') ||
+				(data[startOffset] == '[' && data[startOffset+1+nextToken(data[startOffset+1:])] == '{') && keys[depth:][0][0] == 91 {
 				depthOffset--
 				startOffset = depthOffset
 				// otherwise, over-write it with a new object
