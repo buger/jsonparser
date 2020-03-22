@@ -98,9 +98,15 @@ func findKeyStart(data []byte, key string) (int, error) {
 			}
 
 		case '[':
-			i = blockEnd(data[i:], data[i], ']') + i
+			end := blockEnd(data[i:], data[i], ']')
+			if end != -1 {
+				i = i + end
+			}
 		case '{':
-			i = blockEnd(data[i:], data[i], '}') + i
+			end := blockEnd(data[i:], data[i], '}')
+			if end != -1 {
+				i = i + end
+			}
 		}
 		i++
 	}
@@ -261,19 +267,23 @@ func searchKeys(data []byte, keys ...string) int {
 					keyUnesc = ku
 				}
 
-				if equalStr(&keyUnesc, keys[level-1]) {
-					lastMatched = true
+				if level <= len(keys) {
+					if equalStr(&keyUnesc, keys[level-1]) {
+						lastMatched = true
 
-					// if key level match
-					if keyLevel == level-1 {
-						keyLevel++
-						// If we found all keys in path
-						if keyLevel == lk {
-							return i + 1
+						// if key level match
+						if keyLevel == level-1 {
+							keyLevel++
+							// If we found all keys in path
+							if keyLevel == lk {
+								return i + 1
+							}
 						}
+					} else {
+						lastMatched = false
 					}
 				} else {
-					lastMatched = false
+					return -1
 				}
 			} else {
 				i--
@@ -484,10 +494,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
-
-				aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
-				arrIdxFlags |= bitwiseFlags[aIdx+1]
-				pIdxFlags |= bitwiseFlags[pi+1]
+				if len(p[level]) >= 2 {
+					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
+					arrIdxFlags |= bitwiseFlags[aIdx+1]
+					pIdxFlags |= bitwiseFlags[pi+1]
+				}
 			}
 
 			if arrIdxFlags > 0 {
@@ -588,15 +599,17 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	if comma {
 		buffer.WriteString(",")
 	}
-	if isIndex {
+	if isIndex && !comma {
 		buffer.WriteString("[")
 	} else {
 		if object {
 			buffer.WriteString("{")
 		}
-		buffer.WriteString("\"")
-		buffer.WriteString(keys[0])
-		buffer.WriteString("\":")
+		if !isIndex {
+			buffer.WriteString("\"")
+			buffer.WriteString(keys[0])
+			buffer.WriteString("\":")
+		}
 	}
 
 	for i := 1; i < len(keys); i++ {
@@ -616,7 +629,7 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 			buffer.WriteString("}")
 		}
 	}
-	if isIndex {
+	if isIndex && !comma {
 		buffer.WriteString("]")
 	}
 	if object && !isIndex {
@@ -765,7 +778,9 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		depthOffset := endOffset
 		if depth != 0 {
 			// if subpath is a non-empty object, add to it
-			if data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}' {
+			// or if subpath is a non-empty array, add to it
+			if (data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}') ||
+				(data[startOffset] == '[' && data[startOffset+1+nextToken(data[startOffset+1:])] == '{') && keys[depth:][0][0] == 91 {
 				depthOffset--
 				startOffset = depthOffset
 				// otherwise, over-write it with a new object

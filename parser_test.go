@@ -209,6 +209,18 @@ var deleteTests = []DeleteTest{
 		path: []string{"[1]"},
 		data: `[{"key":"val-obj1"}]`,
 	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@[`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@[`,
+	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@{`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@{`,
+	},
 }
 
 var setTests = []SetTest{
@@ -416,6 +428,14 @@ var setTests = []SetTest{
 		path:    []string{"test"},
 		setData: "new value",
 		isErr:   true,
+	},
+	{
+		desc:    "set unknown key (simple object within nested array)",
+		json:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"}]}}`,
+		isFound: true,
+		path:    []string{"test", "key", "[1]", "newInnerKey"},
+		setData: `"new object"`,
+		data:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"},{"newInnerKey":"new object"}]}}`,
 	},
 }
 
@@ -838,6 +858,13 @@ var getTests = []GetTest{
 		path:    []string{"a", "[0]", "b"},
 		isFound: true,
 		data:    `1`,
+	},
+	{
+		// Issue #178: Crash in searchKeys
+		desc: `invalid json`,
+		json: `{{{"":`,
+		path: []string{"a", "b"},
+		isFound: false,
 	},
 }
 
@@ -1566,6 +1593,7 @@ func TestEachKey(t *testing.T) {
 		{"arrInt", "[3]"},
 		{"arrInt", "[5]"}, // Should not find last key
 		{"nested"},
+		{"arr", "["}, // issue#177 Invalid arguments
 	}
 
 	keysFound := 0
@@ -1612,6 +1640,8 @@ func TestEachKey(t *testing.T) {
 			if string(value) != `{"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}` {
 				t.Error("Should find 9 key", string(value))
 			}
+		case 10:
+			t.Errorf("Found key #10 that should not be found")
 		default:
 			t.Errorf("Should find only 9 keys, got %v key", idx)
 		}
