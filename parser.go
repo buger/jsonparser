@@ -594,48 +594,96 @@ var (
 )
 
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
-	var buffer bytes.Buffer
 	isIndex := string(keys[0][0]) == "["
+	offset := 0
+	lk := calcAllocateSpace(keys, setValue, comma, object)
+	buffer := make([]byte, lk, lk)
 	if comma {
-		buffer.WriteString(",")
+		offset += WriteToBuffer(buffer[offset:], ",")
 	}
 	if isIndex && !comma {
-		buffer.WriteString("[")
+		offset += WriteToBuffer(buffer[offset:], "[")
 	} else {
 		if object {
-			buffer.WriteString("{")
+			offset += WriteToBuffer(buffer[offset:], "{")
 		}
 		if !isIndex {
-			buffer.WriteString("\"")
-			buffer.WriteString(keys[0])
-			buffer.WriteString("\":")
+			offset += WriteToBuffer(buffer[offset:], "\"")
+			offset += WriteToBuffer(buffer[offset:], keys[0])
+			offset += WriteToBuffer(buffer[offset:], "\":")
 		}
 	}
 
 	for i := 1; i < len(keys); i++ {
 		if string(keys[i][0]) == "[" {
-			buffer.WriteString("[")
+			offset += WriteToBuffer(buffer[offset:], "[")
 		} else {
-			buffer.WriteString("{\"")
-			buffer.WriteString(keys[i])
-			buffer.WriteString("\":")
+			offset += WriteToBuffer(buffer[offset:], "{\"")
+			offset += WriteToBuffer(buffer[offset:], keys[i])
+			offset += WriteToBuffer(buffer[offset:], "\":")
 		}
 	}
-	buffer.Write(setValue)
+	offset += WriteToBuffer(buffer[offset:], string(setValue))
 	for i := len(keys) - 1; i > 0; i-- {
 		if string(keys[i][0]) == "[" {
-			buffer.WriteString("]")
+			offset += WriteToBuffer(buffer[offset:], "]")
 		} else {
-			buffer.WriteString("}")
+			offset += WriteToBuffer(buffer[offset:], "}")
 		}
 	}
 	if isIndex && !comma {
-		buffer.WriteString("]")
+		offset += WriteToBuffer(buffer[offset:], "]")
 	}
 	if object && !isIndex {
-		buffer.WriteString("}")
+		offset += WriteToBuffer(buffer[offset:], "}")
 	}
-	return buffer.Bytes()
+	return buffer
+}
+
+func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
+	isIndex := string(keys[0][0]) == "["
+	lk := 0
+	if comma {
+		// ,
+		lk += 1
+	}
+	if isIndex && !comma {
+		// []
+		lk += 2
+	} else {
+		if object {
+			// {
+			lk += 1
+		}
+		if !isIndex {
+			// "keys[0]"
+			lk += len(keys[0]) + 3
+		}
+	}
+
+
+	lk += len(setValue)
+	for i := 1; i < len(keys); i++ {
+		if string(keys[i][0]) == "[" {
+			// []
+			lk += 2
+		} else {
+			// {"keys[i]":setValue}
+			lk += len(keys[i]) + 5
+		}
+	}
+
+	if object && !isIndex {
+		// }
+		lk += 1
+	}
+
+	return lk
+}
+
+func WriteToBuffer(buffer []byte, str string) int {
+	copy(buffer, str)
+	return len(str)
 }
 
 /*
