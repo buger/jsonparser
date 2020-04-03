@@ -294,6 +294,9 @@ func searchKeys(data []byte, keys ...string) int {
 			// can move to the end of this block
 			if !lastMatched {
 				end := blockEnd(data[i:], '{', '}')
+				if end == -1 {
+					return -1
+				}
 				i += end - 1
 			} else {
 				level++

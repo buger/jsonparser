@@ -861,9 +861,15 @@ var getTests = []GetTest{
 	},
 	{
 		// Issue #178: Crash in searchKeys
-		desc: `invalid json`,
-		json: `{{{"":`,
-		path: []string{"a", "b"},
+		desc:    `invalid json`,
+		json:    `{{{"":`,
+		path:    []string{"a", "b"},
+		isFound: false,
+	},
+	{
+		desc:    `opening brace instead of closing and without key`,
+		json:    `{"a":1{`,
+		path:    []string{"b"},
 		isFound: false,
 	},
 }
