@@ -922,7 +922,12 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		return -1, MalformedObjectError
 	}
 
-	offset = 1
+	nT := nextToken(data)
+	if nT == -1 {
+		return -1, MalformedJsonError
+	}
+
+	offset = nT+1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {

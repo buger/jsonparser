@@ -1383,6 +1383,56 @@ func TestArrayEach(t *testing.T) {
 	}, "a", "b")
 }
 
+func TestArrayEachWithWhiteSpace(t *testing.T) {
+	//Issue #159
+	count := 0
+	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+	funcSuccess := func(value []byte, dataType ValueType, index int, err error) {
+		count++
+
+		switch count {
+		case 1:
+			if string(value) != `AAA` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 2:
+			if string(value) != `BBB` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+		case 3:
+			if string(value) != `CCC` {
+				t.Errorf("Wrong third item: %s", string(value))
+			}
+		default:
+			t.Errorf("Should process only 3 items")
+		}
+	}
+
+	type args struct {
+		data []byte
+		cb   func(value []byte, dataType ValueType, offset int, err error)
+		keys []string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantErr    bool
+	}{
+		{"Array with white space", args{[]byte(`    ["AAA", "BBB", "CCC"]`), funcSuccess, []string{}}, false},
+		{"Array with only one character after white space", args{[]byte(`    1`), funcError, []string{}}, true},
+		{"Only white space", args{[]byte(`    `), funcError, []string{}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func TestArrayEachEmpty(t *testing.T) {
 	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
 
