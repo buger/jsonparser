@@ -61,7 +61,7 @@ jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, off
 }, "person", "avatars")
 
 // Or use can access fields by index!
-jsonparser.GetInt("person", "avatars", "[0]", "url")
+jsonparser.GetString(data, "person", "avatars", "[0]", "url")
 
 // You can use `ObjectEach` helper to iterate objects { "key1":object1, "key2":object2, .... "keyN":objectN }
 jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
