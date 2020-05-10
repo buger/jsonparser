@@ -388,7 +388,6 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		}
 	}
 
-	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 	pathsBuf := make([]string, maxPath)
 
 	for i < ln {
@@ -420,6 +419,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
 				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
 				var keyUnesc []byte
+				var stackbuf [unescapeStackBufSize]byte
 				if !keyEscaped {
 					keyUnesc = key
 				} else if ku, err := Unescape(key, stackbuf[:]); err != nil {
