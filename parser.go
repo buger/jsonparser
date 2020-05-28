@@ -916,7 +916,7 @@ func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType,
 		value = value[1 : len(value)-1]
 	}
 
-	return value, dataType, offset, endOffset, nil
+	return value[:len(value):len(value)], dataType, offset, endOffset, nil
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
