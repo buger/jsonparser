@@ -766,7 +766,7 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		if endOffset == -1 {
 			firstToken := nextToken(data)
 			// We can't set a top-level key if data isn't an object
-			if len(data) == 0 || data[firstToken] != '{' {
+			if firstToken < 0 || data[firstToken] != '{' {
 				return nil, KeyPathNotFoundError
 			}
 			// Don't need a comma if the input is an empty object
