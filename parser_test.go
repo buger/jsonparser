@@ -185,6 +185,42 @@ var deleteTests = []DeleteTest{
 		path: []string{"b"},
 		data: `{"a": "1" , "c": 3}`,
 	},
+	{
+		desc: "Delete non-last key",
+		json: `{"test":"input","test1":"input1"}`,
+		path: []string{"test"},
+		data: `{"test1":"input1"}`,
+	},
+	{
+		desc: "Delete non-exist key",
+		json: `{"test:":"input"}`,
+		path: []string{"test", "test1"},
+		data: `{"test:":"input"}`,
+	},
+	{
+		desc: "Delete non-last object in an array",
+		json: `[{"key":"val-obj1"},{"key2":"val-obj2"}]`,
+		path: []string{"[0]"},
+		data: `[{"key2":"val-obj2"}]`,
+	},
+	{
+		desc: "Delete non-first object in an array",
+		json: `[{"key":"val-obj1"},{"key2":"val-obj2"}]`,
+		path: []string{"[1]"},
+		data: `[{"key":"val-obj1"}]`,
+	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@[`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@[`,
+	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@{`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@{`,
+	},
 }
 
 var setTests = []SetTest{
@@ -379,6 +415,27 @@ var setTests = []SetTest{
 		setData: `"value"`,
 		isFound: true,
 		data:    `{"top":["one", "two", "value"]}`,
+	},
+	{
+		desc:    "set non-exist key",
+		json:    `{"test":"input"}`,
+		setData: `"new value"`,
+		isFound: false,
+	},
+	{
+		desc:    "set key in invalid json",
+		json:    `{"test"::"input"}`,
+		path:    []string{"test"},
+		setData: "new value",
+		isErr:   true,
+	},
+	{
+		desc:    "set unknown key (simple object within nested array)",
+		json:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"}]}}`,
+		isFound: true,
+		path:    []string{"test", "key", "[1]", "newInnerKey"},
+		setData: `"new object"`,
+		data:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"},{"newInnerKey":"new object"}]}}`,
 	},
 }
 
@@ -802,6 +859,19 @@ var getTests = []GetTest{
 		isFound: true,
 		data:    `1`,
 	},
+	{
+		// Issue #178: Crash in searchKeys
+		desc:    `invalid json`,
+		json:    `{{{"":`,
+		path:    []string{"a", "b"},
+		isFound: false,
+	},
+	{
+		desc:    `opening brace instead of closing and without key`,
+		json:    `{"a":1{`,
+		path:    []string{"b"},
+		isFound: false,
+	},
 }
 
 var getIntTests = []GetTest{
@@ -831,6 +901,12 @@ var getIntTests = []GetTest{
 		path:  []string{"p"},
 		isErr: true,
 	},
+	{
+		desc:  `read non-numeric value as integer`,
+		json:  `{"a": "b", "c": "d"}`,
+		path:  []string{"c"},
+		isErr: true,
+	},
 }
 
 var getFloatTests = []GetTest{
@@ -847,6 +923,12 @@ var getFloatTests = []GetTest{
 		path:    []string{"c"},
 		isFound: true,
 		data:    float64(23.41323),
+	},
+	{
+		desc:  `read non-numeric value as float`,
+		json:  `{"a": "b", "c": "d"}`,
+		path:  []string{"c"},
+		isErr: true,
 	},
 }
 
@@ -899,6 +981,43 @@ var getStringTests = []GetTest{
 		path:    []string{"o"},
 		isFound: false,
 		data:    ``,
+	},
+	{
+		desc:  `read non-string as string`,
+		json:  `{"c": true}`,
+		path:  []string{"c"},
+		isErr: true,
+	},
+}
+
+var getUnsafeStringTests = []GetTest{
+	{
+		desc:    `Do not translate Unicode symbols`,
+		json:    `{"c": "test"}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `test`,
+	},
+	{
+		desc:    `Do not translate Unicode symbols`,
+		json:    `{"c": "15\u00b0C"}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `15\u00b0C`,
+	},
+	{
+		desc:    `Do not translate supplementary Unicode symbols`,
+		json:    `{"c": "\uD83D\uDE03"}`, // Smiley face (UTF16 surrogate pair)
+		path:    []string{"c"},
+		isFound: true,
+		data:    `\uD83D\uDE03`, // Smiley face
+	},
+	{
+		desc:    `Do not translate escape symbols`,
+		json:    `{"c": "\\\""}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `\\\"`,
 	},
 }
 
@@ -1175,6 +1294,19 @@ func TestGetString(t *testing.T) {
 	)
 }
 
+func TestGetUnsafeString(t *testing.T) {
+	runGetTests(t, "GetUnsafeString()", getUnsafeStringTests,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = GetUnsafeString([]byte(test.json), test.path...)
+			return value, String, err
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := test.data.(string)
+			return expected == value.(string), expected
+		},
+	)
+}
+
 func TestGetInt(t *testing.T) {
 	runGetTests(t, "GetInt()", getIntTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1255,6 +1387,56 @@ func TestArrayEach(t *testing.T) {
 			t.Errorf("Should process only 4 items")
 		}
 	}, "a", "b")
+}
+
+func TestArrayEachWithWhiteSpace(t *testing.T) {
+	//Issue #159
+	count := 0
+	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+	funcSuccess := func(value []byte, dataType ValueType, index int, err error) {
+		count++
+
+		switch count {
+		case 1:
+			if string(value) != `AAA` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 2:
+			if string(value) != `BBB` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+		case 3:
+			if string(value) != `CCC` {
+				t.Errorf("Wrong third item: %s", string(value))
+			}
+		default:
+			t.Errorf("Should process only 3 items")
+		}
+	}
+
+	type args struct {
+		data []byte
+		cb   func(value []byte, dataType ValueType, offset int, err error)
+		keys []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"Array with white space", args{[]byte(`    ["AAA", "BBB", "CCC"]`), funcSuccess, []string{}}, false},
+		{"Array with only one character after white space", args{[]byte(`    1`), funcError, []string{}}, true},
+		{"Only white space", args{[]byte(`    `), funcError, []string{}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
 }
 
 func TestArrayEachEmpty(t *testing.T) {
@@ -1453,7 +1635,34 @@ func TestObjectEach(t *testing.T) {
 	}
 }
 
-var testJson = []byte(`{"name": "Name", "order": "Order", "sum": 100, "len": 12, "isPaid": true, "nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, "nested2": {"a":"test2", "b":3}, "arr": [{"a":"zxc", "b": 1}, {"a":"123", "b":2}], "arrInt": [1,2,3,4], "intPtr": 10, "arrString": ["a","b","c"]}`)
+var testJson = []byte(`{
+	"name": "Name", 
+	"order": "Order", 
+	"sum": 100, 
+	"len": 12, 
+	"isPaid": true, 
+	"nested": {"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}, 
+	"nested2": {
+		"a":"test2", 
+		"b":3
+	}, 
+	"arr": [
+		{
+			"a":"zxc", 
+			"b": 1
+		}, 
+		{
+			"a":"123", 
+			"b":2
+		}
+	], 
+	"arrInt": [1,2,3,4], 
+	"intPtr": 10, 
+	"a\n":{
+		"b\n":99
+	},
+	"arrString": ["a","b","c"]}
+}`)
 
 func TestEachKey(t *testing.T) {
 	paths := [][]string{
@@ -1465,8 +1674,11 @@ func TestEachKey(t *testing.T) {
 		{"nested", "nested3", "b"},
 		{"arr", "[1]", "b"},
 		{"arrInt", "[3]"},
-		{"arrString", "[1]"},
 		{"arrInt", "[5]"}, // Should not find last key
+		{"nested"},
+		{"arr", "["},   // issue#177 Invalid arguments
+		{"a\n", "b\n"}, // issue#165
+		{"arrString", "[1]"},
 	}
 
 	keysFound := 0
@@ -1477,47 +1689,59 @@ func TestEachKey(t *testing.T) {
 		switch idx {
 		case 0:
 			if string(value) != "Name" {
-				t.Error("Should find 1 key", string(value))
+				t.Error("Should find 0 key", string(value))
 			}
 		case 1:
 			if string(value) != "Order" {
-				t.Errorf("Should find 2 key")
+				t.Errorf("Should find 1 key")
 			}
 		case 2:
 			if string(value) != "test" {
-				t.Errorf("Should find 3 key")
+				t.Errorf("Should find 2 key")
 			}
 		case 3:
 			if string(value) != "2" {
-				t.Errorf("Should find 4 key")
+				t.Errorf("Should find 3 key")
 			}
 		case 4:
 			if string(value) != "test2" {
-				t.Error("Should find 5 key", string(value))
+				t.Error("Should find 4 key", string(value))
 			}
 		case 5:
 			if string(value) != "4" {
-				t.Errorf("Should find 6 key")
+				t.Errorf("Should find 5 key")
 			}
 		case 6:
 			if string(value) != "2" {
-				t.Errorf("Should find 7 key")
+				t.Errorf("Should find 6 key")
 			}
 		case 7:
 			if string(value) != "4" {
-				t.Error("Should find 8 key", string(value))
+				t.Error("Should find 7 key", string(value))
 			}
 		case 8:
-			if string(value) != "b" {
+			t.Errorf("Found key #8 that should not be found")
+		case 9:
+			if string(value) != `{"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}` {
 				t.Error("Should find 9 key", string(value))
 			}
+		case 10:
+			t.Errorf("Found key #10 that should not be found")
+		case 11:
+			if string(value) != "99" {
+				t.Error("Should find 11 key", string(value))
+			}
+		case 12:
+			if string(value) != "b" {
+				t.Error("Should find 12 key", string(value))
+			}
 		default:
-			t.Errorf("Should found only 9 keys")
+			t.Errorf("Only %v keys specified, got key for non-existent index %v", len(paths), idx)
 		}
 	}, paths...)
 
-	if keysFound != 9 {
-		t.Errorf("Should find 9 keys: %d", keysFound)
+	if keysFound != 11 {
+		t.Errorf("Should find 11 keys: %d", keysFound)
 	}
 }
 
