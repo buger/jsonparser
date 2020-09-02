@@ -31,7 +31,7 @@ func BenchmarkJsonParserMedium(b *testing.B) {
 		jsonparser.GetInt(mediumFixture, "person", "github", "followers")
 		jsonparser.Get(mediumFixture, "company")
 
-		jsonparser.ArrayEach(mediumFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		jsonparser.ArrayEach(mediumFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err *error) {
 			jsonparser.Get(value, "url")
 			nothing()
 		}, "person", "gravatar", "avatars")
@@ -69,7 +69,7 @@ func BenchmarkJsonParserEachKeyManualMedium(b *testing.B) {
 			case 2:
 			// jsonparser.ParseString(value)
 			case 3:
-				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
+				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err *error) {
 					jsonparser.Get(avalue, "url")
 				})
 			}
@@ -105,7 +105,7 @@ func BenchmarkJsonParserEachKeyStructMedium(b *testing.B) {
 				json.Unmarshal(value, &data.Company) // we don't have a JSON -> map[string]interface{} function yet, so use standard encoding/json here
 			case 3:
 				var avatars []*CBAvatar
-				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
+				jsonparser.ArrayEach(value, func(avalue []byte, dataType jsonparser.ValueType, offset int, err *error) {
 					url, _ := jsonparser.ParseString(avalue)
 					avatars = append(avatars, &CBAvatar{Url: url})
 				})
@@ -141,7 +141,7 @@ func BenchmarkJsonParserObjectEachStructMedium(b *testing.B) {
 				missing--
 			case bytes.Equal(k, gravatarKey):
 				var avatars []*CBAvatar
-				jsonparser.ArrayEach(v, func(avalue []byte, dataType jsonparser.ValueType, offset int, err error) {
+				jsonparser.ArrayEach(v, func(avalue []byte, dataType jsonparser.ValueType, offset int, err *error) {
 					url, _ := jsonparser.ParseString(avalue)
 					avatars = append(avatars, &CBAvatar{Url: url})
 				}, "avatars")
