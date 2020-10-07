@@ -982,7 +982,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if t != NotExist {
-			cb(v, t, offset+o-len(v), e)
+			e = cb(v, t, offset+o-len(v), e)
 		}
 
 		if e != nil {
