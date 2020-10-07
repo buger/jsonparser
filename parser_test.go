@@ -12,16 +12,18 @@ import (
 var activeTest = ""
 
 func toArray(data []byte) (result [][]byte) {
-	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
+	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) error {
 		result = append(result, value)
+		return nil
 	})
 
 	return
 }
 
 func toStringArray(data []byte) (result []string) {
-	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
+	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) error {
 		result = append(result, string(value))
+		return nil
 	})
 
 	return
@@ -1363,7 +1365,7 @@ func TestArrayEach(t *testing.T) {
 	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
 	count := 0
 
-	ArrayEach(mock, func(value []byte, dataType ValueType, offset int, err error) {
+	ArrayEach(mock, func(value []byte, dataType ValueType, offset int, err error) error {
 		count++
 
 		switch count {
@@ -1386,14 +1388,18 @@ func TestArrayEach(t *testing.T) {
 		default:
 			t.Errorf("Should process only 4 items")
 		}
+		return nil
 	}, "a", "b")
 }
 
 func TestArrayEachWithWhiteSpace(t *testing.T) {
 	//Issue #159
 	count := 0
-	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
-	funcSuccess := func(value []byte, dataType ValueType, index int, err error) {
+	funcError := func([]byte, ValueType, int, error) error {
+		t.Errorf("Run func not allow")
+		return nil
+	}
+	funcSuccess := func(value []byte, dataType ValueType, index int, err error) error {
 		count++
 
 		switch count {
@@ -1412,17 +1418,18 @@ func TestArrayEachWithWhiteSpace(t *testing.T) {
 		default:
 			t.Errorf("Should process only 3 items")
 		}
+		return nil
 	}
 
 	type args struct {
 		data []byte
-		cb   func(value []byte, dataType ValueType, offset int, err error)
+		cb   func(value []byte, dataType ValueType, offset int, err error) error
 		keys []string
 	}
 	tests := []struct {
-		name       string
-		args       args
-		wantErr    bool
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{"Array with white space", args{[]byte(`    ["AAA", "BBB", "CCC"]`), funcSuccess, []string{}}, false},
 		{"Array with only one character after white space", args{[]byte(`    1`), funcError, []string{}}, true},
@@ -1440,11 +1447,14 @@ func TestArrayEachWithWhiteSpace(t *testing.T) {
 }
 
 func TestArrayEachEmpty(t *testing.T) {
-	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+	funcError := func([]byte, ValueType, int, error) error {
+		t.Errorf("Run func not allow")
+		return nil
+	}
 
 	type args struct {
 		data []byte
-		cb   func(value []byte, dataType ValueType, offset int, err error)
+		cb   func(value []byte, dataType ValueType, offset int, err error) error
 		keys []string
 	}
 	tests := []struct {
@@ -1675,7 +1685,7 @@ func TestEachKey(t *testing.T) {
 		{"arrInt", "[3]"},
 		{"arrInt", "[5]"}, // Should not find last key
 		{"nested"},
-		{"arr", "["}, // issue#177 Invalid arguments
+		{"arr", "["},   // issue#177 Invalid arguments
 		{"a\n", "b\n"}, // issue#165
 	}
 

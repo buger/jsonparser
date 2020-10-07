@@ -317,7 +317,7 @@ func searchKeys(data []byte, keys ...string) int {
 				var valueFound []byte
 				var valueOffset int
 				var curI = i
-				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) error {
 					if curIdx == aIdx {
 						valueFound = value
 						valueOffset = offset
@@ -327,6 +327,7 @@ func searchKeys(data []byte, keys ...string) int {
 						}
 					}
 					curIdx += 1
+					return nil
 				})
 
 				if valueFound == nil {
@@ -508,7 +509,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				level++
 
 				var curIdx int
-				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) error {
 					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
 						for pi, p := range paths {
 							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
@@ -530,6 +531,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					}
 
 					curIdx += 1
+					return nil
 				})
 
 				if pathsMatched == len(paths) {
@@ -553,6 +555,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 	}
 
 	return -1
+}
+
+func GuessValueType(data []byte, offset int) (ValueType, error) {
+	_, dataType, _, err := getType(data, offset)
+	return dataType, err
 }
 
 // Data types available in valid JSON data.
@@ -920,7 +927,7 @@ func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType,
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
-func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error), keys ...string) (offset int, err error) {
+func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int, err error) error, keys ...string) (offset int, err error) {
 	if len(data) == 0 {
 		return -1, MalformedObjectError
 	}
@@ -930,7 +937,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		return -1, MalformedJsonError
 	}
 
-	offset = nT+1
+	offset = nT + 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
