@@ -986,7 +986,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		}
 
 		if e != nil {
-			break
+			return offset + o - len(v), e
 		}
 
 		offset += o
