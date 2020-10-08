@@ -557,7 +557,15 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 	return -1
 }
 
-func GuessValueType(data []byte, offset int) (ValueType, error) {
+// GuessValueType : returns the type of the next JSON piece in data stream
+// Does not ensure that the whole data is a valid JSON
+func GuessValueType(data []byte) (ValueType, error) {
+
+	offset := nextToken(data)
+	if offset == -1 {
+		return NotExist, MalformedJsonError
+	}
+
 	_, dataType, _, err := getType(data, offset)
 	return dataType, err
 }
