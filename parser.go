@@ -445,11 +445,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 						match = pi
 
-						i++
 						pathsMatched++
 						pathFlags |= bitwiseFlags[pi+1]
 
-						v, dt, _, e := Get(data[i:])
+						v, dt, _, e := Get(data[i+1:])
 						cb(pi, v, dt, e)
 
 						if pathsMatched == len(paths) {
@@ -930,7 +929,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		return -1, MalformedJsonError
 	}
 
-	offset = nT+1
+	offset = nT + 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
