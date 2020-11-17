@@ -380,7 +380,8 @@ func sameTree(p1, p2 []string) bool {
 }
 
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
-	var pathFlags int64
+	var x struct{}
+	pathFlags := make([]bool, len(paths))
 	var level, pathsMatched, i int
 	ln := len(data)
 
@@ -439,7 +440,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 					pathsBuf[level-1] = bytesToString(&keyUnesc)
 					for pi, p := range paths {
-						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+						if len(p) != level || pathFlags[pi] || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
 							continue
 						}
 
@@ -447,7 +448,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 						i++
 						pathsMatched++
-						pathFlags |= bitwiseFlags[pi+1]
+						pathFlags[pi] = true
 
 						v, dt, _, e := Get(data[i:])
 						cb(pi, v, dt, e)
@@ -485,8 +486,9 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '}':
 			level--
 		case '[':
-			var arrIdxFlags int64
-			var pIdxFlags int64
+			var ok bool
+			arrIdxFlags := make(map[int]struct{})
+			pIdxFlags := make([]bool, len(paths))
 
 			if level < 0 {
 				cb(-1, nil, Unknown, MalformedJsonError)
@@ -494,31 +496,31 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			}
 
 			for pi, p := range paths {
-				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+				if len(p) < level+1 || pathFlags[pi] || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
 				if len(p[level]) >= 2 {
 					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
-					arrIdxFlags |= bitwiseFlags[aIdx+1]
-					pIdxFlags |= bitwiseFlags[pi+1]
+					arrIdxFlags[aIdx] = x
+					pIdxFlags[pi] = true
 				}
 			}
 
-			if arrIdxFlags > 0 {
+			if len(arrIdxFlags) > 0 {
 				level++
 
 				var curIdx int
 				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
+					if _, ok = arrIdxFlags[curIdx]; ok {
 						for pi, p := range paths {
-							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
+							if pIdxFlags[pi] {
 								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
 
 								if curIdx == aIdx {
 									of := searchKeys(value, p[level:]...)
 
 									pathsMatched++
-									pathFlags |= bitwiseFlags[pi+1]
+									pathFlags[pi] = true
 
 									if of != -1 {
 										v, dt, _, e := Get(value[of:])
@@ -930,7 +932,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		return -1, MalformedJsonError
 	}
 
-	offset = nT+1
+	offset = nT + 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
