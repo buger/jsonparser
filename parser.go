@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 )
 
@@ -354,14 +353,6 @@ func searchKeys(data []byte, keys ...string) int {
 	}
 
 	return -1
-}
-
-var bitwiseFlags []int64
-
-func init() {
-	for i := 0; i < 63; i++ {
-		bitwiseFlags = append(bitwiseFlags, int64(math.Pow(2, float64(i))))
-	}
 }
 
 func sameTree(p1, p2 []string) bool {
