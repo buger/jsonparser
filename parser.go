@@ -437,11 +437,10 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 						match = pi
 
-						i++
 						pathsMatched++
 						pathFlags[pi] = true
 
-						v, dt, _, e := Get(data[i:])
+						v, dt, _, e := Get(data[i+1:])
 						cb(pi, v, dt, e)
 
 						if pathsMatched == len(paths) {
