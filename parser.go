@@ -1129,7 +1129,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return "", fmt.Errorf("Value is not a string: %s", string(v))
 	}
 
-	// If no escapes return raw conten
+	// If no escapes return raw content
 	if bytes.IndexByte(v, '\\') == -1 {
 		return string(v), nil
 	}
