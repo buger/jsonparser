@@ -988,6 +988,18 @@ var getStringTests = []GetTest{
 		path:  []string{"c"},
 		isErr: true,
 	},
+	{
+		desc:  `empty array index`,
+		json:  `[""]`,
+		path:  []string{"[]"},
+		isFound: false,
+	},
+	{
+		desc:  `malformed array index`,
+		json:  `[""]`,
+		path:  []string{"["},
+		isFound: false,
+	},
 }
 
 var getUnsafeStringTests = []GetTest{
