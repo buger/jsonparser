@@ -308,7 +308,11 @@ func searchKeys(data []byte, keys ...string) int {
 		case '[':
 			// If we want to get array element by index
 			if keyLevel == level && keys[level][0] == '[' {
-				aIdx, err := strconv.Atoi(keys[level][1 : len(keys[level])-1])
+				var keyLen = len(keys[level])
+				if keyLen < 3 || keys[level][0] != '[' || keys[level][keyLen-1] != ']' {
+					return -1
+				}
+				aIdx, err := strconv.Atoi(keys[level][1 : keyLen-1])
 				if err != nil {
 					return -1
 				}
