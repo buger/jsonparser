@@ -1678,6 +1678,9 @@ func TestEachKey(t *testing.T) {
 		{"nested"},
 		{"arr", "["},   // issue#177 Invalid arguments
 		{"a\n", "b\n"}, // issue#165
+		{"arr", "["},    // issue#177 Invalid arguments
+		{"a\n", "b\n"},  // issue#165
+		{"nested", "b"}, // Should find repeated key
 		{"arrString", "[1]"},
 	}
 
@@ -1734,6 +1737,10 @@ func TestEachKey(t *testing.T) {
 		case 12:
 			if string(value) != "b" {
 				t.Error("Should find 12 key", string(value))
+			}
+		case 12:
+			if string(value) != "2" {
+				t.Errorf("Should find 11 key")
 			}
 		default:
 			t.Errorf("Only %v keys specified, got key for non-existent index %v", len(paths), idx)

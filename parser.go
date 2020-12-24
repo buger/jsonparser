@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 )
 
@@ -356,14 +355,6 @@ func searchKeys(data []byte, keys ...string) int {
 	return -1
 }
 
-var bitwiseFlags []int64
-
-func init() {
-	for i := 0; i < 63; i++ {
-		bitwiseFlags = append(bitwiseFlags, int64(math.Pow(2, float64(i))))
-	}
-}
-
 func sameTree(p1, p2 []string) bool {
 	minLen := len(p1)
 	if len(p2) < minLen {
@@ -380,7 +371,8 @@ func sameTree(p1, p2 []string) bool {
 }
 
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
-	var pathFlags int64
+	var x struct{}
+	pathFlags := make([]bool, len(paths))
 	var level, pathsMatched, i int
 	ln := len(data)
 
@@ -422,13 +414,15 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
 				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
 				var keyUnesc []byte
-				var stackbuf [unescapeStackBufSize]byte
 				if !keyEscaped {
 					keyUnesc = key
-				} else if ku, err := Unescape(key, stackbuf[:]); err != nil {
-					return -1
 				} else {
-					keyUnesc = ku
+					var stackbuf [unescapeStackBufSize]byte
+					if ku, err := Unescape(key, stackbuf[:]); err != nil {
+						return -1
+					} else {
+						keyUnesc = ku
+					}
 				}
 
 				if maxPath >= level {
@@ -439,17 +433,16 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 					pathsBuf[level-1] = bytesToString(&keyUnesc)
 					for pi, p := range paths {
-						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+						if len(p) != level || pathFlags[pi] || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
 							continue
 						}
 
 						match = pi
 
-						i++
 						pathsMatched++
-						pathFlags |= bitwiseFlags[pi+1]
+						pathFlags[pi] = true
 
-						v, dt, _, e := Get(data[i:])
+						v, dt, _, e := Get(data[i+1:])
 						cb(pi, v, dt, e)
 
 						if pathsMatched == len(paths) {
@@ -485,8 +478,9 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '}':
 			level--
 		case '[':
-			var arrIdxFlags int64
-			var pIdxFlags int64
+			var ok bool
+			arrIdxFlags := make(map[int]struct{})
+			pIdxFlags := make([]bool, len(paths))
 
 			if level < 0 {
 				cb(-1, nil, Unknown, MalformedJsonError)
@@ -494,31 +488,31 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			}
 
 			for pi, p := range paths {
-				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+				if len(p) < level+1 || pathFlags[pi] || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
 				if len(p[level]) >= 2 {
 					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
-					arrIdxFlags |= bitwiseFlags[aIdx+1]
-					pIdxFlags |= bitwiseFlags[pi+1]
+					arrIdxFlags[aIdx] = x
+					pIdxFlags[pi] = true
 				}
 			}
 
-			if arrIdxFlags > 0 {
+			if len(arrIdxFlags) > 0 {
 				level++
 
 				var curIdx int
 				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
+					if _, ok = arrIdxFlags[curIdx]; ok {
 						for pi, p := range paths {
-							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
+							if pIdxFlags[pi] {
 								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
 
 								if curIdx == aIdx {
 									of := searchKeys(value, p[level:]...)
 
 									pathsMatched++
-									pathFlags |= bitwiseFlags[pi+1]
+									pathFlags[pi] = true
 
 									if of != -1 {
 										if dataType == String {
@@ -602,48 +596,96 @@ var (
 )
 
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
-	var buffer bytes.Buffer
 	isIndex := string(keys[0][0]) == "["
+	offset := 0
+	lk := calcAllocateSpace(keys, setValue, comma, object)
+	buffer := make([]byte, lk, lk)
 	if comma {
-		buffer.WriteString(",")
+		offset += WriteToBuffer(buffer[offset:], ",")
 	}
 	if isIndex && !comma {
-		buffer.WriteString("[")
+		offset += WriteToBuffer(buffer[offset:], "[")
 	} else {
 		if object {
-			buffer.WriteString("{")
+			offset += WriteToBuffer(buffer[offset:], "{")
 		}
 		if !isIndex {
-			buffer.WriteString("\"")
-			buffer.WriteString(keys[0])
-			buffer.WriteString("\":")
+			offset += WriteToBuffer(buffer[offset:], "\"")
+			offset += WriteToBuffer(buffer[offset:], keys[0])
+			offset += WriteToBuffer(buffer[offset:], "\":")
 		}
 	}
 
 	for i := 1; i < len(keys); i++ {
 		if string(keys[i][0]) == "[" {
-			buffer.WriteString("[")
+			offset += WriteToBuffer(buffer[offset:], "[")
 		} else {
-			buffer.WriteString("{\"")
-			buffer.WriteString(keys[i])
-			buffer.WriteString("\":")
+			offset += WriteToBuffer(buffer[offset:], "{\"")
+			offset += WriteToBuffer(buffer[offset:], keys[i])
+			offset += WriteToBuffer(buffer[offset:], "\":")
 		}
 	}
-	buffer.Write(setValue)
+	offset += WriteToBuffer(buffer[offset:], string(setValue))
 	for i := len(keys) - 1; i > 0; i-- {
 		if string(keys[i][0]) == "[" {
-			buffer.WriteString("]")
+			offset += WriteToBuffer(buffer[offset:], "]")
 		} else {
-			buffer.WriteString("}")
+			offset += WriteToBuffer(buffer[offset:], "}")
 		}
 	}
 	if isIndex && !comma {
-		buffer.WriteString("]")
+		offset += WriteToBuffer(buffer[offset:], "]")
 	}
 	if object && !isIndex {
-		buffer.WriteString("}")
+		offset += WriteToBuffer(buffer[offset:], "}")
 	}
-	return buffer.Bytes()
+	return buffer
+}
+
+func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
+	isIndex := string(keys[0][0]) == "["
+	lk := 0
+	if comma {
+		// ,
+		lk += 1
+	}
+	if isIndex && !comma {
+		// []
+		lk += 2
+	} else {
+		if object {
+			// {
+			lk += 1
+		}
+		if !isIndex {
+			// "keys[0]"
+			lk += len(keys[0]) + 3
+		}
+	}
+
+
+	lk += len(setValue)
+	for i := 1; i < len(keys); i++ {
+		if string(keys[i][0]) == "[" {
+			// []
+			lk += 2
+		} else {
+			// {"keys[i]":setValue}
+			lk += len(keys[i]) + 5
+		}
+	}
+
+	if object && !isIndex {
+		// }
+		lk += 1
+	}
+
+	return lk
+}
+
+func WriteToBuffer(buffer []byte, str string) int {
+	copy(buffer, str)
+	return len(str)
 }
 
 /*
@@ -935,7 +977,7 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 		return -1, MalformedJsonError
 	}
 
-	offset = nT+1
+	offset = nT + 1
 
 	if len(keys) > 0 {
 		if offset = searchKeys(data, keys...); offset == -1 {
@@ -1140,7 +1182,7 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 		return "", fmt.Errorf("Value is not a string: %s", string(v))
 	}
 
-	// If no escapes return raw conten
+	// If no escapes return raw content
 	if bytes.IndexByte(v, '\\') == -1 {
 		return string(v), nil
 	}
