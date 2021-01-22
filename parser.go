@@ -374,11 +374,18 @@ func sameTree(p1, p2 []string) bool {
 	return true
 }
 
+const stackArraySize = 128
+
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
 	var x struct{}
-	pathFlags := make([]bool, len(paths))
 	var level, pathsMatched, i int
 	ln := len(data)
+
+	pathFlags := make([]bool, stackArraySize)[:]
+	if len(paths) > cap(pathFlags) {
+		pathFlags = make([]bool, len(paths))[:]
+	}
+	pathFlags = pathFlags[0:len(paths)]
 
 	var maxPath int
 	for _, p := range paths {
@@ -387,7 +394,11 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		}
 	}
 
-	pathsBuf := make([]string, maxPath)
+	pathsBuf := make([]string, stackArraySize)[:]
+	if maxPath > cap(pathsBuf) {
+		pathsBuf = make([]string, maxPath)[:]
+	}
+	pathsBuf = pathsBuf[0:maxPath]
 
 	for i < ln {
 		switch data[i] {
@@ -661,7 +672,6 @@ func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
 			lk += len(keys[0]) + 3
 		}
 	}
-
 
 	lk += len(setValue)
 	for i := 1; i < len(keys); i++ {
