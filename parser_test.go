@@ -221,6 +221,12 @@ var deleteTests = []DeleteTest{
 		path: []string{""},
 		data: `^_ï¿½^C^A^@{`,
 	},
+	{
+		desc: "Issue #150: leading space",
+		json: `   {"test":"input"}`,
+		path: []string{"test"},
+		data: `   {}`,
+	},
 }
 
 var setTests = []SetTest{
@@ -989,15 +995,15 @@ var getStringTests = []GetTest{
 		isErr: true,
 	},
 	{
-		desc:  `empty array index`,
-		json:  `[""]`,
-		path:  []string{"[]"},
+		desc:    `empty array index`,
+		json:    `[""]`,
+		path:    []string{"[]"},
 		isFound: false,
 	},
 	{
-		desc:  `malformed array index`,
-		json:  `[""]`,
-		path:  []string{"["},
+		desc:    `malformed array index`,
+		json:    `[""]`,
+		path:    []string{"["},
 		isFound: false,
 	},
 }

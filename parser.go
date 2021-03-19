@@ -49,10 +49,10 @@ func findTokenStart(data []byte, token byte) int {
 }
 
 func findKeyStart(data []byte, key string) (int, error) {
-	i := 0
+	i := nextToken(data)
 	ln := len(data)
-	if ln > 0 && (data[0] == '{' || data[0] == '[') {
-		i = 1
+	if ln > 0 && (data[i] == '{' || data[i] == '[') {
+		i += 1
 	}
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
 
