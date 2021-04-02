@@ -50,6 +50,9 @@ func findTokenStart(data []byte, token byte) int {
 
 func findKeyStart(data []byte, key string) (int, error) {
 	i := nextToken(data)
+	if i == -1 {
+		return i, KeyPathNotFoundError
+	}
 	ln := len(data)
 	if ln > 0 && (data[i] == '{' || data[i] == '[') {
 		i += 1
