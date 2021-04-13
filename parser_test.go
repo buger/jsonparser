@@ -913,6 +913,12 @@ var getIntTests = []GetTest{
 		path:  []string{"c"},
 		isErr: true,
 	},
+	{
+		desc:  `null test`,
+		json:  `{"a": "b", "c": null}`,
+		path:  []string{"c"},
+		isErr: true,
+	},
 }
 
 var getFloatTests = []GetTest{
@@ -933,6 +939,12 @@ var getFloatTests = []GetTest{
 	{
 		desc:  `read non-numeric value as float`,
 		json:  `{"a": "b", "c": "d"}`,
+		path:  []string{"c"},
+		isErr: true,
+	},
+	{
+		desc:  `null test`,
+		json:  `{"a": "b", "c": null}`,
 		path:  []string{"c"},
 		isErr: true,
 	},
@@ -1005,6 +1017,12 @@ var getStringTests = []GetTest{
 		json:    `[""]`,
 		path:    []string{"["},
 		isFound: false,
+	},
+	{
+		desc:  `null test`,
+		json:  `{"c": null}`,
+		path:  []string{"c"},
+		isErr: true,
 	},
 }
 
@@ -1086,6 +1104,13 @@ var getBoolTests = []GetTest{
 		path:    []string{"a"},
 		isFound: true,
 		data:    true,
+	},
+	{
+		desc:    `null test`,
+		json:    `{"a": "b", "c": null}`,
+		path:    []string{"c"},
+		isFound: false,
+		isErr:   true,
 	},
 }
 
@@ -1408,7 +1433,7 @@ func TestArrayEach(t *testing.T) {
 }
 
 func TestArrayEachWithWhiteSpace(t *testing.T) {
-	//Issue #159
+	// Issue #159
 	count := 0
 	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
 	funcSuccess := func(value []byte, dataType ValueType, index int, err error) {
