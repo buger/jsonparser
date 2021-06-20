@@ -86,6 +86,18 @@ var parseIntTests = []ParseIntTest{
 		in:    "9223372036854775807x",
 		isErr: true,
 	},
+	{
+		in:         "27670116110564327410",
+		out:        0,
+		isErr:      true,
+		isOverflow: true,
+	},
+	{
+		in:         "-27670116110564327410",
+		out:        0,
+		isErr:      true,
+		isOverflow: true,
+	},
 }
 
 func TestBytesParseInt(t *testing.T) {
