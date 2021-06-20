@@ -18,6 +18,7 @@ var (
 	MalformedValueError        = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 	OverflowIntegerError       = errors.New("Value is number, but overflowed while parsing")
 	MalformedStringEscapeError = errors.New("Encountered an invalid escape sequence in a string")
+	NullValueError             = errors.New("Value is null")
 )
 
 // How much stack space to allocate for unescaping JSON strings; if a string longer
@@ -311,7 +312,7 @@ func searchKeys(data []byte, keys ...string) int {
 		case '[':
 			// If we want to get array element by index
 			if keyLevel == level && keys[level][0] == '[' {
-				var keyLen = len(keys[level])
+				keyLen := len(keys[level])
 				if keyLen < 3 || keys[level][0] != '[' || keys[level][keyLen-1] != ']' {
 					return -1
 				}
@@ -322,7 +323,7 @@ func searchKeys(data []byte, keys ...string) int {
 				var curIdx int
 				var valueFound []byte
 				var valueOffset int
-				var curI = i
+				curI := i
 				ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
 					if curIdx == aIdx {
 						valueFound = value
@@ -1191,6 +1192,9 @@ func GetString(data []byte, keys ...string) (val string, err error) {
 	}
 
 	if t != String {
+		if t == Null {
+			return "", NullValueError
+		}
 		return "", fmt.Errorf("Value is not a string: %s", string(v))
 	}
 
@@ -1213,6 +1217,9 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 	}
 
 	if t != Number {
+		if t == Null {
+			return 0, NullValueError
+		}
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
@@ -1229,6 +1236,9 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 	}
 
 	if t != Number {
+		if t == Null {
+			return 0, NullValueError
+		}
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
@@ -1246,6 +1256,9 @@ func GetBoolean(data []byte, keys ...string) (val bool, err error) {
 	}
 
 	if t != Boolean {
+		if t == Null {
+			return false, NullValueError
+		}
 		return false, fmt.Errorf("Value is not a boolean: %s", string(v))
 	}
 
