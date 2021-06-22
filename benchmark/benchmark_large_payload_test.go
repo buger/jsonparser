@@ -6,11 +6,15 @@
 package benchmark
 
 import (
-	"github.com/buger/jsonparser"
 	"testing"
+
+	"github.com/buger/jsonparser"
+	"github.com/valyala/fastjson"
+
 	// "github.com/Jeffail/gabs"
 	// "github.com/bitly/go-simplejson"
 	"encoding/json"
+
 	"github.com/a8m/djson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	"github.com/pquerna/ffjson/ffjson"
@@ -70,6 +74,19 @@ func BenchmarkEncodingJsonInterfaceLarge(b *testing.B) {
 			tI := t.(map[string]interface{})
 			nothing(tI["id"].(float64), tI["slug"].(string))
 		}
+	}
+}
+
+/*
+  github.com/valyala/fastjson
+*/
+
+func BenchmarkFastJSONLarge(b *testing.B) {
+	var pp fastjson.ParserPool
+	for i := 0; i < b.N; i++ {
+		p := pp.Get()
+		p.ParseBytes(largeFixture)
+		pp.Put(p)
 	}
 }
 

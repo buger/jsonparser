@@ -17,6 +17,8 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
+	"github.com/valyala/fastjson"
+
 	// "fmt"
 	"bytes"
 	"errors"
@@ -233,6 +235,18 @@ func BenchmarkGoSimpleJsonMedium(b *testing.B) {
 		for _, el := range arr {
 			nothing(el.(map[string]interface{})["url"])
 		}
+	}
+}
+
+/*
+  github.com/valyala/fastjson
+*/
+func BenchmarkFastJSONMedium(b *testing.B) {
+	var pp fastjson.ParserPool
+	for i := 0; i < b.N; i++ {
+		p := pp.Get()
+		p.ParseBytes(mediumFixture)
+		pp.Put(p)
 	}
 }
 

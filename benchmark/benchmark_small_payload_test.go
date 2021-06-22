@@ -17,6 +17,8 @@ import (
 	"github.com/mreiferson/go-ujson"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/ugorji/go/codec"
+	"github.com/valyala/fastjson"
+
 	// "fmt"
 	"bytes"
 	"errors"
@@ -222,6 +224,19 @@ func BenchmarkGoSimplejsonSetSmall(b *testing.B) {
 		json.SetPath([]string{"st"}, 3)
 
 		nothing()
+	}
+}
+
+/*
+  github.com/valyala/fastjson
+*/
+
+func BenchmarkFastJSONSmall(b *testing.B) {
+	var pp fastjson.ParserPool
+	for i := 0; i < b.N; i++ {
+		p := pp.Get()
+		p.ParseBytes(smallFixture)
+		pp.Put(p)
 	}
 }
 
