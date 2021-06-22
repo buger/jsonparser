@@ -1703,7 +1703,8 @@ var testJson = []byte(`{
 	"intPtr": 10, 
 	"a\n":{
 		"b\n":99
-	}
+	},
+	"arrString": ["a","b","c"]}
 }`)
 
 func TestEachKey(t *testing.T) {
@@ -1718,9 +1719,12 @@ func TestEachKey(t *testing.T) {
 		{"arrInt", "[3]"},
 		{"arrInt", "[5]"}, // Should not find last key
 		{"nested"},
+		{"arr", "["},   // issue#177 Invalid arguments
+		{"a\n", "b\n"}, // issue#165
 		{"arr", "["},    // issue#177 Invalid arguments
 		{"a\n", "b\n"},  // issue#165
 		{"nested", "b"}, // Should find repeated key
+		{"arrString", "[1]"},
 	}
 
 	keysFound := 0
@@ -1731,35 +1735,35 @@ func TestEachKey(t *testing.T) {
 		switch idx {
 		case 0:
 			if string(value) != "Name" {
-				t.Error("Should find 1 key", string(value))
+				t.Error("Should find 0 key", string(value))
 			}
 		case 1:
 			if string(value) != "Order" {
-				t.Errorf("Should find 2 key")
+				t.Errorf("Should find 1 key")
 			}
 		case 2:
 			if string(value) != "test" {
-				t.Errorf("Should find 3 key")
+				t.Errorf("Should find 2 key")
 			}
 		case 3:
 			if string(value) != "2" {
-				t.Errorf("Should find 4 key")
+				t.Errorf("Should find 3 key")
 			}
 		case 4:
 			if string(value) != "test2" {
-				t.Error("Should find 5 key", string(value))
+				t.Error("Should find 4 key", string(value))
 			}
 		case 5:
 			if string(value) != "4" {
-				t.Errorf("Should find 6 key")
+				t.Errorf("Should find 5 key")
 			}
 		case 6:
 			if string(value) != "2" {
-				t.Errorf("Should find 7 key")
+				t.Errorf("Should find 6 key")
 			}
 		case 7:
 			if string(value) != "4" {
-				t.Error("Should find 8 key", string(value))
+				t.Error("Should find 7 key", string(value))
 			}
 		case 8:
 			t.Errorf("Found key #8 that should not be found")
@@ -1771,14 +1775,18 @@ func TestEachKey(t *testing.T) {
 			t.Errorf("Found key #10 that should not be found")
 		case 11:
 			if string(value) != "99" {
-				t.Error("Should find 10 key", string(value))
+				t.Error("Should find 11 key", string(value))
+			}
+		case 12:
+			if string(value) != "b" {
+				t.Error("Should find 12 key", string(value))
 			}
 		case 12:
 			if string(value) != "2" {
 				t.Errorf("Should find 11 key")
 			}
 		default:
-			t.Errorf("Should find only 10 keys, got %v key", idx)
+			t.Errorf("Only %v keys specified, got key for non-existent index %v", len(paths), idx)
 		}
 	}, paths...)
 
