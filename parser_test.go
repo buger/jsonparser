@@ -1719,8 +1719,6 @@ func TestEachKey(t *testing.T) {
 		{"arrInt", "[3]"},
 		{"arrInt", "[5]"}, // Should not find last key
 		{"nested"},
-		{"arr", "["},   // issue#177 Invalid arguments
-		{"a\n", "b\n"}, // issue#165
 		{"arr", "["},    // issue#177 Invalid arguments
 		{"a\n", "b\n"},  // issue#165
 		{"nested", "b"}, // Should find repeated key
@@ -1778,11 +1776,11 @@ func TestEachKey(t *testing.T) {
 				t.Error("Should find 11 key", string(value))
 			}
 		case 12:
-			if string(value) != "b" {
+			if string(value) != "2" {
 				t.Error("Should find 12 key", string(value))
 			}
-		case 12:
-			if string(value) != "2" {
+		case 13:
+			if string(value) != "b" {
 				t.Errorf("Should find 11 key")
 			}
 		default:
@@ -1790,8 +1788,8 @@ func TestEachKey(t *testing.T) {
 		}
 	}, paths...)
 
-	if keysFound != 11 {
-		t.Errorf("Should find 11 keys: %d", keysFound)
+	if keysFound != 12 {
+		t.Errorf("Should find 12 keys: %d", keysFound)
 	}
 }
 
