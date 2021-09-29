@@ -751,6 +751,16 @@ func ParseString(b []byte) (string, error) {
 	}
 }
 
+// ParseUnsafeString parses a String ValueType into a Go string (the main parsing work is unescaping the JSON string)
+func ParseUnsafeString(b []byte) (string, error) {
+	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
+	if bU, err := Unescape(b, stackbuf[:]); err != nil {
+		return "", err
+	} else {
+		return bytesToString(&bU), nil
+	}
+}
+
 // ParseNumber parses a Number ValueType into a Go float64
 func ParseFloat(b []byte) (float64, error) {
 	if v, err := parseFloat(&b); err != nil {
