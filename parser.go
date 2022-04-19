@@ -497,19 +497,19 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '}':
 			level--
 		case '[':
-			var ok bool
-			arrIdxFlags := make(map[int]struct{})
-
-			pIdxFlags := make([]bool, stackArraySize)[:]
-			if len(paths) > cap(pIdxFlags) {
-				pIdxFlags = make([]bool, len(paths))[:]
-			}
-			pIdxFlags = pIdxFlags[0:len(paths)]
-
 			if level < 0 {
 				cb(-1, nil, Unknown, MalformedJsonError)
 				return -1
 			}
+
+			var ok bool
+			arrIdxFlags := make(map[int]struct{})
+
+			defaultStackArraySize := stackArraySize
+			if len(paths) > defaultStackArraySize {
+				defaultStackArraySize = len(paths)
+			}
+			pIdxFlags := make([]bool, len(paths), defaultStackArraySize)
 
 			for pi, p := range paths {
 				if len(p) < level+1 || pathFlags[pi] || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
