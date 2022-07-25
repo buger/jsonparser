@@ -11,6 +11,11 @@ I investigated what's on the market and found that most libraries are just wrapp
 
 Goal of this project is to push JSON parser to the performance limits and not sacrifice with compliance and developer user experience.
 
+## Install
+```bash
+go get -u github.com/buger/jsonparser
+```
+
 ## Example
 For the given JSON our goal is to extract the user's full name, number of github followers and avatar.
 
