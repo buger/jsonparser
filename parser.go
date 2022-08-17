@@ -380,6 +380,254 @@ func sameTree(p1, p2 []string) bool {
 
 const stackArraySize = 128
 
+func getRawValue(data []byte, offset int) ([]byte, int, error) {
+	endOffset := offset
+
+	if data[offset] == '"' {
+		if idx, _ := stringEnd(data[offset+1:]); idx != -1 {
+			endOffset += idx + 1
+		} else {
+			return nil, offset, MalformedStringError
+		}
+	} else if data[offset] == '[' { // if array value
+		// break label, for stopping nested loops
+		endOffset = blockEnd(data[offset:], '[', ']')
+
+		if endOffset == -1 {
+			return nil, offset, MalformedArrayError
+		}
+
+		endOffset += offset
+	} else if data[offset] == '{' { // if object value
+		// break label, for stopping nested loops
+		endOffset = blockEnd(data[offset:], '{', '}')
+
+		if endOffset == -1 {
+			return nil, offset, MalformedObjectError
+		}
+
+		endOffset += offset
+	} else {
+		// Number, Boolean or None
+		end := tokenEnd(data[endOffset:])
+
+		if end == -1 {
+			return nil, offset, MalformedValueError
+		}
+
+		endOffset += end
+	}
+	return data[offset:endOffset], endOffset, nil
+}
+
+func internalRawGet(data []byte) (value []byte, err error) {
+	// Go to closest value
+	nO := nextToken(data)
+	if nO == -1 {
+		return nil, MalformedJsonError
+	}
+
+	value, _, err = getRawValue(data, nO)
+	if err != nil {
+		return value, err
+	}
+
+	return value[:len(value):len(value)], nil
+}
+
+func EachRawKey(data []byte, cb func(int, []byte, error), paths ...[]string) int {
+	var x struct{}
+	var level, pathsMatched, i int
+	ln := len(data)
+
+	pathFlags := make([]bool, stackArraySize)[:]
+	if len(paths) > cap(pathFlags) {
+		pathFlags = make([]bool, len(paths))[:]
+	}
+	pathFlags = pathFlags[0:len(paths)]
+
+	var maxPath int
+	for _, p := range paths {
+		if len(p) > maxPath {
+			maxPath = len(p)
+		}
+	}
+
+	pathsBuf := make([]string, stackArraySize)[:]
+	if maxPath > cap(pathsBuf) {
+		pathsBuf = make([]string, maxPath)[:]
+	}
+	pathsBuf = pathsBuf[0:maxPath]
+
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd, keyEscaped := stringEnd(data[i:])
+			if strEnd == -1 {
+				return -1
+			}
+			i += strEnd
+
+			keyEnd := i - 1
+
+			valueOffset := nextToken(data[i:])
+			if valueOffset == -1 {
+				return -1
+			}
+
+			i += valueOffset
+
+			// if string is a key, and key level match
+			if data[i] == ':' {
+				match := -1
+				key := data[keyBegin:keyEnd]
+
+				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+				var keyUnesc []byte
+				if !keyEscaped {
+					keyUnesc = key
+				} else {
+					var stackbuf [unescapeStackBufSize]byte
+					if ku, err := Unescape(key, stackbuf[:]); err != nil {
+						return -1
+					} else {
+						keyUnesc = ku
+					}
+				}
+
+				if maxPath >= level {
+					if level < 1 {
+						cb(-1, nil, MalformedJsonError)
+						return -1
+					}
+
+					pathsBuf[level-1] = bytesToString(&keyUnesc)
+					for pi, p := range paths {
+						if len(p) != level || pathFlags[pi] || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+							continue
+						}
+
+						match = pi
+
+						pathsMatched++
+						pathFlags[pi] = true
+
+						v, e := internalRawGet(data[i+1:])
+						cb(pi, v, e)
+
+						if pathsMatched == len(paths) {
+							break
+						}
+					}
+					if pathsMatched == len(paths) {
+						return i
+					}
+				}
+
+				if match == -1 {
+					tokenOffset := nextToken(data[i+1:])
+					i += tokenOffset
+
+					if data[i] == '{' {
+						blockSkip := blockEnd(data[i:], '{', '}')
+						i += blockSkip + 1
+					}
+				}
+
+				if i < ln {
+					switch data[i] {
+					case '{', '}', '[', '"':
+						i--
+					}
+				}
+			} else {
+				i--
+			}
+		case '{':
+			level++
+		case '}':
+			level--
+		case '[':
+			var ok bool
+			arrIdxFlags := make(map[int]struct{})
+
+			pIdxFlags := make([]bool, stackArraySize)[:]
+			if len(paths) > cap(pIdxFlags) {
+				pIdxFlags = make([]bool, len(paths))[:]
+			}
+			pIdxFlags = pIdxFlags[0:len(paths)]
+
+			if level < 0 {
+				cb(-1, nil, MalformedJsonError)
+				return -1
+			}
+
+			for pi, p := range paths {
+				if len(p) < level+1 || pathFlags[pi] || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+					continue
+				}
+				if len(p[level]) >= 2 {
+					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
+					arrIdxFlags[aIdx] = x
+					pIdxFlags[pi] = true
+				}
+			}
+
+			if len(arrIdxFlags) > 0 {
+				level++
+
+				var curIdx int
+				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+					if _, ok = arrIdxFlags[curIdx]; ok {
+						for pi, p := range paths {
+							if pIdxFlags[pi] {
+								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
+
+								if curIdx == aIdx {
+									of := searchKeys(value, p[level:]...)
+
+									pathsMatched++
+									pathFlags[pi] = true
+
+									if of != -1 {
+										v, er := internalRawGet(value[of:])
+										cb(pi, v, er)
+									}
+								}
+							}
+						}
+					}
+
+					curIdx += 1
+				})
+
+				if pathsMatched == len(paths) {
+					return i
+				}
+
+				i += arrOff - 1
+			} else {
+				// Do not search for keys inside arrays
+				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
+					return -1
+				} else {
+					i += arraySkip - 1
+				}
+			}
+		case ']':
+			level--
+		}
+
+		i++
+	}
+
+	return -1
+}
+
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
 	var x struct{}
 	var level, pathsMatched, i int
@@ -707,12 +955,10 @@ func WriteToBuffer(buffer []byte, str string) int {
 }
 
 /*
-
 Del - Receives existing data structure, path to delete.
 
 Returns:
 `data` - return modified data
-
 */
 func Delete(data []byte, keys ...string) []byte {
 	lk := len(keys)
@@ -793,13 +1039,11 @@ func Delete(data []byte, keys ...string) []byte {
 }
 
 /*
-
 Set - Receives existing data structure, path to set, and data to set at that key.
 
 Returns:
 `value` - modified byte array
 `err` - On any parsing error
-
 */
 func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error) {
 	// ensure keys are set
