@@ -1,4 +1,4 @@
-module github.com/buger/jsonparser
+module github.com/autopilot3/jsonparser
 
-go 1.13
+go 1.18
 
