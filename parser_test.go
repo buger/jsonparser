@@ -1787,6 +1787,87 @@ func TestEachKey(t *testing.T) {
 	}
 }
 
+func TestEachRawKey(t *testing.T) {
+	paths := [][]string{
+		{"name"},
+		{"order"},
+		{"nested", "a"},
+		{"nested", "b"},
+		{"nested2", "a"},
+		{"nested", "nested3", "b"},
+		{"arr", "[1]", "b"},
+		{"arrInt", "[3]"},
+		{"arrInt", "[5]"}, // Should not find last key
+		{"nested"},
+		{"arr", "["},    // issue#177 Invalid arguments
+		{"a\n", "b\n"},  // issue#165
+		{"nested", "b"}, // Should find repeated key
+	}
+
+	keysFound := 0
+
+	EachRawKey(testJson, func(idx int, value []byte, err error) {
+		keysFound++
+
+		switch idx {
+		case 0:
+			if string(value) != `"Name"` {
+				t.Error("Should find 1 key", string(value))
+			}
+		case 1:
+			if string(value) != `"Order"` {
+				t.Errorf("Should find 2 key")
+			}
+		case 2:
+			if string(value) != `"test"` {
+				t.Errorf("Should find 3 key")
+			}
+		case 3:
+			if string(value) != "2" {
+				t.Errorf("Should find 4 key")
+			}
+		case 4:
+			if string(value) != `"test2"` {
+				t.Error("Should find 5 key", string(value))
+			}
+		case 5:
+			if string(value) != "4" {
+				t.Errorf("Should find 6 key")
+			}
+		case 6:
+			if string(value) != "2" {
+				t.Errorf("Should find 7 key")
+			}
+		case 7:
+			if string(value) != "4" {
+				t.Error("Should find 8 key", string(value))
+			}
+		case 8:
+			t.Errorf("Found key #8 that should not be found")
+		case 9:
+			if string(value) != `{"a":"test", "b":2, "nested3":{"a":"test3","b":4}, "c": "unknown"}` {
+				t.Error("Should find 9 key", string(value))
+			}
+		case 10:
+			t.Errorf("Found key #10 that should not be found")
+		case 11:
+			if string(value) != "99" {
+				t.Error("Should find 10 key", string(value))
+			}
+		case 12:
+			if string(value) != "2" {
+				t.Errorf("Should find 11 key")
+			}
+		default:
+			t.Errorf("Should find only 10 keys, got %v key", idx)
+		}
+	}, paths...)
+
+	if keysFound != 11 {
+		t.Errorf("Should find 11 keys: %d", keysFound)
+	}
+}
+
 type ParseTest struct {
 	in     string
 	intype ValueType
