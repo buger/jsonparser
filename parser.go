@@ -417,6 +417,10 @@ func getRawValue(data []byte, offset int) ([]byte, int, error) {
 
 		endOffset += end
 	}
+	// raw json can't be empty value
+	if endOffset <= offset {
+		return nil, offset, MalformedValueError
+	}
 	return data[offset:endOffset], endOffset, nil
 }
 
@@ -1226,6 +1230,29 @@ func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType,
 	}
 
 	return value[:len(value):len(value)], dataType, offset, endOffset, nil
+}
+
+func GetRaw(data []byte, keys ...string) (value []byte, offset int, err error) {
+	if len(keys) > 0 {
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return nil, -1, KeyPathNotFoundError
+		}
+	}
+
+	// Go to closest value
+	nO := nextToken(data[offset:])
+	if nO == -1 {
+		return nil, -1, MalformedJsonError
+	}
+
+	offset += nO
+
+	value, offset, err = getRawValue(data, offset)
+	if err != nil {
+		return value, offset, err
+	}
+
+	return value[:len(value):len(value)], offset, nil
 }
 
 // ArrayEach is used when iterating arrays, accepts a callback function with the same return arguments as `Get`.
