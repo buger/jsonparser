@@ -1,4 +1,4 @@
-module github.com/autopilot3/jsonparser
+module github.com/buger/jsonparser
 
 go 1.18
 
