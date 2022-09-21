@@ -38,6 +38,413 @@ type GetTest struct {
 	data interface{}
 }
 
+type SetTest struct {
+	desc    string
+	json    string
+	setData string
+	path    []string
+
+	isErr   bool
+	isFound bool
+
+	data interface{}
+}
+
+type DeleteTest struct {
+	desc string
+	json string
+	path []string
+
+	data interface{}
+}
+
+var deleteTests = []DeleteTest{
+	{
+		desc: "Delete test key",
+		json: `{"test":"input"}`,
+		path: []string{"test"},
+		data: `{}`,
+	},
+	{
+		desc: "Delete object",
+		json: `{"test":"input"}`,
+		path: []string{},
+		data: ``,
+	},
+	{
+		desc: "Delete a nested object",
+		json: `{"test":"input","new.field":{"key": "new object"}}`,
+		path: []string{"new.field", "key"},
+		data: `{"test":"input","new.field":{}}`,
+	},
+	{
+		desc: "Deleting a key that doesn't exist should return the same object",
+		json: `{"test":"input"}`,
+		path: []string{"test2"},
+		data: `{"test":"input"}`,
+	},
+	{
+		desc: "Delete object in an array",
+		json: `{"test":[{"key":"val-obj1"}]}`,
+		path: []string{"test", "[0]"},
+		data: `{"test":[]}`,
+	},
+	{
+		desc: "Deleting a object in an array that doesn't exists should return the same object",
+		json: `{"test":[{"key":"val-obj1"}]}`,
+		path: []string{"test", "[1]"},
+		data: `{"test":[{"key":"val-obj1"}]}`,
+	},
+	{
+		desc: "Delete a complex object in a nested array",
+		json: `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
+		path: []string{"test", "[0]", "key", "[0]"},
+		data: `{"test":[{"key":[]}]}`,
+	},
+	{
+		desc: "Delete known key (simple type within nested array)",
+		json: `{"test":[{"key":["innerKey"]}]}`,
+		path: []string{"test", "[0]", "key", "[0]"},
+		data: `{"test":[{"key":[]}]}`,
+	},
+	{
+		desc: "Delete in empty json",
+		json: `{}`,
+		path: []string{},
+		data: ``,
+	},
+	{
+		desc: "Delete empty array",
+		json: `[]`,
+		path: []string{},
+		data: ``,
+	},
+	{
+		desc: "Deleting non json should return the same value",
+		json: `1.323`,
+		path: []string{"foo"},
+		data: `1.323`,
+	},
+	{
+		desc: "Delete known key (top level array)",
+		json: `[{"key":"val-obj1"}]`,
+		path: []string{"[0]"},
+		data: `[]`,
+	},
+	{ // This test deletes the key instead of returning a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc: `malformed with trailing whitespace`,
+		json: `{"a":1 `,
+		path: []string{"a"},
+		data: `{ `,
+	},
+	{ // This test dels the key instead of returning a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc: "malformed 'colon chain', delete b",
+		json: `{"a":"b":"c"}`,
+		path: []string{"b"},
+		data: `{"a":}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": {"b": 1}, "b": 2}`,
+		path: []string{"b"},
+		data: `{"a": {"b": 1}}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": [{"b": 1}], "b": 2}`,
+		path: []string{"b"},
+		data: `{"a": [{"b": 1}]}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": {"c": {"b": 3}, "b": 1}, "b": 2}`,
+		path: []string{"a", "b"},
+		data: `{"a": {"c": {"b": 3}}, "b": 2}`,
+	},
+	{
+		desc: "Delete object without inner array",
+		json: `{"a": [{"c": {"b": 3}, "b": 1}], "b": 2}`,
+		path: []string{"a", "[0]", "b"},
+		data: `{"a": [{"c": {"b": 3}}], "b": 2}`,
+	},
+	{
+		desc: "Remove trailing comma if last object is deleted",
+		json: `{"a": "1", "b": "2"}`,
+		path: []string{"b"},
+		data: `{"a": "1"}`,
+	},
+	{
+		desc: "Correctly delete first element with space-comma",
+		json: `{"a": "1" ,"b": "2" }`,
+		path: []string{"a"},
+		data: `{"b": "2" }`,
+	},
+	{
+		desc: "Correctly delete middle element with space-comma",
+		json: `{"a": "1" ,"b": "2" , "c": 3}`,
+		path: []string{"b"},
+		data: `{"a": "1" , "c": 3}`,
+	},
+	{
+		desc: "Delete non-last key",
+		json: `{"test":"input","test1":"input1"}`,
+		path: []string{"test"},
+		data: `{"test1":"input1"}`,
+	},
+	{
+		desc: "Delete non-exist key",
+		json: `{"test:":"input"}`,
+		path: []string{"test", "test1"},
+		data: `{"test:":"input"}`,
+	},
+	{
+		desc: "Delete non-last object in an array",
+		json: `[{"key":"val-obj1"},{"key2":"val-obj2"}]`,
+		path: []string{"[0]"},
+		data: `[{"key2":"val-obj2"}]`,
+	},
+	{
+		desc: "Delete non-first object in an array",
+		json: `[{"key":"val-obj1"},{"key2":"val-obj2"}]`,
+		path: []string{"[1]"},
+		data: `[{"key":"val-obj1"}]`,
+	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@[`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@[`,
+	},
+	{
+		desc: "Issue #188: infinite loop in Delete",
+		json: `^_ï¿½^C^A^@{`,
+		path: []string{""},
+		data: `^_ï¿½^C^A^@{`,
+	},
+	{
+		desc: "Issue #150: leading space",
+		json: `   {"test":"input"}`,
+		path: []string{"test"},
+		data: `   {}`,
+	},
+}
+
+var setTests = []SetTest{
+	{
+		desc:    "set unknown key (string)",
+		json:    `{"test":"input"}`,
+		isFound: true,
+		path:    []string{"new.field"},
+		setData: `"new value"`,
+		data:    `{"test":"input","new.field":"new value"}`,
+	},
+	{
+		desc:    "set known key (string)",
+		json:    `{"test":"input"}`,
+		isFound: true,
+		path:    []string{"test"},
+		setData: `"new value"`,
+		data:    `{"test":"new value"}`,
+	},
+	{
+		desc:    "set unknown key (object)",
+		json:    `{"test":"input"}`,
+		isFound: true,
+		path:    []string{"new.field"},
+		setData: `{"key": "new object"}`,
+		data:    `{"test":"input","new.field":{"key": "new object"}}`,
+	},
+	{
+		desc:    "set known key (object)",
+		json:    `{"test":"input"}`,
+		isFound: true,
+		path:    []string{"test"},
+		setData: `{"key": "new object"}`,
+		data:    `{"test":{"key": "new object"}}`,
+	},
+	{
+		desc:    "set known key (object within array)",
+		json:    `{"test":[{"key":"val-obj1"}]}`,
+		isFound: true,
+		path:    []string{"test", "[0]"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":[{"key":"new object"}]}`,
+	},
+	{
+		desc:    "set unknown key (replace object)",
+		json:    `{"test":[{"key":"val-obj1"}]}`,
+		isFound: true,
+		path:    []string{"test", "newKey"},
+		setData: `"new object"`,
+		data:    `{"test":{"newKey":"new object"}}`,
+	},
+	{
+		desc:    "set unknown key (complex object within nested array)",
+		json:    `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
+		isFound: true,
+		path:    []string{"test", "[0]", "key", "[0]", "newInnerKey"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":[{"key":[{"innerKey":"innerKeyValue","newInnerKey":{"key":"new object"}}]}]}`,
+	},
+	{
+		desc:    "set known key (complex object within nested array)",
+		json:    `{"test":[{"key":[{"innerKey":"innerKeyValue"}]}]}`,
+		isFound: true,
+		path:    []string{"test", "[0]", "key", "[0]", "innerKey"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":[{"key":[{"innerKey":{"key":"new object"}}]}]}`,
+	},
+	{
+		desc:    "set unknown key (object, partial subtree exists)",
+		json:    `{"test":{"input":"output"}}`,
+		isFound: true,
+		path:    []string{"test", "new.field"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":{"input":"output","new.field":{"key":"new object"}}}`,
+	},
+	{
+		desc:    "set unknown key (object, empty partial subtree exists)",
+		json:    `{"test":{}}`,
+		isFound: true,
+		path:    []string{"test", "new.field"},
+		setData: `{"key":"new object"}`,
+		data:    `{"test":{"new.field":{"key":"new object"}}}`,
+	},
+	{
+		desc:    "set unknown key (object, no subtree exists)",
+		json:    `{"test":"input"}`,
+		isFound: true,
+		path:    []string{"new.field", "nested", "value"},
+		setData: `{"key": "new object"}`,
+		data:    `{"test":"input","new.field":{"nested":{"value":{"key": "new object"}}}}`,
+	},
+	{
+		desc:    "set in empty json",
+		json:    `{}`,
+		isFound: true,
+		path:    []string{"foo"},
+		setData: `"null"`,
+		data:    `{"foo":"null"}`,
+	},
+	{
+		desc:    "set subtree in empty json",
+		json:    `{}`,
+		isFound: true,
+		path:    []string{"foo", "bar"},
+		setData: `"null"`,
+		data:    `{"foo":{"bar":"null"}}`,
+	},
+	{
+		desc:    "set in empty string - not found",
+		json:    ``,
+		isFound: false,
+		path:    []string{"foo"},
+		setData: `"null"`,
+		data:    ``,
+	},
+	{
+		desc:    "set in Number - not found",
+		json:    `1.323`,
+		isFound: false,
+		path:    []string{"foo"},
+		setData: `"null"`,
+		data:    `1.323`,
+	},
+	{
+		desc:    "set known key (top level array)",
+		json:    `[{"key":"val-obj1"}]`,
+		isFound: true,
+		path:    []string{"[0]", "key"},
+		setData: `"new object"`,
+		data:    `[{"key":"new object"}]`,
+	},
+	{
+		desc:    "set unknown key (trailing whitespace)",
+		json:    `{"key":"val-obj1"}  `,
+		isFound: true,
+		path:    []string{"alt-key"},
+		setData: `"new object"`,
+		data:    `{"key":"val-obj1","alt-key":"new object"}  `,
+	},
+	{ // This test sets the key instead of returning a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc:    `malformed with trailing whitespace`,
+		json:    `{"a":1 `,
+		path:    []string{"a"},
+		setData: `2`,
+		isFound: true,
+		data:    `{"a":2 `,
+	},
+	{ // This test sets the key instead of returning a parse error, as checking for the malformed JSON would reduce performance (this is not ideal)
+		desc:    "malformed 'colon chain', set second string",
+		json:    `{"a":"b":"c"}`,
+		path:    []string{"b"},
+		setData: `"d"`,
+		isFound: true,
+		data:    `{"a":"b":"d"}`,
+	},
+	{
+		desc:    "set indexed path to object on empty JSON",
+		json:    `{}`,
+		path:    []string{"top", "[0]", "middle", "[0]", "bottom"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":[{"bottom":"value"}]}]}`,
+	},
+	{
+		desc:    "set indexed path on existing object with object",
+		json:    `{"top":[{"middle":[]}]}`,
+		path:    []string{"top", "[0]", "middle", "[0]", "bottom"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":[{"bottom":"value"}]}]}`,
+	},
+	{
+		desc:    "set indexed path on existing object with value",
+		json:    `{"top":[{"middle":[]}]}`,
+		path:    []string{"top", "[0]", "middle", "[0]"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":["value"]}]}`,
+	},
+	{
+		desc:    "set indexed path on empty object with value",
+		json:    `{}`,
+		path:    []string{"top", "[0]", "middle", "[0]"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":[{"middle":["value"]}]}`,
+	},
+	{
+		desc:    "set indexed path on object with existing array",
+		json:    `{"top":["one", "two", "three"]}`,
+		path:    []string{"top", "[2]"},
+		setData: `"value"`,
+		isFound: true,
+		data:    `{"top":["one", "two", "value"]}`,
+	},
+	{
+		desc:    "set non-exist key",
+		json:    `{"test":"input"}`,
+		setData: `"new value"`,
+		isFound: false,
+	},
+	{
+		desc:    "set key in invalid json",
+		json:    `{"test"::"input"}`,
+		path:    []string{"test"},
+		setData: "new value",
+		isErr:   true,
+	},
+	{
+		desc:    "set unknown key (simple object within nested array)",
+		json:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"}]}}`,
+		isFound: true,
+		path:    []string{"test", "key", "[1]", "newInnerKey"},
+		setData: `"new object"`,
+		data:    `{"test":{"key":[{"innerKey":"innerKeyValue", "innerKey2":"innerKeyValue2"},{"newInnerKey":"new object"}]}}`,
+	},
+}
+
 var getTests = []GetTest{
 	// Found key tests
 	GetTest{
@@ -1021,6 +1428,276 @@ func TestParseFloat(t *testing.T) {
 		func(test ParseTest, obtained interface{}) (bool, interface{}) {
 			expected := test.out.(float64)
 			return obtained.(float64) == expected, expected
+		},
+	)
+}
+
+func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner func(DeleteTest) (interface{}, []byte), resultChecker func(DeleteTest, interface{}) (bool, interface{})) {
+	for _, test := range tests {
+		if activeTest != "" && test.desc != activeTest {
+			continue
+		}
+
+		original := make([]byte, len(test.json))
+		copy(original, test.json)
+
+		fmt.Println("Running:", test.desc)
+
+		value, bytes := runner(test)
+
+		if string(original) != string(bytes) {
+			t.Errorf("ORIGINAL DATA MALFORMED: %v, %v", string(original), string(bytes))
+			continue
+		}
+
+		if test.data == nil {
+			t.Errorf("MALFORMED TEST: %v", test)
+			continue
+		}
+
+		if ok, expected := resultChecker(test, value); !ok {
+			if expectedBytes, ok := expected.([]byte); ok {
+				expected = string(expectedBytes)
+			}
+			if valueBytes, ok := value.([]byte); ok {
+				value = string(valueBytes)
+			}
+			t.Errorf("%s test '%s' expected to return value %v, but did returned %v instead", testKind, test.desc, expected, value)
+		}
+	}
+}
+
+func TestDelete(t *testing.T) {
+	runDeleteTests(t, "Delete()", deleteTests,
+		func(test DeleteTest) (interface{}, []byte) {
+			ba := []byte(test.json)
+			return Delete(ba, test.path...), ba
+		},
+		func(test DeleteTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+func TestArrayEachWithWhiteSpace(t *testing.T) {
+	// Issue #159
+	count := 0
+	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+	funcSuccess := func(value []byte, dataType ValueType, index int, err error) {
+		count++
+
+		switch count {
+		case 1:
+			if string(value) != `AAA` {
+				t.Errorf("Wrong first item: %s", string(value))
+			}
+		case 2:
+			if string(value) != `BBB` {
+				t.Errorf("Wrong second item: %s", string(value))
+			}
+		case 3:
+			if string(value) != `CCC` {
+				t.Errorf("Wrong third item: %s", string(value))
+			}
+		default:
+			t.Errorf("Should process only 3 items")
+		}
+	}
+
+	type args struct {
+		data []byte
+		cb   func(value []byte, dataType ValueType, offset int, err error)
+		keys []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"Array with white space", args{[]byte(`    ["AAA", "BBB", "CCC"]`), funcSuccess, []string{}}, false},
+		{"Array with only one character after white space", args{[]byte(`    1`), funcError, []string{}}, true},
+		{"Only white space", args{[]byte(`    `), funcError, []string{}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestArrayEachEmpty(t *testing.T) {
+	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
+
+	type args struct {
+		data []byte
+		cb   func(value []byte, dataType ValueType, offset int, err error)
+		keys []string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantOffset int
+		wantErr    bool
+	}{
+		{"Empty array", args{[]byte("[]"), funcError, []string{}}, 1, false},
+		{"Empty array with space", args{[]byte("[ ]"), funcError, []string{}}, 2, false},
+		{"Empty array with \n", args{[]byte("[\n]"), funcError, []string{}}, 2, false},
+		{"Empty field array", args{[]byte("{\"data\": []}"), funcError, []string{"data"}}, 10, false},
+		{"Empty field array with space", args{[]byte("{\"data\": [ ]}"), funcError, []string{"data"}}, 11, false},
+		{"Empty field array with \n", args{[]byte("{\"data\": [\n]}"), funcError, []string{"data"}}, 11, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOffset, err := ArrayEach(tt.args.data, tt.args.cb, tt.args.keys...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ArrayEach() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotOffset != tt.wantOffset {
+				t.Errorf("ArrayEach() = %v, want %v", gotOffset, tt.wantOffset)
+			}
+		})
+	}
+}
+
+func setTestCheckFoundAndNoError(t *testing.T, testKind string, test SetTest, value interface{}, err error) bool {
+	isFound := (err != KeyPathNotFoundError)
+	isErr := (err != nil && err != KeyPathNotFoundError)
+
+	if test.isErr != isErr {
+		// If the call didn't match the error expectation, fail
+		t.Errorf("%s test '%s' isErr mismatch: expected %t, obtained %t (err %v). Value: %v", testKind, test.desc, test.isErr, isErr, err, value)
+		return false
+	} else if isErr {
+		// Else, if there was an error, don't fail and don't check isFound or the value
+		return false
+	} else if test.isFound != isFound {
+		// Else, if the call didn't match the is-found expectation, fail
+		t.Errorf("%s test '%s' isFound mismatch: expected %t, obtained %t", testKind, test.desc, test.isFound, isFound)
+		return false
+	} else if !isFound {
+		// Else, if no value was found, don't fail and don't check the value
+		return false
+	} else {
+		// Else, there was no error and a value was found, so check the value
+		return true
+	}
+}
+
+func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(SetTest) (interface{}, ValueType, error), resultChecker func(SetTest, interface{}) (bool, interface{})) {
+	for _, test := range tests {
+		if activeTest != "" && test.desc != activeTest {
+			continue
+		}
+
+		fmt.Println("Running:", test.desc)
+
+		value, _, err := runner(test)
+
+		if setTestCheckFoundAndNoError(t, testKind, test, value, err) {
+			if test.data == nil {
+				t.Errorf("MALFORMED TEST: %v", test)
+				continue
+			}
+
+			if string(value.([]byte)) != test.data {
+				t.Errorf("Unexpected result on %s test '%s'", testKind, test.desc)
+				t.Log("Got:     ", string(value.([]byte)))
+				t.Log("Expected:", test.data)
+				t.Log("Error:   ", err)
+			}
+		}
+	}
+}
+
+func TestSet(t *testing.T) {
+	runSetTests(t, "Set()", setTests,
+		func(test SetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = Set([]byte(test.json), []byte(test.setData), test.path...)
+			return
+		},
+		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+var parseStringTest = []ParseTest{
+	{
+		in:     "\uFF11",
+		intype: String,
+		out:    "\uFF11",
+	},
+	{
+		in:     "\uFFFF",
+		intype: String,
+		out:    "\uFFFF",
+	},
+	{
+		in:     `\uDF00`,
+		intype: String,
+		isErr:  true,
+	},
+}
+
+var getUnsafeStringTests = []GetTest{
+	{
+		desc:    `Do not translate Unicode symbols`,
+		json:    `{"c": "test"}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `test`,
+	},
+	{
+		desc:    `Do not translate Unicode symbols`,
+		json:    `{"c": "15\u00b0C"}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `15\u00b0C`,
+	},
+	{
+		desc:    `Do not translate supplementary Unicode symbols`,
+		json:    `{"c": "\uD83D\uDE03"}`, // Smiley face (UTF16 surrogate pair)
+		path:    []string{"c"},
+		isFound: true,
+		data:    `\uD83D\uDE03`, // Smiley face
+	},
+	{
+		desc:    `Do not translate escape symbols`,
+		json:    `{"c": "\\\""}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `\\\"`,
+	},
+}
+
+func TestGetUnsafeString(t *testing.T) {
+	runGetTests(t, "GetUnsafeString()", getUnsafeStringTests,
+		func(test GetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = GetUnsafeString([]byte(test.json), test.path...)
+			return value, String, err
+		},
+		func(test GetTest, value interface{}) (bool, interface{}) {
+			expected := test.data.(string)
+			return expected == value.(string), expected
+		},
+	)
+}
+
+func TestParseString(t *testing.T) {
+	runParseTests(t, "ParseString()", parseStringTest,
+		func(test ParseTest) (value interface{}, err error) {
+			return ParseString([]byte(test.in))
+		},
+		func(test ParseTest, obtained interface{}) (bool, interface{}) {
+			expected := test.out.(string)
+			return obtained.(string) == expected, expected
 		},
 	)
 }
