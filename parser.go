@@ -1313,3 +1313,179 @@ func ParseInt(b []byte) (int64, error) {
 		return v, nil
 	}
 }
+
+func OldEachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
+	var pathFlags int64
+	var level, pathsMatched, i int
+	ln := len(data)
+
+	var maxPath int
+	for _, p := range paths {
+		if len(p) > maxPath {
+			maxPath = len(p)
+		}
+	}
+
+	pathsBuf := make([]string, maxPath)
+
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd, keyEscaped := stringEnd(data[i:])
+			if strEnd == -1 {
+				return -1
+			}
+			i += strEnd
+
+			keyEnd := i - 1
+
+			valueOffset := nextToken(data[i:])
+			if valueOffset == -1 {
+				return -1
+			}
+
+			i += valueOffset
+
+			// if string is a key, and key level match
+			if data[i] == ':' {
+				match := -1
+				key := data[keyBegin:keyEnd]
+
+				// for unescape: if there are no escape sequences, this is cheap; if there are, it is a
+				// bit more expensive, but causes no allocations unless len(key) > unescapeStackBufSize
+				var keyUnesc []byte
+				var stackbuf [unescapeStackBufSize]byte
+				if !keyEscaped {
+					keyUnesc = key
+				} else if ku, err := Unescape(key, stackbuf[:]); err != nil {
+					return -1
+				} else {
+					keyUnesc = ku
+				}
+
+				if maxPath >= level {
+					if level < 1 {
+						cb(-1, nil, Unknown, MalformedJsonError)
+						return -1
+					}
+
+					pathsBuf[level-1] = bytesToString(&keyUnesc)
+					for pi, p := range paths {
+						if len(p) != level || pathFlags&bitwiseFlags[pi+1] != 0 || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+							continue
+						}
+
+						match = pi
+
+						i++
+						pathsMatched++
+						pathFlags |= bitwiseFlags[pi+1]
+
+						v, dt, _, e := Get(data[i:])
+						cb(pi, v, dt, e)
+
+						if pathsMatched == len(paths) {
+							break
+						}
+					}
+					if pathsMatched == len(paths) {
+						return i
+					}
+				}
+
+				if match == -1 {
+					tokenOffset := nextToken(data[i+1:])
+					i += tokenOffset
+
+					if data[i] == '{' {
+						blockSkip := blockEnd(data[i:], '{', '}')
+						i += blockSkip + 1
+					}
+				}
+
+				if i < ln {
+					switch data[i] {
+					case '{', '}', '[', '"':
+						i--
+					}
+				}
+			} else {
+				i--
+			}
+		case '{':
+			level++
+		case '}':
+			level--
+		case '[':
+			var arrIdxFlags int64
+			var pIdxFlags int64
+
+			if level < 0 {
+				cb(-1, nil, Unknown, MalformedJsonError)
+				return -1
+			}
+
+			for pi, p := range paths {
+				if len(p) < level+1 || pathFlags&bitwiseFlags[pi+1] != 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+					continue
+				}
+				if len(p[level]) >= 2 {
+					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
+					arrIdxFlags |= bitwiseFlags[aIdx+1]
+					pIdxFlags |= bitwiseFlags[pi+1]
+				}
+			}
+
+			if arrIdxFlags > 0 {
+				level++
+
+				var curIdx int
+				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
+						for pi, p := range paths {
+							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
+								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
+
+								if curIdx == aIdx {
+									of := searchKeys(value, p[level:]...)
+
+									pathsMatched++
+									pathFlags |= bitwiseFlags[pi+1]
+
+									if of != -1 {
+										v, dt, _, e := Get(value[of:])
+										cb(pi, v, dt, e)
+									}
+								}
+							}
+						}
+					}
+
+					curIdx += 1
+				})
+
+				if pathsMatched == len(paths) {
+					return i
+				}
+
+				i += arrOff - 1
+			} else {
+				// Do not search for keys inside arrays
+				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
+					return -1
+				} else {
+					i += arraySkip - 1
+				}
+			}
+		case ']':
+			level--
+		}
+
+		i++
+	}
+
+	return -1
+}
