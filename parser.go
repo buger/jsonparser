@@ -19,6 +19,7 @@ var (
 	OverflowIntegerError       = errors.New("Value is number, but overflowed while parsing")
 	MalformedStringEscapeError = errors.New("Encountered an invalid escape sequence in a string")
 	NullValueError             = errors.New("Value is null")
+	DoneError                  = errors.New("Done. Reached End of Iterator")
 )
 
 // How much stack space to allocate for unescaping JSON strings; if a string longer
@@ -707,12 +708,10 @@ func WriteToBuffer(buffer []byte, str string) int {
 }
 
 /*
-
 Del - Receives existing data structure, path to delete.
 
 Returns:
 `data` - return modified data
-
 */
 func Delete(data []byte, keys ...string) []byte {
 	lk := len(keys)
@@ -793,13 +792,11 @@ func Delete(data []byte, keys ...string) []byte {
 }
 
 /*
-
 Set - Receives existing data structure, path to set, and data to set at that key.
 
 Returns:
 `value` - modified byte array
 `err` - On any parsing error
-
 */
 func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error) {
 	// ensure keys are set
@@ -1067,6 +1064,86 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 	}
 
 	return offset, nil
+}
+
+func ArrayIterator(data []byte, keys ...string) (next func() ([]byte, ValueType, int, error), err error) {
+
+	makeNextError := func(err error) func() ([]byte, ValueType, int, error) {
+		return func() ([]byte, ValueType, int, error) { return nil, NotExist, -1, err }
+	}
+
+	if len(data) == 0 {
+		return makeNextError(MalformedObjectError), MalformedObjectError
+	}
+
+	nT := nextToken(data)
+	if nT == -1 {
+		return makeNextError(MalformedJsonError), MalformedJsonError
+	}
+
+	offset := nT + 1
+
+	if len(keys) > 0 {
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return makeNextError(KeyPathNotFoundError), KeyPathNotFoundError
+		}
+
+		// Go to closest value
+		nO := nextToken(data[offset:])
+		if nO == -1 {
+			return makeNextError(MalformedJsonError), MalformedJsonError
+		}
+
+		offset += nO
+
+		if data[offset] != '[' {
+			return makeNextError(MalformedArrayError), MalformedArrayError
+		}
+
+		offset++
+	}
+
+	isFirst, nextOffset := true, offset
+
+	next = func() ([]byte, ValueType, int, error) {
+		offset = nextOffset
+
+		nO := nextToken(data[offset:])
+		if nO == -1 {
+			return nil, NotExist, -1, MalformedJsonError
+		}
+		offset += nO
+		if data[offset] == ']' {
+			return nil, NotExist, -1, DoneError
+		}
+
+		if !isFirst && data[offset] != ',' {
+			return nil, NotExist, -1, MalformedArrayError
+		}
+		if !isFirst {
+			offset++
+		}
+
+		v, t, o, e := Get(data[offset:])
+
+		if e != nil {
+			return nil, NotExist, -1, e
+		}
+
+		if o == 0 {
+			return nil, NotExist, -1, DoneError
+		}
+
+		if t == NotExist {
+			return nil, NotExist, -1, DoneError
+		}
+
+		isFirst = false
+		nextOffset = offset + o
+
+		return v, t, offset - len(v), e
+	}
+	return next, nil
 }
 
 // ObjectEach iterates over the key-value pairs of a JSON object, invoking a given callback for each such entry
