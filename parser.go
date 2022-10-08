@@ -708,13 +708,29 @@ func WriteToBuffer(buffer []byte, str string) int {
 
 /*
 
-Del - Receives existing data structure, path to delete.
+Delete - Receives existing data structure, path to delete.
 
 Returns:
-`data` - return modified data
+`data` - return modified data on new slice
 
 */
 func Delete(data []byte, keys ...string) []byte {
+	return delete(false, data, keys)
+}
+
+/*
+
+DeleteOnOrig - Receives existing data structure, path to delete.
+
+Returns:
+`data` - return modified data on original slice
+
+*/
+func DeleteOnOrig(data []byte, keys ...string) []byte {
+	return delete(true, data, keys)
+}
+
+func delete(flag bool, data []byte, keys ...string) []byte {
 	lk := len(keys)
 	if lk == 0 {
 		return data[:0]
@@ -783,11 +799,16 @@ func Delete(data []byte, keys ...string) []byte {
 		newOffset = prevTok + 1
 	}
 
-	// We have to make a copy here if we don't want to mangle the original data, because byte slices are
-	// accessed by reference and not by value
-	dataCopy := make([]byte, len(data))
-	copy(dataCopy, data)
-	data = append(dataCopy[:newOffset], dataCopy[endOffset:]...)
+	if !flag {
+		// We have to make a copy here if we don't want to mangle the original data, because byte slices are
+		// accessed by reference and not by value
+		dataCopy := make([]byte, len(data))
+		copy(dataCopy, data)
+		data = append(dataCopy[:newOffset], dataCopy[endOffset:]...)
+	} else {
+		// delete on original slice
+		data = append(data[:newOffset], data[endOffset:]...)
+	}
 
 	return data
 }
