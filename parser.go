@@ -715,7 +715,7 @@ Returns:
 
 */
 func Delete(data []byte, keys ...string) []byte {
-	return delete(false, data, keys)
+	return delete(false, data, keys...)
 }
 
 /*
@@ -727,7 +727,7 @@ Returns:
 
 */
 func DeleteOnOrig(data []byte, keys ...string) []byte {
-	return delete(true, data, keys)
+	return delete(true, data, keys...)
 }
 
 func delete(flag bool, data []byte, keys ...string) []byte {
