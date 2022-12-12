@@ -539,8 +539,13 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 									pathFlags[pi] = true
 
 									if of != -1 {
-										v, dt, _, e := Get(value[of:])
-										cb(pi, v, dt, e)
+										if dataType == String {
+											// the double-quotes were stripped, so we cannot call Get again.
+											cb(pi, value[of:], dataType, nil)
+										} else {
+											v, dt, _, e := Get(value[of:])
+											cb(pi, v, dt, e)
+										}
 									}
 								}
 							}
