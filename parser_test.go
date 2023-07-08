@@ -3,7 +3,6 @@ package jsonparser
 import (
 	"bytes"
 	"fmt"
-	_ "fmt"
 	"reflect"
 	"testing"
 )
