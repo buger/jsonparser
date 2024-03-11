@@ -1,4 +1,4 @@
-// +build appengine appenginevm
+// +build appengine appenginevm tinygo
 
 package jsonparser
 
