@@ -752,6 +752,10 @@ func Delete(data []byte, keys ...string) []byte {
 		tokEnd := tokenEnd(data[endOffset:])
 		tokStart := findTokenStart(data[:keyOffset], ","[0])
 
+		if endOffset+tokEnd >= len(data) {
+			return data
+		}
+
 		if data[endOffset+tokEnd] == ","[0] {
 			endOffset += tokEnd + 1
 		} else if data[endOffset+tokEnd] == " "[0] && len(data) > endOffset+tokEnd+1 && data[endOffset+tokEnd+1] == ","[0] {
