@@ -707,12 +707,10 @@ func WriteToBuffer(buffer []byte, str string) int {
 }
 
 /*
-
 Del - Receives existing data structure, path to delete.
 
 Returns:
 `data` - return modified data
-
 */
 func Delete(data []byte, keys ...string) []byte {
 	lk := len(keys)
@@ -751,6 +749,16 @@ func Delete(data []byte, keys ...string) []byte {
 		endOffset = startOffset + subEndOffset
 		tokEnd := tokenEnd(data[endOffset:])
 		tokStart := findTokenStart(data[:keyOffset], ","[0])
+
+		// Fuzz-generated or truncated input can leave endOffset+tokEnd
+		// past the end of data, which used to panic the whole process
+		// with 'index out of range' before any caller could recover
+		// (#274). Bail out and return the original buffer unchanged
+		// when the index is out of range - equivalent to 'nothing to
+		// delete here'.
+		if endOffset+tokEnd >= len(data) {
+			return data
+		}
 
 		if data[endOffset+tokEnd] == ","[0] {
 			endOffset += tokEnd + 1
@@ -797,13 +805,11 @@ func Delete(data []byte, keys ...string) []byte {
 }
 
 /*
-
 Set - Receives existing data structure, path to set, and data to set at that key.
 
 Returns:
 `value` - modified byte array
 `err` - On any parsing error
-
 */
 func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error) {
 	// ensure keys are set
