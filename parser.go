@@ -813,10 +813,12 @@ func Delete(data []byte, keys ...string) []byte {
 	remainedTok := nextToken(remainedValue)
 
 	var newOffset int
-	if remainedTok > -1 && remainedValue[remainedTok] == '}' && data[prevTok] == ',' {
+	if prevTok > -1 && remainedTok > -1 && remainedValue[remainedTok] == '}' && data[prevTok] == ',' {
 		newOffset = prevTok
-	} else {
+	} else if prevTok > -1 {
 		newOffset = prevTok + 1
+	} else {
+		newOffset = 0
 	}
 
 	// We have to make a copy here if we don't want to mangle the original data, because byte slices are

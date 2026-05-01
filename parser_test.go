@@ -248,6 +248,23 @@ var deleteTests = []DeleteTest{
 		path: []string{"a", "b"},
 		data: `{"a":{"b":  `,
 	},
+	{
+		// OSS-Fuzz testcase 4649128545288192: leading garbage comma
+		// caused findTokenStart to return offset 0, which then made the
+		// trailing-comma cleanup branch reassign keyOffset=0, which made
+		// lastToken(data[:0]) return -1, which made data[prevTok] panic
+		// with "index out of range [-1]" at parser.go.
+		desc: "OSS-Fuzz: leading-comma malformed input must not panic in Delete",
+		json: `,{"test":1{}`,
+		path: []string{"test"},
+		data: `}`,
+	},
+	{
+		desc: "OSS-Fuzz variant: leading comma + empty string then object must not panic in Delete",
+		json: `,""{"test":0}`,
+		path: []string{"test"},
+		data: `}`,
+	},
 }
 
 var setTests = []SetTest{
