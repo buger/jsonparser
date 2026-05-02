@@ -39,6 +39,13 @@ const unescapeStackBufSize = 64
 // reqproof:lemma tokenEnd_empty_zero func(data []byte) bool {
 //   return !(len(data) == 0) || tokenEnd(data) == 0
 // }
+// reqproof:lemma tokenEnd_path_indexable_implies_nonneg func(data []byte) bool {
+//   r := tokenEnd(data)
+//   if r < len(data) {
+//     return r >= 0
+//   }
+//   return true
+// }
 func tokenEnd(data []byte) int {
 	for i, c := range data {
 		// reqproof:invariant 0 <= i
@@ -151,6 +158,13 @@ func findKeyStart(data []byte, key string) (int, error) {
 // reqproof:lemma tokenStart_empty_zero func(data []byte) bool {
 //   return !(len(data) == 0) || tokenStart(data) == 0
 // }
+// reqproof:lemma tokenStart_path_indexable_when_nonempty func(data []byte) bool {
+//   r := tokenStart(data)
+//   if len(data) > 0 {
+//     return r >= 0 && r < len(data)
+//   }
+//   return r == 0
+// }
 func tokenStart(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		// reqproof:invariant -1 <= i
@@ -179,6 +193,13 @@ func tokenStart(data []byte) int {
 //   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
 //   return r == -1 || r >= 0
 // }
+// reqproof:lemma nextToken_path_indexable_implies_lt_len func(data []byte) bool {
+//   r := nextToken(data)
+//   if r >= 0 {
+//     return r < len(data)
+//   }
+//   return true
+// }
 func nextToken(data []byte) int {
 	for i, c := range data {
 		// reqproof:invariant 0 <= i
@@ -205,6 +226,13 @@ func nextToken(data []byte) int {
 //   r := lastToken(data)
 //   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
 //   return r == -1 || r >= 0
+// }
+// reqproof:lemma lastToken_path_indexable_implies_lt_len func(data []byte) bool {
+//   r := lastToken(data)
+//   if r >= 0 {
+//     return r < len(data)
+//   }
+//   return true
 // }
 func lastToken(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
@@ -1423,4 +1451,65 @@ func ParseInt(b []byte) (int64, error) {
 	} else {
 		return v, nil
 	}
+}
+
+// --- reqproof verification helpers ---
+//
+// The functions below are callable but only used by reqproof
+// verification. They abstract control-flow shapes inside Delete's
+// cleanup block (which itself doesn't translate yet because of slice
+// expressions and early returns) and exercise the variadic translator
+// path. Keeping them in the production file (rather than a separate
+// _proof.go) means lemma directives sit next to the production code
+// they characterize.
+
+// deleteCleanupBuggyDereferenceObligation encodes the implicit
+// obligation of the pre-fix Delete block (parser.go pre-a6c5ed3,
+// lines 813-820): the data[prevTok] dereference happens whenever
+// remainedTok > -1, so safety requires prevTok >= 0 in that case.
+// On the buggy model the obligation is FALSIFIABLE — Z3 surfaces
+// (prevTok = -1, remainedTok = 0), the OSS-Fuzz witness shape.
+//
+// reqproof:lemma deleteCleanupBuggy_prevTok_nonneg_falsifiable func(prevTok, remainedTok int) bool {
+//   return deleteCleanupBuggyDereferenceObligation(prevTok, remainedTok)
+// }
+func deleteCleanupBuggyDereferenceObligation(prevTok, remainedTok int) bool {
+	if remainedTok >= 0 {
+		return prevTok >= 0
+	}
+	return true
+}
+
+// deleteCleanupFixedDereferenceObligation encodes the post-fix block
+// (parser.go HEAD a6c5ed3, lines 815-822). The new prevTok > -1
+// guard fronts every dereference, so the obligation holds.
+//
+// reqproof:lemma deleteCleanupFixed_prevTok_nonneg func(prevTok, remainedTok int) bool {
+//   return !(prevTok >= 0 && remainedTok >= 0) || prevTok >= 0
+// }
+func deleteCleanupFixedDereferenceObligation(prevTok, remainedTok int) bool {
+	return !(prevTok >= 0 && remainedTok >= 0) || prevTok >= 0
+}
+
+// deleteCleanupBuggyFalsifyingWitness documents the falsifying input
+// that the COUNTEREXAMPLE verdict surfaces: prevTok = -1, remainedTok = 0.
+// Plain Go function (no lemma) — the machine-checked counterexample
+// already proves it; this helper exists for documentation only.
+func deleteCleanupBuggyFalsifyingWitness() bool {
+	return !deleteCleanupBuggyDereferenceObligation(-1, 0)
+}
+
+// keysCount exercises the translator's variadic ...string parameter
+// (Item #2). No production caller exists; the helper lives here so
+// the variadic-passthrough lemma stays near the JSON-key handling
+// code it's a stand-in for.
+//
+// reqproof:lemma keysCount_matches_len func(keys []string) bool {
+//   return keysCount(keys...) == len(keys)
+// }
+// reqproof:lemma keysCount_nonneg func(keys []string) bool {
+//   return keysCount(keys...) >= 0
+// }
+func keysCount(keys ...string) int {
+	return len(keys)
 }

@@ -50,6 +50,13 @@ const badHex = -1
 //   if c >= 'a' && c <= 'f' { return true }
 //   return h2I(c) == badHex
 // }
+// reqproof:lemma h2I_nonneg_implies_le_15 func(c byte) bool {
+//   r := h2I(c)
+//   if r >= 0 {
+//     return r <= 15
+//   }
+//   return true
+// }
 func h2I(c byte) int {
 	if c >= 48 && c <= 57 { // '0'..'9'
 		return int(c - 48)
