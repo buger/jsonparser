@@ -15,20 +15,27 @@ const lowSurrogateOffset = 0xDC00
 const basicMultilingualPlaneReservedOffset = 0xDFFF
 const basicMultilingualPlaneOffset = 0xFFFF
 
+// NOTE: combineUTF16Surrogates uses package constants which the
+// translator currently rejects as free variables — no lemma here.
 func combineUTF16Surrogates(high, low rune) rune {
 	return supplementalPlanesOffset + (high-highSurrogateOffset)<<10 + (low - lowSurrogateOffset)
 }
 
 const badHex = -1
 
+// reqproof:lemma h2I_range func(c byte) bool {
+//   r := h2I(c)
+//   return r == -1 || (r >= 0 && r <= 15)
+// }
 func h2I(c byte) int {
-	switch {
-	case c >= '0' && c <= '9':
-		return int(c - '0')
-	case c >= 'A' && c <= 'F':
-		return int(c - 'A' + 10)
-	case c >= 'a' && c <= 'f':
-		return int(c - 'a' + 10)
+	if c >= 48 && c <= 57 { // '0'..'9'
+		return int(c - 48)
+	}
+	if c >= 65 && c <= 70 { // 'A'..'F'
+		return int(c-65) + 10
+	}
+	if c >= 97 && c <= 102 { // 'a'..'f'
+		return int(c-97) + 10
 	}
 	return badHex
 }
@@ -56,8 +63,20 @@ func decodeSingleUnicodeEscape(in []byte) (rune, bool) {
 // isUTF16EncodedRune checks if a rune is in the range for non-BMP characters,
 // which is used to describe UTF16 chars.
 // Source: https://en.wikipedia.org/wiki/Plane_(Unicode)#Basic_Multilingual_Plane
+//
+// reqproof:lemma isUTF16EncodedRune_low_excluded func(r rune) bool {
+//   return !(r < 0xD800) || !isUTF16EncodedRune(r)
+// }
 func isUTF16EncodedRune(r rune) bool {
-	return highSurrogateOffset <= r && r <= basicMultilingualPlaneReservedOffset
+	return 0xD800 <= r && r <= 0xDFFF
+}
+
+// isUTF16EncodedRuneNot is a thin alias hosting an additional lemma.
+// reqproof:lemma isUTF16EncodedRune_high_excluded func(r rune) bool {
+//   return !(r > 0xDFFF) || !isUTF16EncodedRuneNot(r)
+// }
+func isUTF16EncodedRuneNot(r rune) bool {
+	return isUTF16EncodedRune(r)
 }
 
 func decodeUnicodeEscape(in []byte) (rune, int) {
