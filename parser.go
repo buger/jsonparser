@@ -30,6 +30,15 @@ const unescapeStackBufSize = 64
 //   r := tokenEnd(data)
 //   return r >= 0 && r <= len(data)
 // }
+// reqproof:lemma tokenEnd_nonneg func(data []byte) bool {
+//   // tokenEnd never signals via a negative sentinel — the empty-input
+//   // path returns len(data)==0 (still nonneg), and any hit returns the
+//   // loop index (also nonneg).
+//   return tokenEnd(data) >= 0
+// }
+// reqproof:lemma tokenEnd_empty_zero func(data []byte) bool {
+//   return !(len(data) == 0) || tokenEnd(data) == 0
+// }
 func tokenEnd(data []byte) int {
 	for i, c := range data {
 		// reqproof:invariant 0 <= i
@@ -136,6 +145,12 @@ func findKeyStart(data []byte, key string) (int, error) {
 //   r := tokenStart(data)
 //   return r >= 0 && r <= len(data)
 // }
+// reqproof:lemma tokenStart_nonneg func(data []byte) bool {
+//   return tokenStart(data) >= 0
+// }
+// reqproof:lemma tokenStart_empty_zero func(data []byte) bool {
+//   return !(len(data) == 0) || tokenStart(data) == 0
+// }
 func tokenStart(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		// reqproof:invariant -1 <= i
@@ -159,6 +174,11 @@ func tokenStart(data []byte) int {
 // reqproof:lemma nextToken_empty_neg func(data []byte) bool {
 //   return !(len(data) == 0) || nextToken(data) == -1
 // }
+// reqproof:lemma nextToken_signed_disjoint func(data []byte) bool {
+//   r := nextToken(data)
+//   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
+//   return r == -1 || r >= 0
+// }
 func nextToken(data []byte) int {
 	for i, c := range data {
 		// reqproof:invariant 0 <= i
@@ -180,6 +200,11 @@ func nextToken(data []byte) int {
 // }
 // reqproof:lemma lastToken_empty_neg func(data []byte) bool {
 //   return !(len(data) == 0) || lastToken(data) == -1
+// }
+// reqproof:lemma lastToken_signed_disjoint func(data []byte) bool {
+//   r := lastToken(data)
+//   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
+//   return r == -1 || r >= 0
 // }
 func lastToken(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {

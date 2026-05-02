@@ -15,8 +15,10 @@ const lowSurrogateOffset = 0xDC00
 const basicMultilingualPlaneReservedOffset = 0xDFFF
 const basicMultilingualPlaneOffset = 0xFFFF
 
-// NOTE: combineUTF16Surrogates uses package constants which the
-// translator currently rejects as free variables — no lemma here.
+// NOTE: combineUTF16Surrogates is blocked by an unsupported `<<` shift op
+// in the translator (Phase T.* gap, beyond #1/#2/#5). Even though Fix #6
+// resolves the package-const references in this body, the shift remains
+// untranslated, so no lemma is attached here.
 func combineUTF16Surrogates(high, low rune) rune {
 	return supplementalPlanesOffset + (high-highSurrogateOffset)<<10 + (low - lowSurrogateOffset)
 }
@@ -26,6 +28,27 @@ const badHex = -1
 // reqproof:lemma h2I_range func(c byte) bool {
 //   r := h2I(c)
 //   return r == -1 || (r >= 0 && r <= 15)
+// }
+// reqproof:lemma h2I_decimal_digit func(c byte) bool {
+//   if c < '0' || c > '9' { return true }
+//   r := h2I(c)
+//   return r >= 0 && r <= 9
+// }
+// reqproof:lemma h2I_uppercase_hex func(c byte) bool {
+//   if c < 'A' || c > 'F' { return true }
+//   r := h2I(c)
+//   return r >= 10 && r <= 15
+// }
+// reqproof:lemma h2I_lowercase_hex func(c byte) bool {
+//   if c < 'a' || c > 'f' { return true }
+//   r := h2I(c)
+//   return r >= 10 && r <= 15
+// }
+// reqproof:lemma h2I_nondigit_is_badhex func(c byte) bool {
+//   if c >= '0' && c <= '9' { return true }
+//   if c >= 'A' && c <= 'F' { return true }
+//   if c >= 'a' && c <= 'f' { return true }
+//   return h2I(c) == badHex
 // }
 func h2I(c byte) int {
 	if c >= 48 && c <= 57 { // '0'..'9'
@@ -66,6 +89,17 @@ func decodeSingleUnicodeEscape(in []byte) (rune, bool) {
 //
 // reqproof:lemma isUTF16EncodedRune_low_excluded func(r rune) bool {
 //   return !(r < 0xD800) || !isUTF16EncodedRune(r)
+// }
+// reqproof:lemma isUTF16EncodedRune_const_high_bound func(r rune) bool {
+//   // Fix #6: package-level const highSurrogateOffset (= 0xD800) now
+//   // resolves at translation time. Below the high surrogate offset
+//   // means definitely outside the UTF-16 surrogate range.
+//   return !(r < highSurrogateOffset) || !isUTF16EncodedRune(r)
+// }
+// reqproof:lemma isUTF16EncodedRune_const_bmp_bound func(r rune) bool {
+//   // Fix #6: package-level const basicMultilingualPlaneReservedOffset (= 0xDFFF).
+//   // Above the BMP-reserved offset means outside the UTF-16 surrogate range.
+//   return !(r > basicMultilingualPlaneReservedOffset) || !isUTF16EncodedRune(r)
 // }
 func isUTF16EncodedRune(r rune) bool {
 	return 0xD800 <= r && r <= 0xDFFF
