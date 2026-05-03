@@ -160,26 +160,59 @@ relevant authority (RFC 8259) rather than hand-waving "doesn't apply."
 
 After tagging and resolution, OWASP-ASVS-v4 coverage:
 
-> **OWASP Application Security Verification Standard v4.0.3** — 6 controls,
-> 0 covered, 6 suppressed, 0 missing (100.0% covered+suppressed)
+> **OWASP Application Security Verification Standard v4.0.3** — 6 controls
+> accepted: 0  suppressed: 6  missing: 0
+> decided coverage: 100.0%  active coverage: 0.0%
 
 CWE coverage:
 
-> **Common Weakness Enumeration** — 14 controls, 0 covered, 14 suppressed, 0 missing
-> (100.0% covered+suppressed)
+> **Common Weakness Enumeration** — 14 controls
+> accepted: 0  suppressed: 14  missing: 0
+> decided coverage: 100.0%  active coverage: 0.0%
 
 MISRA-C coverage:
 
-> **MISRA C:2023 — Guidelines for the Use of C in Critical Systems** — 3 controls,
-> 0 covered, 3 suppressed, 0 missing (100.0% covered+suppressed)
+> **MISRA C:2023 — Guidelines for the Use of C in Critical Systems** — 3 controls
+> accepted: 0  suppressed: 3  missing: 0
+> decided coverage: 100.0%  active coverage: 0.0%
 
-The "0 covered, N suppressed" reading is a side-effect of the decomposition strategy
-described above — we recorded each catalog obligation as a *decomposition-routed
-suppression* on the STK-REQ rather than as an active checklist commitment, because
-the leaves cannot themselves carry a checklist without breaking the "every checklist
-needs a child satisfier" decomposition rule. A future catalog version that adds a
-"leaf-terminator" marker would let these flip from `suppressed` to `covered`. The
-SARIF artifact is 6,393 bytes and ships every framework reference.
+The headline metric — **decided coverage** — is the fraction of controls the project
+has explicitly addressed (either by committing or by suppressing with rationale).
+Active coverage is the stricter sub-metric: only checklist commitments count. For
+jsonparser, every framework citation is `decided` because every obligation is either
+on a checklist or carries a written suppression rationale; nothing is silently
+unaddressed.
+
+(This three-bucket layout was added in v0.3.0 — D30 / Finding 3 below — after the
+earlier "0 covered, N suppressed" framing read as misleading red on otherwise
+fully-decided projects.)
+
+The SARIF artifact ships every framework reference and now includes a `properties`
+block on each missing-coverage result with the framework's three counts and both
+percentages, so GitHub Code Scanning and GRC tooling can render decided coverage
+alongside the finding.
+
+## Findings surfaced by this dogfood (resolved in v0.3.0)
+
+Three structural improvements to the catalog were discovered by applying it to
+jsonparser, a project that is nothing like ReqProof itself, and shipped in v0.3.0:
+
+1. **Discoverability gap on `denial_of_service_resistant`**: the obligation
+   was gated on `tag_match_any: [accepts_user_data]`, which meant a parser
+   library spec author tagging only `parser` (the natural intuition) silently
+   missed a CRITICAL DoS obligation. Loosened to fire whenever `parser` is
+   tagged; trusted-input parsers may suppress with rationale.
+2. **Leaf-terminator false positive in `obligation_decomposition_complete`**:
+   leaves with obligations on their checklist were being flagged as having
+   "no derived requirements" — but leaves don't decompose further, that's the
+   point. Added leaf detection: a leaf with `implemented_by` traces passes;
+   a leaf with obligations but no `implemented_by` gets the new
+   `LeafObligationWithoutImplementation` finding instead.
+3. **Coverage report messaging** (the section above): "0 covered, N suppressed"
+   reads as 0% in the headline. Now: three buckets (accepted / suppressed /
+   missing) plus `decided coverage` and `active coverage` percentages,
+   surfacing the difference between "actively committed" and "explicitly
+   addressed".
 
 ## What this proves
 
