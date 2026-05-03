@@ -26,8 +26,9 @@ traces:
         - obligation_property_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.427271Z"
+    reviewed_at: "2026-05-03T10:18:39.47434Z"
     reviewed_by: human:leonidbugaev
+    reviewed_fingerprint: sha256:709f182112b42570511605a0022675208f2034a3a026060b607bb2e0fbd5fa5e
 verification:
     assurance_level: E
     formalization_status: valid

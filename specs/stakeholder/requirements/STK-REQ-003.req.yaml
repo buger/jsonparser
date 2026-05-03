@@ -13,13 +13,16 @@ informal_verification:
     verified: false
 component: parser
 rationale: The README presents typed helpers as part of the public API for callers who already know the expected JSON scalar type.
-tags: []
+tags:
+    - parser
+    - accepts_user_data
 variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.200401Z"
+    reviewed_at: "2026-05-03T10:16:37.751828Z"
     reviewed_by: human:leonidbugaev
+    reviewed_fingerprint: sha256:e1999702de59be1f37115b38bdac75148238431731dbb73710d5298a77c6cb7a
 verification:
     assurance_level: E
     formalization_status: none
@@ -32,7 +35,7 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:10:33Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-04-13T17:14:56Z"
+    last_modified_at: "2026-05-03T10:15:08Z"
 stakeholder:
     persona: Go developers reading known scalar fields from dynamic JSON payloads
     story: As a Go developer who knows the expected scalar type of a JSON field, I want typed helper accessors so that I can avoid manual byte parsing and get explicit errors on invalid access.
@@ -61,15 +64,54 @@ stakeholder:
             - SYS-REQ-095
             - SYS-REQ-096
     obligation_checklist:
-        - nominal
-        - malformed_input
         - boundary
-        - type_mismatch
-        - empty_input
-        - partial_literal
         - determinism
-        - nil_safety
         - edge_case
+        - empty_input
+        - malformed_input
+        - nil_safety
+        - nominal
+        - partial_literal
+        - type_mismatch
+    obligation_suppressions:
+        - id: denial_of_service_resistant
+          reason: Decomposed at SYS-REQ-040 (ParseInt malformed-token error), SYS-REQ-037 (ParseFloat malformed numeric token), SYS-REQ-036 (ParseBoolean invalid token); typed scalar helpers run a single-token byte scan bounded by the addressed value slice, with no recursion or backtracking.
+          suppressed_by: leonidbugaev
+          suppressed_at: "2026-05-03T10:14:23Z"
+          framework_refs:
+            - CWE CWE-400,CWE-1333
+            - MISRA-C Rule 17.2
+            - NIST-800-53 SC-5
+            - OWASP-ASVS-v4 V11.1.4
+        - id: encoding_aware
+          reason: Numeric and boolean JSON tokens are ASCII per RFC 8259; SYS-REQ-040 / SYS-REQ-037 / SYS-REQ-036 reject non-ASCII bytes inside numeric/boolean tokens via MalformedValueError; encoding concerns terminate at the per-token scanners in parser.go.
+          suppressed_by: leonidbugaev
+          suppressed_at: "2026-05-03T10:14:23Z"
+          framework_refs:
+            - CWE CWE-176,CWE-180,CWE-838
+            - MISRA-C Dir 4.14
+            - NIST-800-53 SI-10
+            - OWASP-ASVS-v4 V5.1.4
+        - id: length_prefix_validated
+          reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+          suppressed_by: leonidbugaev
+          suppressed_at: "2026-05-03T10:07:03Z"
+          framework_refs:
+            - CWE CWE-130,CWE-805,CWE-119
+            - IEC-62304 §5.3.1
+            - MISRA-C Rule 21.18
+            - NIST-800-53 SI-10
+            - OWASP-ASVS-v4 V5.1.4
+        - id: malformed_recovers_or_errors_loudly
+          reason: Decomposed at SYS-REQ-040 (ParseInt MalformedValueError), SYS-REQ-037 (ParseFloat MalformedValueError), SYS-REQ-036 (ParseBoolean MalformedValueError); typed helpers fail-loud rather than returning partial conversion results.
+          suppressed_by: leonidbugaev
+          suppressed_at: "2026-05-03T10:14:23Z"
+          framework_refs:
+            - CWE CWE-20,CWE-755
+            - IEC-62304 §5.3.1
+            - MISRA-C Dir 4.14
+            - NIST-800-53 SI-10,SI-11
+            - OWASP-ASVS-v4 V5.1.3,V5.5.3
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"

@@ -27,8 +27,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.23752Z"
+    reviewed_at: "2026-05-03T10:18:24.763656Z"
     reviewed_by: human:leonidbugaev
+    reviewed_fingerprint: sha256:79be64677bafb7a5cd31ec1fbe176fcb8c3c70fdac46780d067be9b2d68654e7
 verification:
     assurance_level: E
     formalization_status: valid

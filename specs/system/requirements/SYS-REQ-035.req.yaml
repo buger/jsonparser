@@ -30,8 +30,9 @@ traces:
         - mcdc_supplement_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.27977Z"
+    reviewed_at: "2026-05-03T10:18:28.888932Z"
     reviewed_by: human:leonidbugaev
+    reviewed_fingerprint: sha256:fd65733175fa84f535549a887501d1db2360ee4d70340a4a6f66a880f8f02d44
 verification:
     assurance_level: E
     formalization_status: valid

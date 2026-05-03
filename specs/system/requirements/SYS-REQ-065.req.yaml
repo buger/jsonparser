@@ -28,8 +28,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.337537Z"
+    reviewed_at: "2026-05-03T10:18:33.837201Z"
     reviewed_by: human:leonidbugaev
+    reviewed_fingerprint: sha256:0309d672032b8d3c3abcd6dbd5dd0760fc3c5a9ba3750477986f531f222fa27d
 verification:
     assurance_level: E
     formalization_status: valid
