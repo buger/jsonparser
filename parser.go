@@ -322,7 +322,7 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 		case '[':
 			// If we want to get array element by index
-			if keyLevel == level && keys[level][0] == '[' {
+			if keyLevel == level && len(keys[level]) > 0 && keys[level][0] == '[' {
 				keyLen := len(keys[level])
 				// Note: keys[level][0] == '[' is guaranteed by the outer if-guard,
 				// so the former middle term `keys[level][0] != '['` was always false

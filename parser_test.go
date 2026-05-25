@@ -1171,6 +1171,18 @@ var getArrayTests = []GetTest{
 		data:    []string{`1`, `2`, `3`, `4`},
 	},
 	{
+		desc:    `array with single empty-string key returns not-found, not panic`,
+		json:    `[]`,
+		path:    []string{""},
+		isFound: false,
+	},
+	{
+		desc:    `truncated array with empty key returns not-found, not panic`,
+		json:    `[`,
+		path:    []string{""},
+		isFound: false,
+	},
+	{
 		desc:    `read array of objects`,
 		json:    `{"a": { "b":[{"x":1},{"x":2},{"x":3},{"x":4}]}}`,
 		path:    []string{"a", "b"},
