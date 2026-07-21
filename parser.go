@@ -883,9 +883,12 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		depthOffset := endOffset
 		if depth != 0 {
 			// if subpath is a non-empty object, add to it
-			// or if subpath is a non-empty array, add to it
-			if (data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}') ||
-				(data[startOffset] == '[' && data[startOffset+1+nextToken(data[startOffset+1:])] == '{') && keys[depth:][0][0] == 91 {
+			// or if subpath is a non-empty array and next key is an index, append to it
+			nextInside := data[startOffset+1+nextToken(data[startOffset+1:])]
+			nextKeyIsIndex := len(keys[depth:]) > 0 && len(keys[depth:][0]) > 0 && keys[depth:][0][0] == '['
+			canExtendObject := data[startOffset] == '{' && nextInside != '}'
+			canExtendArray := data[startOffset] == '[' && nextInside != ']' && nextKeyIsIndex
+			if canExtendObject || canExtendArray {
 				depthOffset--
 				startOffset = depthOffset
 				// otherwise, over-write it with a new object

@@ -338,16 +338,13 @@ func TestDeleteSupplementalEdgeCases(t *testing.T) {
 // MCDC SYS-REQ-009: N/A
 func TestSetSupplementalArrayInsertionCoverage(t *testing.T) {
 	t.Run("append into existing top level array path", func(t *testing.T) {
-		// When setting an index beyond the current array length for a
-		// primitive (non-object) array, the code overwrites rather than
-		// appends because createInsertComponent with object=true wraps
-		// the value. This is the actual parser behavior.
+		// Setting an index beyond the current array length appends the value.
 		got, err := Set([]byte(`{"top":[1]}`), []byte(`2`), "top", "[1]")
 		if err != nil {
 			t.Fatalf("Set array append returned error: %v", err)
 		}
-		if string(got) != `{"top":[2]}` {
-			t.Fatalf("Set array append result = %s, want %s", string(got), `{"top":[2]}`)
+		if string(got) != `{"top":[1,2]}` {
+			t.Fatalf("Set array append result = %s, want %s", string(got), `{"top":[1,2]}`)
 		}
 	})
 

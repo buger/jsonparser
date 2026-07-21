@@ -52,3 +52,26 @@ func TestFuzzSetHarnessCoverage(t *testing.T) {
 		t.Fatalf("expected FuzzSet failure path to return 0, got %d", got)
 	}
 }
+
+
+// Regression for issue #267: Set with successive array indexes must append scalars.
+func TestSetAppendsScalarToExistingArrayByIndex(t *testing.T) {
+	value := []byte(`{}`)
+	var err error
+	value, err = Set(value, []byte(`1`), "test", "[0]")
+	if err != nil {
+		t.Fatalf("Set [0]: %v", err)
+	}
+	value, err = Set(value, []byte(`2`), "test", "[1]")
+	if err != nil {
+		t.Fatalf("Set [1]: %v", err)
+	}
+	value, err = Set(value, []byte(`3`), "test", "[2]")
+	if err != nil {
+		t.Fatalf("Set [2]: %v", err)
+	}
+	expected := `{"test":[1,2,3]}`
+	if string(value) != expected {
+		t.Fatalf("Set result mismatch: expected %s, got %s", expected, string(value))
+	}
+}
