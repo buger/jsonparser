@@ -40,24 +40,8 @@ jobs:
       - name: Install Z3 solver
         run: sudo apt-get update -qq && sudo apt-get install -y -qq z3
 
-      - name: Install probe (autolink enrichment)
-        run: npm install -g @probelabs/probe
-
-      # Build proof from source instead of downloading the pre-built release.
-      # The latest published release (June 2026, catalog 1.0.0) lags behind the
-      # current main branch (catalog 1.9.0) and does not support the overlay
-      # catalog, verification_method schema, or MC/DC languages.go config this
-      # project relies on. Building from main keeps CI in sync with the dev
-      # build. Pin to a commit SHA for reproducibility if main drifts.
-      - name: Build proof from source
-        run: go install github.com/probelabs/proof/cmd/proof@main
-
-      - name: Verify proof version
-        run: proof --version
-
       - uses: probelabs/proof-action@v1
         with:
           fail-level: warn
           scope: full
           format: markdown
-          proof-path: /home/runner/go/bin/proof
