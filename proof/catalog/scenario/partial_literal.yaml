@@ -1,0 +1,17 @@
+id: partial_literal
+catalog_version: 1
+category: scenario
+order: 1008
+status: active
+name: partial_literal
+summary: Input ends mid-`true`/`false`/`null` or mid-numeric literal at a value slot.
+description: |
+  Covers the case where the addressed value slot begins a recognized literal
+  token but is truncated before completion (e.g. `tru`, `fals`, `nu`, or a
+  number like `12.3e` with no signed exponent digits). getType relies on
+  tokenEnd to bound the literal, and a partial token must be classified as
+  Unknown and rejected by ParseBoolean/ParseInt/ParseFloat/ParseNull
+  (SYS-REQ-057, SYS-REQ-079) rather than be silently coerced into the
+  nearest complete value. A violation would let truncated input masquerade
+  as a valid typed value, which is the precondition for downstream
+  application logic trusting garbage data from the wire.

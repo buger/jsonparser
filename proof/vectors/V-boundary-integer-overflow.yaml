@@ -1,0 +1,15 @@
+id: V-boundary-integer-overflow
+title: Integer boundary overflow silent-wrap sweep
+description: Hunt for silent integer overflow on ParseInt/GetInt when a numeric token's magnitude exceeds the int64 range (e.g. 9223372036854775808 = MaxInt64+1). The parseInt overflow flag must trigger OverflowIntegerError; a regressed check silently wraps to a negative int64. Covered by boundary/overflow regression tests in parser_test.go exercising both ParseInt and GetInt at and past int64 limits.
+priority: P0
+status: closed-null
+related_obligation_classes:
+    - boundary
+stacks:
+    - go
+close_note: Hunted. Worst case (numeric token at int64 magnitude boundary parsed by strconv.ParseInt with overflow flag regression -> silent wrap to negative int64 instead of OverflowIntegerError) covered by ParseInt/GetInt boundary tests in parser_test.go at MaxInt64, MaxInt64+1, MinInt64, MinInt64-1. Campaign saturated, 0 silent-wrap defects on this class. No NEW Med+.
+campaign_log:
+    - at: "2026-07-26T15:05:00Z"
+      status: closed-null
+      note: Hunted. Worst case (int64 boundary magnitude token -> silent overflow wrap instead of OverflowIntegerError) covered by ParseInt/GetInt boundary regression tests in parser_test.go. Campaign saturated, 0 silent-wrap defects on this class. No NEW Med+.
+      actor: agent

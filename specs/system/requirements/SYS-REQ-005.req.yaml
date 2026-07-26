@@ -26,8 +26,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.223203Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.063812Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:78c99b2667bc19b9e1676df26c486878cafe21d1622d6f0e56cd5c5328d07730
 verification:
     assurance_level: E
     formalization_status: valid
@@ -41,7 +42,7 @@ history:
     created_at: "2026-04-13T17:10:46Z"
     last_modified_by: human:cli
     last_modified_at: "2026-04-13T17:14:56Z"
-obligation_class: nominal
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"
@@ -49,3 +50,9 @@ lifecycle:
           to: review
           reason: ""
           changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

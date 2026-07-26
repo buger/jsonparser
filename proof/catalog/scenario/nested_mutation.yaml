@@ -1,0 +1,17 @@
+id: nested_mutation
+catalog_version: 1
+category: scenario
+order: 1011
+status: active
+name: nested_mutation
+summary: Set or Delete walks a deeply multi-level path through internalGet's recursive descent.
+description: |
+  Covers Set/Delete invoked with a multi-segment key path where intermediate
+  object levels exist but the leaf does not (SYS-REQ-069). The
+  createInsertComponent depth-tracking logic must correctly decide whether to
+  append inside the deepest existing structure or overwrite the value in
+  place, and the recursive internalGet walk must produce offsets that stay
+  valid at each level. A violation surfaces as a value inserted at the wrong
+  nesting depth, or as offsets that escape the buffer when an intermediate
+  level is itself truncated, which is why this class shares hazard surface
+  with sentinel_value_boundary and error_propagation.

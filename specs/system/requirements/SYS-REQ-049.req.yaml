@@ -27,8 +27,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.305976Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.769081Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:39ed8e83c7925419ad30ded2bccea50d9fd79218a9e29dd902bb2e44f1c356f2
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +41,15 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: error_propagation
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:19Z"
+obligation_checklist:
+    - error_propagation
+obligation_hazards:
+    - class: error_propagation
+      worst_case: Delete discards the internalGet error and proceeds with stale offsets into data[prevTok]/data[end:] (parser.go:907), panicking with index-out-of-range on adversarial input — the OSS-Fuzz witness shape.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -50,3 +57,9 @@ lifecycle:
           to: review
           reason: Added explicit error-propagation requirement for Delete calling internalGet.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: error_propagation

@@ -26,8 +26,9 @@ traces:
         - mcdc_supplement_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.215485Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.027067Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:3d4ecf0f84cb0d49a28b82f7c67320c39eb1ffff0c325f32c7247f853183ea0a
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,8 +41,22 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:10:46Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-04-13T17:14:56Z"
-obligation_class: nominal
+    last_modified_at: "2026-07-26T14:54:13Z"
+obligation_checklist:
+    - determinism
+    - edge_case
+    - encoding_safety
+obligation_hazards:
+    - class: determinism
+      worst_case: GetString returns a different decoded string across calls on identical well-formed input, corrupting cache keys or byte-equality assumptions at the call site.
+      severity: medium
+    - class: edge_case
+      worst_case: GetString on a 1-char escaped body like an empty quoted string returns an out-of-range slice or wrong length, corrupting downstream string math at the caller.
+      severity: low
+    - class: encoding_safety
+      worst_case: GetString on a body containing invalid UTF-8 (e.g. a lone surrogate like \uDDDD) returns a Go string with invalid runes; the caller re-serializes it as invalid JSON or panics in encoding-aware downstream.
+      severity: high
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"
@@ -49,3 +64,9 @@ lifecycle:
           to: review
           reason: ""
           changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

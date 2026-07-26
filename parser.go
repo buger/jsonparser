@@ -26,18 +26,43 @@ var (
 const unescapeStackBufSize = 64
 
 // SYS-REQ-044
+// reqproof:lemma tokenEnd_in_range func(data []byte) bool {
+//   r := tokenEnd(data)
+//   return r >= 0 && r <= len(data)
+// }
+// reqproof:lemma tokenEnd_nonneg func(data []byte) bool {
+//   // tokenEnd never signals via a negative sentinel — the empty-input
+//   // path returns len(data)==0 (still nonneg), and any hit returns the
+//   // loop index (also nonneg).
+//   return tokenEnd(data) >= 0
+// }
+// reqproof:lemma tokenEnd_empty_zero func(data []byte) bool {
+//   return !(len(data) == 0) || tokenEnd(data) == 0
+// }
+// reqproof:lemma tokenEnd_path_indexable_implies_nonneg func(data []byte) bool {
+//   r := tokenEnd(data)
+//   if r < len(data) {
+//     return r >= 0
+//   }
+//   return true
+// }
 func tokenEnd(data []byte) int {
 	for i, c := range data {
-		switch c {
-		case ' ', '\n', '\r', '\t', ',', '}', ']':
-			return i
+		// reqproof:invariant 0 <= i
+		// reqproof:invariant i <= len(data)
+		if c != 32 && c != 10 && c != 13 && c != 9 && c != 44 && c != 125 && c != 93 {
+			continue
 		}
+		return i
 	}
 
 	return len(data)
 }
 
 // SYS-REQ-001
+// NOTE: findTokenStart's two-conditional-return body shape exposes
+// the translator's __early_val scoping bug; we leave it without an
+// in-range lemma. (Documented as a Phase S.2c.4 follow-up.)
 func findTokenStart(data []byte, token byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		switch data[i] {
@@ -123,12 +148,32 @@ func findKeyStart(data []byte, key string) (int, error) {
 }
 
 // SYS-REQ-001
+// reqproof:lemma tokenStart_in_range func(data []byte) bool {
+//   r := tokenStart(data)
+//   return r >= 0 && r <= len(data)
+// }
+// reqproof:lemma tokenStart_nonneg func(data []byte) bool {
+//   return tokenStart(data) >= 0
+// }
+// reqproof:lemma tokenStart_empty_zero func(data []byte) bool {
+//   return !(len(data) == 0) || tokenStart(data) == 0
+// }
+// reqproof:lemma tokenStart_path_indexable_when_nonempty func(data []byte) bool {
+//   r := tokenStart(data)
+//   if len(data) > 0 {
+//     return r >= 0 && r < len(data)
+//   }
+//   return r == 0
+// }
 func tokenStart(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
-		switch data[i] {
-		case '\n', '\r', '\t', ',', '{', '[':
-			return i
+		// reqproof:invariant -1 <= i
+		// reqproof:invariant i < len(data)
+		c := data[i]
+		if c != 10 && c != 13 && c != 9 && c != 44 && c != 123 && c != 91 {
+			continue
 		}
+		return i
 	}
 
 	return 0
@@ -136,14 +181,33 @@ func tokenStart(data []byte) int {
 
 // SYS-REQ-001
 // Find position of next character which is not whitespace
+// reqproof:lemma nextToken_in_range func(data []byte) bool {
+//   r := nextToken(data)
+//   return r >= -1 && r < len(data)
+// }
+// reqproof:lemma nextToken_empty_neg func(data []byte) bool {
+//   return !(len(data) == 0) || nextToken(data) == -1
+// }
+// reqproof:lemma nextToken_signed_disjoint func(data []byte) bool {
+//   r := nextToken(data)
+//   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
+//   return r == -1 || r >= 0
+// }
+// reqproof:lemma nextToken_path_indexable_implies_lt_len func(data []byte) bool {
+//   r := nextToken(data)
+//   if r >= 0 {
+//     return r < len(data)
+//   }
+//   return true
+// }
 func nextToken(data []byte) int {
 	for i, c := range data {
-		switch c {
-		case ' ', '\n', '\r', '\t':
+		// reqproof:invariant 0 <= i
+		// reqproof:invariant i <= len(data)
+		if c == ' ' || c == '\n' || c == '\r' || c == '\t' {
 			continue
-		default:
-			return i
 		}
+		return i
 	}
 
 	return -1
@@ -151,14 +215,34 @@ func nextToken(data []byte) int {
 
 // SYS-REQ-001
 // Find position of last character which is not whitespace
+// reqproof:lemma lastToken_in_range func(data []byte) bool {
+//   r := lastToken(data)
+//   return r >= -1 && r < len(data)
+// }
+// reqproof:lemma lastToken_empty_neg func(data []byte) bool {
+//   return !(len(data) == 0) || lastToken(data) == -1
+// }
+// reqproof:lemma lastToken_signed_disjoint func(data []byte) bool {
+//   r := lastToken(data)
+//   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
+//   return r == -1 || r >= 0
+// }
+// reqproof:lemma lastToken_path_indexable_implies_lt_len func(data []byte) bool {
+//   r := lastToken(data)
+//   if r >= 0 {
+//     return r < len(data)
+//   }
+//   return true
+// }
 func lastToken(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
-		switch data[i] {
-		case ' ', '\n', '\r', '\t':
+		// reqproof:invariant -1 <= i
+		// reqproof:invariant i < len(data)
+		c := data[i]
+		if c == ' ' || c == '\n' || c == '\r' || c == '\t' {
 			continue
-		default:
-			return i
 		}
+		return i
 	}
 
 	return -1
@@ -322,7 +406,8 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 		case '[':
 			// If we want to get array element by index
-			if keyLevel == level && keys[level][0] == '[' {
+			// guard: empty key component — not an array index, fall through to skip.
+			if keyLevel == level && len(keys[level]) > 0 && keys[level][0] == '[' {
 				keyLen := len(keys[level])
 				// Note: keys[level][0] == '[' is guaranteed by the outer if-guard,
 				// so the former middle term `keys[level][0] != '['` was always false
@@ -527,7 +612,8 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			}
 
 			for pi, p := range paths {
-				if len(p) < level+1 || pathFlags[pi] || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+				// guard: empty key component — skip this path (not an array index).
+				if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
 				if len(p[level]) >= 2 {
@@ -632,7 +718,8 @@ var (
 
 // SYS-REQ-009
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
-	isIndex := string(keys[0][0]) == "["
+	// guard: empty key component — not an array index.
+	isIndex := len(keys[0]) > 0 && string(keys[0][0]) == "["
 	offset := 0
 	lk := calcAllocateSpace(keys, setValue, comma, object)
 	buffer := make([]byte, lk, lk)
@@ -653,7 +740,8 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	}
 
 	for i := 1; i < len(keys); i++ {
-		if string(keys[i][0]) == "[" {
+		// guard: empty key component — treat as object key, not array index.
+		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
 			offset += WriteToBuffer(buffer[offset:], "[")
 		} else {
 			offset += WriteToBuffer(buffer[offset:], "{\"")
@@ -663,7 +751,8 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	}
 	offset += WriteToBuffer(buffer[offset:], string(setValue))
 	for i := len(keys) - 1; i > 0; i-- {
-		if string(keys[i][0]) == "[" {
+		// guard: empty key component — treat as object key, not array index.
+		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
 			offset += WriteToBuffer(buffer[offset:], "]")
 		} else {
 			offset += WriteToBuffer(buffer[offset:], "}")
@@ -680,7 +769,8 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 
 // SYS-REQ-009
 func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
-	isIndex := string(keys[0][0]) == "["
+	// guard: empty key component — not an array index.
+	isIndex := len(keys[0]) > 0 && string(keys[0][0]) == "["
 	lk := 0
 	if comma {
 		// ,
@@ -702,7 +792,8 @@ func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
 
 	lk += len(setValue)
 	for i := 1; i < len(keys); i++ {
-		if string(keys[i][0]) == "[" {
+		// guard: empty key component — treat as object key, not array index.
+		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
 			// []
 			lk += 2
 		} else {
@@ -813,10 +904,12 @@ func Delete(data []byte, keys ...string) []byte {
 	remainedTok := nextToken(remainedValue)
 
 	var newOffset int
-	if remainedTok > -1 && remainedValue[remainedTok] == '}' && data[prevTok] == ',' {
+	if prevTok > -1 && remainedTok > -1 && remainedValue[remainedTok] == '}' && data[prevTok] == ',' {
 		newOffset = prevTok
-	} else {
+	} else if prevTok > -1 {
 		newOffset = prevTok + 1
+	} else {
+		newOffset = 0
 	}
 
 	// We have to make a copy here if we don't want to mangle the original data, because byte slices are

@@ -29,8 +29,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.224937Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.075848Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:1eaf7dbae3f4dcbaa849611c02e538f4d65b87ae034debf4256015eeba0370d5
 verification:
     assurance_level: E
     formalization_status: valid
@@ -42,9 +43,15 @@ verification:
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:10:56Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: nominal
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:13Z"
+obligation_checklist:
+    - determinism
+obligation_hazards:
+    - class: determinism
+      worst_case: ArrayEach invokes callbacks in non-deterministic encounter order on identical input, breaking caller-side slice-append or sum accumulation invariants.
+      severity: medium
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"
@@ -57,3 +64,9 @@ lifecycle:
           to: review
           reason: Narrowed ArrayEach success behavior to the non-empty ordered-iteration case.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

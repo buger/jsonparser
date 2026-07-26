@@ -25,8 +25,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.234219Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.215867Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:537f998de52976ee4f4ff8621d5930490644d8274c502e60fb0cb90283fecdf6
 verification:
     assurance_level: E
     formalization_status: valid
@@ -39,8 +40,14 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:21:50Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-04-13T17:27:00Z"
-obligation_class: nominal
+    last_modified_at: "2026-07-26T14:54:14Z"
+obligation_checklist:
+    - determinism
+obligation_hazards:
+    - class: determinism
+      worst_case: GetUnsafeString returns different raw bytes for identical input across calls, corrupting downstream byte-equality or hash invariants.
+      severity: medium
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-13T17:27:00Z"
@@ -48,3 +55,9 @@ lifecycle:
           to: review
           reason: ""
           changed_by: human:cli
+        - date: "2026-07-26T13:23:27Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

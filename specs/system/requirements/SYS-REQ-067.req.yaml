@@ -28,8 +28,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.340937Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:52.009965Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:282d24cf2984e828c6d87e9b1827f63cc632125544f4ce9cee336d7dd53f9407
 verification:
     assurance_level: E
     formalization_status: valid
@@ -43,7 +44,7 @@ history:
     created_at: "2026-04-14T18:00:00Z"
     last_modified_by: agent:claude
     last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: empty_input
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -51,3 +52,9 @@ lifecycle:
           to: review
           reason: Added explicit empty-input behavior for ParseString.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

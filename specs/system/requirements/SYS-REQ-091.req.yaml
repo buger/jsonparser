@@ -26,8 +26,9 @@ traces:
         - obligation_property_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.39952Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:52.344095Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:97611f91d07501080553085b4bdb606448b59e5664a22685aa67f1c6e2641638
 verification:
     assurance_level: E
     formalization_status: valid
@@ -39,9 +40,9 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-21T00:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-21T00:00:00Z"
-obligation_class: nil_safety
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:39Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-21T00:00:00Z"
@@ -49,3 +50,9 @@ lifecycle:
           to: review
           reason: Added nil-safety obligation for GetString.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nil_safety

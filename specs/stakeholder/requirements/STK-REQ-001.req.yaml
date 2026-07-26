@@ -13,13 +13,17 @@ informal_verification:
     verified: false
 component: parser
 rationale: This is the core value proposition described in the project README and the primary reason to adopt jsonparser over encoding/json for dynamic payloads.
-tags: []
+tags:
+    - parser
+    - deserializer
+    - accepts_user_data
 variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.194955Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:50.608939Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:3d30713464155f6978674f567e7fb2716c34a52707ab55879278a30247c5c9df
 verification:
     assurance_level: E
     formalization_status: none
@@ -32,14 +36,151 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T16:22:41Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-04-13T16:25:24Z"
+    last_modified_at: "2026-07-26T12:53:53Z"
+obligation_checklist:
+    - boundary
+    - determinism
+    - edge_case
+    - empty_input
+    - idempotency
+    - malformed_input
+    - missing_path
+    - negative_array_index
+    - nil_safety
+    - nominal
+    - sentinel_value_boundary
+    - truncated_at_value_boundary
+    - truncated_mid_key
+    - truncated_mid_structure
+    - type_mismatch
+obligation_suppressions:
+    - id: denial_of_service_resistant
+      reason: 'Decomposed across multiple SYS-REQ leaves that bound parser time/stack: SYS-REQ-026 (best-effort recovery on malformed input around addressed token), SYS-REQ-046 (blockEnd structural-balance check); the implementation uses an iterative tokenizer in parser.go bounded by input byte length, with fuzz coverage in fuzz_test.go.'
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:02Z"
+      framework_refs:
+        - CWE CWE-400,CWE-1333
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V11.1.4
+    - id: encoding_aware
+      reason: Decomposed at SYS-REQ-024 (escaped object-member key matching exercises decoded-key equality against escaped JSON); jsonparser handles UTF-8 and JSON \u escapes via the GetString decoder path tested in escape_test.go and parser_test.go.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:02Z"
+      framework_refs:
+        - CWE CWE-176,CWE-180,CWE-838
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: length_prefix_validated
+      reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:56Z"
+      framework_refs:
+        - CWE CWE-130,CWE-805,CWE-119
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 21.18
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: malformed_recovers_or_errors_loudly
+      reason: Decomposed at SYS-REQ-026 (documented best-effort success/not-found preservation outside addressed token), SYS-REQ-041-043 (truncated-at-value-boundary, mid-structure, mid-key handling) and SYS-REQ-029/031 (callback-based malformed input); the malformed-input policy is best-effort recovery and is verified via parser_error_test.go.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:02Z"
+      framework_refs:
+        - CWE CWE-20,CWE-755
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10,SI-11
+        - OWASP-ASVS-v4 V5.1.3,V5.5.3
+    - id: polymorphic_type_whitelist
+      reason: jsonparser exposes raw byte slices and JSON token types; it never instantiates Go types from a discriminator field, so no polymorphic deserialization attack surface exists in the API.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:56Z"
+      framework_refs:
+        - CWE CWE-502,CWE-915
+        - IEC-62304 §5.3.1
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.5.1,V5.5.2
+    - id: recursion_depth_bounded
+      reason: Decomposed at SYS-REQ-046 (blockEnd helper enforces structural recursion bounds across nested objects and arrays); the implementation uses an iterative byte-pointer tokenizer in parser.go that does not native-recurse on JSON nesting depth, so deep payloads cannot overflow the goroutine stack.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:03Z"
+      framework_refs:
+        - CWE CWE-674,CWE-400
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V5.5.3
+    - id: reference_cycle_safe
+      reason: JSON RFC 8259 has no reference or alias syntax; cycles cannot exist in a well-formed JSON document and jsonparser does not perform any $ref or anchor expansion.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:56Z"
+      framework_refs:
+        - CWE CWE-674,CWE-1325
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V5.5.3
+    - id: untrusted_input_bounded
+      reason: jsonparser's API takes a caller-provided []byte slice and processes it in-place; size enforcement is the caller's responsibility (delegated to the surrounding HTTP / queue handler); the parser itself processes bounded byte slices and never instantiates Go types from the input, so the deserializer schema-bound concern of this catalog class does not apply at the library layer.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:03Z"
+      framework_refs:
+        - CWE CWE-502,CWE-20
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.5.1,V5.5.3
+obligation_hazards:
+    - class: boundary
+      worst_case: Value at exactly len(data) makes tokenEnd return len(data); an omitted bounds check slices data[offset:endOffset] past the buffer end and panics with index-out-of-range.
+      severity: medium
+    - class: determinism
+      worst_case: lastMatched state in searchKeys leaks across sibling object keys, so two Get calls on identical []byte can resolve to different value slices for the same path.
+      severity: medium
+    - class: edge_case
+      worst_case: Get on a bare scalar payload ("null"/"true") with no key path regresses the no-keys fast path to return an empty slice or wrong ValueType instead of the scalar bytes.
+      severity: medium
+    - class: empty_input
+      worst_case: Get on a zero-length []byte drives internalGet nextToken to -1; the subsequent data[offset] dereference in getType panics with index-out-of-range on the empty slice.
+      severity: high
+    - class: idempotency
+      worst_case: Returned value slice aliases the input buffer via value[:len(value):len(value)]; a caller mutating the buffer between calls sees the prior Get result silently change.
+      severity: medium
+    - class: malformed_input
+      worst_case: Adversarial JSON like {"a":,} drives searchKeys data[i] dereference on a delimiter with no following value, replicating the OSS-Fuzz Delete panic class on Get.
+      severity: high
+    - class: missing_path
+      worst_case: A stale valueFound from a prior sibling match in the same call leaves Get returning a wrong-key byte slice instead of KeyPathNotFoundError, silently corrupting downstream decoding.
+      severity: medium
+    - class: negative_array_index
+      worst_case: Path [-1] parses to aIdx=-1 via strconv.Atoi with no sign check; the curIdx match never fires and stale valueOffset arithmetic can panic on stale-offset dereference.
+      severity: high
+    - class: nil_safety
+      worst_case: Get(nil) flows into searchKeys; nextToken on the nil slice returns -1 and getType(nil,0) data[offset] dereference panics with nil-slice index-out-of-range.
+      severity: high
+    - class: sentinel_value_boundary
+      worst_case: When searchKeys/blockEnd/nextToken return the -1 sentinel for not-found, internalGet/ArrayEach dereference data[offset] without re-checking offset>=0 (the OSS-Fuzz Delete panic class).
+      severity: high
+    - class: truncated_at_value_boundary
+      worst_case: 'Payload like {"a": with no value drives nextToken to -1 on the remainder; the subsequent data[offset] dereference in getType panics with index-out-of-range.'
+      severity: high
+    - class: truncated_mid_key
+      worst_case: Payload like {"key with no closing quote drives stringEnd to -1; if the break guard regresses, searchKeys continues and dereferences data[i] past len(data), crashing the process.
+      severity: high
+    - class: truncated_mid_structure
+      worst_case: Payload like {"a":[1,2 with no matching close bracket drives blockEnd to -1; if the return-check regresses the unbounded loop dereferences past the buffer end, crashing the parser.
+      severity: high
+    - class: type_mismatch
+      worst_case: Get on a JSON String where the caller expected Number returns quoted bytes; strconv.ParseInt on the quoted token silently returns 0 instead of an explicit type error.
+      severity: medium
+verification_state: passing
 stakeholder:
     persona: Go developers consuming dynamic JSON payloads
     story: As a Go developer consuming unpredictable JSON APIs, I want to retrieve nested values by key path without predeclaring structs so that I can process payloads directly from byte slices.
     acceptance_criteria:
         - id: AC-1
           text: A caller can request a nested value by path from a JSON byte slice and receive the correct value, not-found result, or parsing error for the addressed input case.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-001
             - SYS-REQ-016
@@ -65,22 +206,6 @@ stakeholder:
             - SYS-REQ-087
             - SYS-REQ-088
             - SYS-REQ-089
-    obligation_checklist:
-        - nominal
-        - missing_path
-        - malformed_input
-        - truncated_at_value_boundary
-        - truncated_mid_structure
-        - truncated_mid_key
-        - empty_input
-        - boundary
-        - type_mismatch
-        - negative_array_index
-        - sentinel_value_boundary
-        - determinism
-        - idempotency
-        - nil_safety
-        - edge_case
 lifecycle:
     change_history:
         - date: "2026-04-13T16:25:24Z"
@@ -88,3 +213,8 @@ lifecycle:
           to: review
           reason: ""
           changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive

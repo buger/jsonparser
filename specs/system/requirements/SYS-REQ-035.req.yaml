@@ -30,8 +30,9 @@ traces:
         - mcdc_supplement_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.27977Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.596111Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ddc2c6888d4f30cf390c4e86c065980a8488cca6586fe6e1a76bf6aa94e4433b
 verification:
     assurance_level: E
     formalization_status: valid
@@ -43,9 +44,15 @@ verification:
 history:
     created_by: agent:codex
     created_at: "2026-04-14T15:45:00Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: malformed_input
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:17Z"
+obligation_checklist:
+    - malformed_input
+obligation_hazards:
+    - class: malformed_input
+      worst_case: Delete on adversarial input like ,{"test":1{}} drives findTokenStart/tokenEnd to stale offsets; the unguarded data[prevTok] dereference (parser.go:907) panics with index-out-of-range — the OSS-Fuzz witness shape.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -53,3 +60,9 @@ lifecycle:
           to: review
           reason: Added explicit unusable-input and no-panic behavior for Delete.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=2; known_issue:KI-1=none | tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

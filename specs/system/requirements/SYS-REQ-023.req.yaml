@@ -31,25 +31,51 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.256398Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.448Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b71fdbd721fed88507cf0580c6321016bdf7fc483a48672ce2dec5e28c0d4ece
 verification:
     assurance_level: B
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        role: system_owner
-        reviewed_at: "2026-04-18T10:12:51Z"
-        comment: 'Dogfooding: Get lookup behavior reviewed and complete'
-        fingerprint: sha256:a9fd0a8264848951f6fbd22cbc23967bb336901bc18664986e933990025f4c54
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T15:21:06Z"
+        comment: 'Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)'
+        fingerprint: sha256:abfe40149e81cb74346d0b37b781dfad12c2cab8e1d2a9ac6e5c32e8a6c9fb53
         ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+        motivation_history:
+            - kind: unchanged
+              rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T14:36:40Z"
+              superseded_by: human:buger
+            - kind: unchanged
+              rationale: 'L3 strict sweep: obligation decomposition + verification-state alignment completed; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T15:21:06Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-04-18T10:12:51Z"
-obligation_class: boundary
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T15:21:07Z"
+obligation_checklist:
+    - boundary
+    - edge_case
+obligation_hazards:
+    - class: boundary
+      worst_case: Get with path [5] on [1,2,3] returns the last element instead of not-found due to an off-by-one in the array bounds check, masking an out-of-range access as a valid value.
+      severity: medium
+    - class: edge_case
+      worst_case: Get on a single-element array with index [0] returns wrong element due to off-by-one in i+1 increment, or panics on [1] due to unchecked post-increment dereference.
+      severity: medium
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T00:00:00Z"
@@ -57,3 +83,24 @@ lifecycle:
           to: review
           reason: Added explicit out-of-bounds array-index behavior for Get.
           changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T14:36:40Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T12:44:03Z comment="Re-approved under L3 strict posture; content re-reviewed against current formalization")'
+          changed_by: human:buger
+        - date: "2026-07-26T15:21:06Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T14:36:40Z comment="Re-approved after obligation/verification-state alignment under L3 strict posture")'
+          changed_by: human:buger
+obligation_class: boundary

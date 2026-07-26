@@ -6,6 +6,7 @@ import (
 )
 
 // Verifies: SYS-REQ-009 [example]
+// STK-REQ-005:AC-1:acceptance
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=F, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=F => TRUE
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=T, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=F => FALSE
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=T, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=T => TRUE

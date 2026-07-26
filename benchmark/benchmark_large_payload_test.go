@@ -27,6 +27,7 @@ import (
 // MCDC STK-REQ-003: N/A
 // Verifies: STK-REQ-004
 // MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -51,6 +52,7 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 // MCDC STK-REQ-003: N/A
 // Verifies: STK-REQ-004
 // MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonStructLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data LargePayload
@@ -72,6 +74,7 @@ func BenchmarkEncodingJsonStructLarge(b *testing.B) {
 // MCDC STK-REQ-003: N/A
 // Verifies: STK-REQ-004
 // MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonInterfaceLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data interface{}
@@ -100,6 +103,7 @@ func BenchmarkEncodingJsonInterfaceLarge(b *testing.B) {
 // MCDC STK-REQ-003: N/A
 // Verifies: STK-REQ-004
 // MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkFFJsonLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data LargePayload
@@ -124,6 +128,7 @@ func BenchmarkFFJsonLarge(b *testing.B) {
 // MCDC STK-REQ-003: N/A
 // Verifies: STK-REQ-004
 // MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEasyJsonLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		lexer := &jlexer.Lexer{Data: largeFixture}
@@ -149,6 +154,7 @@ func BenchmarkEasyJsonLarge(b *testing.B) {
 // MCDC STK-REQ-003: N/A
 // Verifies: STK-REQ-004
 // MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkDjsonLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		m, _ := djson.DecodeObject(largeFixture)

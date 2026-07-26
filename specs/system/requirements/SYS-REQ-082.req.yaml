@@ -26,8 +26,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.375212Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:52.200894Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:af267e89b6633081c79cada1bd494ef936b897560a9d136c9d8810eeca3a3710
 verification:
     assurance_level: E
     formalization_status: valid
@@ -39,9 +40,19 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: truncated_at_value_boundary
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:23Z"
+obligation_checklist:
+    - edge_case
+    - truncated_at_value_boundary
+obligation_hazards:
+    - class: edge_case
+      worst_case: GetUnsafeString on a 1-byte truncated value returns a wrong-length raw slice that points past the value boundary, corrupting downstream byte math.
+      severity: low
+    - class: truncated_at_value_boundary
+      worst_case: 'GetUnsafeString on {"a": (truncated value) propagates a stale offset from Get; the returned slice points past EOF and the caller''s bytes access traverses out-of-range memory.'
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -49,3 +60,9 @@ lifecycle:
           to: review
           reason: Added truncated-at-value-boundary error requirement for GetUnsafeString.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:32Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary

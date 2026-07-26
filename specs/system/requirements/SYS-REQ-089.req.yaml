@@ -27,8 +27,9 @@ traces:
         - obligation_property_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.395928Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:52.316013Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:1f65d7a10328c5fcffd20732779fcfa86abdbc789e487b03c83c756c91ea940c
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +41,9 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-21T00:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-21T00:00:00Z"
-obligation_class: edge_case
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:40Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-21T00:00:00Z"
@@ -50,3 +51,9 @@ lifecycle:
           to: review
           reason: Added deep-nesting edge case obligation for Get.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: edge_case

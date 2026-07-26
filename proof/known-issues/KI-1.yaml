@@ -1,0 +1,51 @@
+id: KI-1
+title: Empty-string key path component panics in searchKeys/EachKey/createInsertComponent/calcAllocateSpace
+affected_requirements:
+    - SYS-REQ-016
+    - SYS-REQ-008
+    - SYS-REQ-009
+    - SYS-REQ-034
+    - SYS-REQ-035
+commands:
+    - go test ./... -count=1 -race
+severity: high
+severity_basis: reproducer
+risk: availability
+cve_surface: unlikely
+affected_api: Get, GetString, GetInt, GetFloat, GetBoolean, GetUnsafeString, EachKey, Set, Delete
+attacker_input: caller-supplied key path component (variadic ...string keys argument)
+sanitizer: go-runtime-panic:index-out-of-range
+reproducer_command: go test -run 'TestGetEmptyKeyPathComponent|TestTypedGetEmptyKeyPathComponent|TestEachKeyEmptyKeyPathComponent|TestSetEmptyKeyPathComponent|TestDeleteEmptyKeyPathComponent' -count=1 ./...
+tripwire_mutation: 'Revert any of the seven len(...) > 0 guards added at parser.go:410,616,722,744,755,773,796 — the empty_key_path_test.go reproducer flips from GREEN back to PANIC (runtime error: index out of range [0] with length 0).'
+introduced_in: inception
+disclosure: private
+minimization_status: minimized
+mitigation: Applied the existing Delete-style len(...) > 0 guard to all seven unguarded keys[i][0] / p[level][0] dereference sites in parser.go
+remediation: Fixed in this change; regression tests in empty_key_path_test.go lock the panic-free degradation in.
+proof_notes: |
+    Sister fix on the same branch (commit a6c5ed3, OSS-Fuzz Delete
+    leading-comma panic) added the post-fix invariant for Delete's
+    cleanup block: every data[prevTok] dereference in parser.go
+    Delete (lines ~907-913) is fronted by a prevTok > -1 guard, so
+    the cleanup never indexes data[-1] when lastToken returns its
+    -1 sentinel on whitespace-only input. The pre-fix obligation
+    was Z3-falsifiable on (prevTok=-1, remainedTok=0) — the
+    OSS-Fuzz witness shape; the post-fix obligation
+    !(prevTok >= 0 && remainedTok >= 0) || prevTok >= 0 holds as a
+    tautology. Regression coverage lives in FuzzDeleteNative
+    (fuzz_native_test.go) and the sentinel regression tests in
+    deep_spec_test.go; the V-panic-malformed-sentinel vector
+    campaign saturated this class with zero crashes.
+customer_impact: No released version affected; defect found and fixed in the same change on the fix-oss-fuzz-delete-leading-comma branch.
+owner: human:buger
+review_date: "2026-08-26"
+release_disposition: fixed
+status: fixed
+history:
+    - at: "2026-07-26T13:13:47Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T13:14:18Z"
+      by: human:buger
+      action: edit
+      detail: set-risk,set-sanitizer,set-tripwire-mutation

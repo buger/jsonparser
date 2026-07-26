@@ -13,13 +13,17 @@ informal_verification:
     verified: false
 component: parser
 rationale: The README explicitly promises that GetString handles escaped and Unicode characters correctly, which is a user-visible contract distinct from raw byte lookup.
-tags: []
+tags:
+    - parser
+    - deserializer
+    - accepts_user_data
 variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.19831Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:50.76848Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:4cd8e7265aed2c3bdc789c99df2135d66c4345a34d1e74ceb57ce2196631cb9e
 verification:
     assurance_level: E
     formalization_status: none
@@ -32,14 +36,126 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:09:09Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-04-13T17:14:56Z"
+    last_modified_at: "2026-07-26T12:53:52Z"
+obligation_checklist:
+    - determinism
+    - edge_case
+    - empty_input
+    - encoding_safety
+    - malformed_input
+    - nil_safety
+    - nominal
+    - truncated_escape_sequence
+    - type_mismatch
+obligation_suppressions:
+    - id: denial_of_service_resistant
+      reason: Decomposed at SYS-REQ-038 (ParseString malformed-token error) and SYS-REQ-074 (string decoding bounds); GetString runs the same iterative tokenizer + decoder, bounded by the caller's []byte slice length, with fuzz coverage of escape decoding in fuzz_test.go.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:18Z"
+      framework_refs:
+        - CWE CWE-400,CWE-1333
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V11.1.4
+    - id: encoding_aware
+      reason: Decomposed at SYS-REQ-073 (Unicode escape \uXXXX decoding) and SYS-REQ-038 (ParseString malformed encoded literal); GetString decodes JSON escapes (\n, \u, surrogate pairs) into valid UTF-8 Go strings, with explicit malformed-encoding rejection via MalformedStringEscapeError.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:18Z"
+      framework_refs:
+        - CWE CWE-176,CWE-180,CWE-838
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: length_prefix_validated
+      reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:56Z"
+      framework_refs:
+        - CWE CWE-130,CWE-805,CWE-119
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 21.18
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: malformed_recovers_or_errors_loudly
+      reason: Decomposed at SYS-REQ-038 (ParseString returns documented MalformedStringError), SYS-REQ-093 (truncated escape sequence handling); GetString fails-loud on invalid escape sequences rather than returning partial decoded output.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:19Z"
+      framework_refs:
+        - CWE CWE-20,CWE-755
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10,SI-11
+        - OWASP-ASVS-v4 V5.1.3,V5.5.3
+    - id: polymorphic_type_whitelist
+      reason: jsonparser exposes raw byte slices and JSON token types; it never instantiates Go types from a discriminator field, so no polymorphic deserialization attack surface exists in the API.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:57Z"
+      framework_refs:
+        - CWE CWE-502,CWE-915
+        - IEC-62304 §5.3.1
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.5.1,V5.5.2
+    - id: recursion_depth_bounded
+      reason: GetString resolves a single string value at the addressed path via the same iterative path-walker as Get; nesting bounds are enforced by SYS-REQ-046 (blockEnd) shared with the lookup chain in STK-REQ-001.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:19Z"
+      framework_refs:
+        - CWE CWE-674,CWE-400
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V5.5.3
+    - id: reference_cycle_safe
+      reason: JSON RFC 8259 has no reference or alias syntax; cycles cannot exist in a well-formed JSON document and jsonparser does not perform any $ref or anchor expansion.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:57Z"
+      framework_refs:
+        - CWE CWE-674,CWE-1325
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V5.5.3
+    - id: untrusted_input_bounded
+      reason: GetString returns a Go string copy of decoded bytes; no Go-type instantiation from a discriminator occurs and the input []byte is caller-bounded; the schema-enforcement aspect of this catalog class does not apply at the helper-API layer.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:19Z"
+      framework_refs:
+        - CWE CWE-502,CWE-20
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.5.1,V5.5.3
+obligation_hazards:
+    - class: determinism
+      worst_case: Two GetString calls on identical input must return byte-identical Go strings; a regression in the Unescape path (surrogate-pair handling diverging between stack and heap allocations) produces different decoded output.
+      severity: medium
+    - class: edge_case
+      worst_case: GetString on an empty JSON string value ("") regresses to returning NullValueError or an empty slice instead of the empty Go string, breaking the empty-string boundary.
+      severity: medium
+    - class: empty_input
+      worst_case: GetString on a zero-length []byte drives Get to internalGet to nextToken=-1; the follow-on getType dereference panics with index-out-of-range on the empty slice.
+      severity: high
+    - class: encoding_safety
+      worst_case: Malformed UTF-8 inside a JSON string value (lone continuation byte) is passed through Unescape without normalization; the returned Go string contains invalid UTF-8, corrupting downstream string operations.
+      severity: high
+    - class: malformed_input
+      worst_case: Adversarial JSON like {"k":"\\q"} drives Unescape to MalformedStringEscapeError; if error propagation regresses, GetString returns a corrupt decoded string or panics on the bad escape offset.
+      severity: high
+    - class: nil_safety
+      worst_case: GetString(nil, ...) flows straight through Get to internalGet to searchKeys nil-slice loop; getType(nil,0) data[offset] dereference panics with nil-slice index-out-of-range.
+      severity: high
+    - class: truncated_escape_sequence
+      worst_case: Truncated \u escape at end of string ("abc\u31") drives Unescape hex-digit scan past the buffer end; if the bounds check regresses the parser reads past len(data) and panics with slice-bounds error.
+      severity: high
+    - class: type_mismatch
+      worst_case: GetString on a JSON Number or Boolean returns the documented type error or silently coerces the raw bytes; callers expecting a string field read garbage from a numeric value.
+      severity: medium
 stakeholder:
     persona: Go developers reading string fields from dynamic JSON payloads
     story: As a Go developer reading JSON string fields, I want escaped and Unicode content decoded into normal Go strings so that application code does not need to manually unescape payload bytes.
     acceptance_criteria:
         - id: AC-1
           text: A caller can request a string field and receive the correctly decoded Go string, including escaped and Unicode content, or an error when string access is invalid.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-002
             - SYS-REQ-071
@@ -50,16 +166,6 @@ stakeholder:
             - SYS-REQ-091
             - SYS-REQ-092
             - SYS-REQ-093
-    obligation_checklist:
-        - nominal
-        - malformed_input
-        - truncated_escape_sequence
-        - type_mismatch
-        - empty_input
-        - determinism
-        - nil_safety
-        - encoding_safety
-        - edge_case
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"

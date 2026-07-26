@@ -1,0 +1,17 @@
+id: error_propagation
+catalog_version: 1
+category: property
+order: 8000
+status: active
+name: error_propagation
+summary: Errors returned by internalGet must short-circuit the caller (Set/Delete) to the safe fallback, never be discarded via `_ =`.
+description: |
+  Cross-cuts every truncation and sentinel scenario: when internalGet returns
+  a non-nil error, the calling mutator (Set/Delete) must branch on that error
+  and return the original input unchanged (SYS-REQ-049), rather than assign
+  it to `_` and proceed with offsets that internalGet never populated. The
+  PR #280 Delete panic was enabled precisely because the error was discarded
+  and the subsequent `data[endOffset+tokEnd]` index was treated as valid.
+  This property is the defense-in-depth invariant that makes the
+  sentinel_value_boundary and truncated_* scenarios safe even when an
+  individual bounds check is missed.

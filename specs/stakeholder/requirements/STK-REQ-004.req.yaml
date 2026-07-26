@@ -16,12 +16,16 @@ rationale: The traversal helpers and EachKey are part of the library's value pro
 tags:
     - traversal
     - decomposition
+    - parser
+    - deserializer
+    - accepts_user_data
 variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.202291Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:50.798306Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:f08c49882a94cffe3b2287107eec8f63c9c9deea43716b8c1b63f4b1f747e3ec
 verification:
     assurance_level: E
     formalization_status: none
@@ -33,15 +37,135 @@ verification:
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:10:34Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T12:54:17Z"
+obligation_checklist:
+    - callback_error_propagation
+    - determinism
+    - edge_case
+    - empty_input
+    - malformed_input
+    - nil_safety
+    - nominal
+    - sentinel_value_boundary
+    - truncated_at_value_boundary
+    - truncated_mid_element
+    - truncated_mid_structure
+obligation_suppressions:
+    - id: denial_of_service_resistant
+      reason: Decomposed at SYS-REQ-029 (ArrayEach malformed input → error), SYS-REQ-031 (ObjectEach malformed input → error), SYS-REQ-053/054 (truncated mid-element handling); traversal helpers iterate via the bounded iterative tokenizer and emit at most one callback per element.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:32Z"
+      framework_refs:
+        - CWE CWE-400,CWE-1333
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V11.1.4
+    - id: encoding_aware
+      reason: ArrayEach / ObjectEach pass raw value byte slices to the caller without decoding; encoding correctness is delegated to the caller-chosen accessor (GetString covered by STK-REQ-002 / SYS-REQ-073) which the callback typically invokes for string fields.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:32Z"
+      framework_refs:
+        - CWE CWE-176,CWE-180,CWE-838
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: length_prefix_validated
+      reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:57Z"
+      framework_refs:
+        - CWE CWE-130,CWE-805,CWE-119
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 21.18
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: malformed_recovers_or_errors_loudly
+      reason: Decomposed at SYS-REQ-029 (ArrayEach malformed → error), SYS-REQ-031 (ObjectEach malformed → error), SYS-REQ-053 (array element truncated → error), SYS-REQ-054 (object entry truncated → error); the traversal helpers fail-loud on malformed structure rather than swallowing partial state.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:32Z"
+      framework_refs:
+        - CWE CWE-20,CWE-755
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10,SI-11
+        - OWASP-ASVS-v4 V5.1.3,V5.5.3
+    - id: polymorphic_type_whitelist
+      reason: jsonparser exposes raw byte slices and JSON token types; it never instantiates Go types from a discriminator field, so no polymorphic deserialization attack surface exists in the API.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:58Z"
+      framework_refs:
+        - CWE CWE-502,CWE-915
+        - IEC-62304 §5.3.1
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.5.1,V5.5.2
+    - id: recursion_depth_bounded
+      reason: ArrayEach / ObjectEach iterate one structural level via the iterative tokenizer; for nested traversal the caller invokes ArrayEach again from inside its callback, so depth bound is the caller's call-stack rather than a parser-internal recursion — the parser itself does not native-recurse on JSON nesting.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:33Z"
+      framework_refs:
+        - CWE CWE-674,CWE-400
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V5.5.3
+    - id: reference_cycle_safe
+      reason: JSON RFC 8259 has no reference or alias syntax; cycles cannot exist in a well-formed JSON document and jsonparser does not perform any $ref or anchor expansion.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:06:58Z"
+      framework_refs:
+        - CWE CWE-674,CWE-1325
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V5.5.3
+    - id: untrusted_input_bounded
+      reason: Traversal helpers expose raw value byte slices; no Go-type instantiation from input occurs and the input []byte is caller-bounded; deserializer-style schema enforcement is delegated to the caller's typed accessor selection.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:33Z"
+      framework_refs:
+        - CWE CWE-502,CWE-20
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.5.1,V5.5.3
+obligation_hazards:
+    - class: callback_error_propagation
+      worst_case: If ObjectEach/ArrayEach swallow a callback returned error and continue iterating, the next iteration invokes the callback on stale offset state, corrupting traversal and dereferencing past the buffer end.
+      severity: high
+    - class: determinism
+      worst_case: EachKey callback order on identical input must be deterministic; a regression in pathFlags match order produces callbacks in different order across calls, breaking deterministic processing.
+      severity: medium
+    - class: edge_case
+      worst_case: ArrayEach on a single-element array must invoke the callback exactly once; a regression in the post-callback offset arithmetic invokes it twice or zero times, breaking the count contract.
+      severity: medium
+    - class: empty_input
+      worst_case: ArrayEach on a zero-length []byte returns MalformedObjectError via the early guard; if the guard regresses nextToken returns -1 and the follow-on data[offset] dereference panics on the empty slice.
+      severity: high
+    - class: malformed_input
+      worst_case: ArrayEach on adversarial JSON like [1,2,,] drives Get to a parse error mid-array; if the error-propagation guard regresses the loop continues past the malformed token and dereferences data[offset] past len(data).
+      severity: high
+    - class: nil_safety
+      worst_case: ObjectEach(nil,...) flows through searchKeys nil-slice loop; the subsequent nextToken/data[offset] dereference panics with nil-slice index-out-of-range.
+      severity: high
+    - class: sentinel_value_boundary
+      worst_case: When searchKeys or blockEnd returns -1 sentinel for malformed structure, ArrayEach/EachKey dereference data[offset] without re-checking offset>=0 (the OSS-Fuzz Delete panic class).
+      severity: high
+    - class: truncated_at_value_boundary
+      worst_case: Truncated JSON like [1,2 with no closing bracket drives nextToken in ArrayEach to -1; the follow-on data[offset] dereference panics with index-out-of-range on the truncated remainder.
+      severity: high
+    - class: truncated_mid_element
+      worst_case: Truncated JSON like [1,"abc with no closing string mid-element drives Get to stringEnd returning -1; the follow-on data[offset] dereference in ArrayEach panics past the buffer end.
+      severity: high
+    - class: truncated_mid_structure
+      worst_case: Truncated JSON like {"a":[1,2 with no matching close bracket drives blockEnd to -1; if the guard regresses the unbounded loop dereferences past the buffer end, crashing the process.
+      severity: high
 stakeholder:
     persona: Go developers traversing dynamic JSON structures
     story: As a Go developer inspecting dynamic JSON payloads, I want traversal helpers that iterate arrays and objects and resolve multiple paths in one scan so that I can process payloads without writing custom walkers.
     acceptance_criteria:
         - id: AC-1
           text: A caller can iterate an addressed JSON array in encounter order, receive no callbacks for a well-formed empty addressed array, and receive an error for malformed or otherwise unusable array input.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-006
             - SYS-REQ-028
@@ -52,7 +176,7 @@ stakeholder:
             - SYS-REQ-083
         - id: AC-2
           text: A caller can iterate an addressed JSON object and receive the correct key, value, and value type tuples for well-formed entries, no entries for well-formed empty objects, propagated callback errors, and an error for malformed or otherwise unusable object input.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-007
             - SYS-REQ-030
@@ -62,25 +186,13 @@ stakeholder:
             - SYS-REQ-084
         - id: AC-3
           text: A caller can request multiple key paths from one payload scan and receive the correct found or missing-path behavior for each requested path.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-008
             - SYS-REQ-085
             - SYS-REQ-097
             - SYS-REQ-098
             - SYS-REQ-099
-    obligation_checklist:
-        - nominal
-        - empty_input
-        - malformed_input
-        - truncated_at_value_boundary
-        - truncated_mid_structure
-        - truncated_mid_element
-        - callback_error_propagation
-        - sentinel_value_boundary
-        - determinism
-        - nil_safety
-        - edge_case
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"

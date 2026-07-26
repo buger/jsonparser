@@ -29,8 +29,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.226669Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.111821Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:2e5712bda661f70ca2a07e980f58d5b71684ce538ff4e4938be684f06d2f22be
 verification:
     assurance_level: E
     formalization_status: valid
@@ -44,7 +45,7 @@ history:
     created_at: "2026-04-13T17:10:56Z"
     last_modified_by: agent:codex
     last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: nominal
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"
@@ -57,3 +58,9 @@ lifecycle:
           to: review
           reason: Narrowed ObjectEach success behavior to the non-empty entry-reporting case.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

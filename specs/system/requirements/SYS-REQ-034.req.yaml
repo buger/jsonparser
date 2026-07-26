@@ -29,8 +29,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.276457Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.583974Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:d23acb4c95dca4a4045a4e0c09776d049c18153bb356b088253db825b028a6c9
 verification:
     assurance_level: E
     formalization_status: valid
@@ -42,9 +43,19 @@ verification:
 history:
     created_by: agent:codex
     created_at: "2026-04-14T15:45:00Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: missing_path
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:17Z"
+obligation_checklist:
+    - edge_case
+    - missing_path
+obligation_hazards:
+    - class: edge_case
+      worst_case: Delete on an object whose only key is the absent target rewrites the payload (e.g. drops a sibling key in cleanup), silently corrupting the document.
+      severity: low
+    - class: missing_path
+      worst_case: Delete on a missing nested path descends into the intermediate structure and corrupts a sibling by deleting the wrong key, producing a wrong document.
+      severity: low
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -52,3 +63,9 @@ lifecycle:
           to: review
           reason: Added explicit missing-target preservation behavior for Delete.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=2; known_issue:KI-1=none | tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: missing_path

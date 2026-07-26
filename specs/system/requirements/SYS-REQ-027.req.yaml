@@ -28,25 +28,47 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.264516Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:51.499144Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:6b19cfb58bedfde5e4fbfa79b54b19cac9e38ba7a821a4ad2e93149ffe19c023
 verification:
     assurance_level: B
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        role: system_owner
-        reviewed_at: "2026-04-18T10:12:52Z"
-        comment: 'Dogfooding: Get lookup behavior reviewed and complete'
-        fingerprint: sha256:59298826dec2ca7db7c1f195d87d0ea4d2119f4a771466d48a7073a9bcc1f5d6
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T15:21:06Z"
+        comment: 'Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)'
+        fingerprint: sha256:bc981396e40abedd99455b6623b2e50f06e9fbd4563243ffe2b72c56278ee288
         ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+        motivation_history:
+            - kind: unchanged
+              rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T14:36:40Z"
+              superseded_by: human:buger
+            - kind: unchanged
+              rationale: 'L3 strict sweep: obligation decomposition + verification-state alignment completed; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T15:21:06Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-04-18T10:12:52Z"
-obligation_class: type_mismatch
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T15:21:07Z"
+obligation_checklist:
+    - type_mismatch
+obligation_hazards:
+    - class: type_mismatch
+      worst_case: Get on a leading-byte token that matches no classifier (e.g. ; at value position) returns a Number or String classification anyway, mis-routing the caller into the wrong typed accessor and producing wrong downstream values.
+      severity: medium
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T00:00:00Z"
@@ -54,3 +76,24 @@ lifecycle:
           to: review
           reason: Added explicit invalid-token-shape behavior for Get.
           changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:52Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T14:36:40Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T12:44:03Z comment="Re-approved under L3 strict posture; content re-reviewed against current formalization")'
+          changed_by: human:buger
+        - date: "2026-07-26T15:21:06Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T14:36:40Z comment="Re-approved after obligation/verification-state alignment under L3 strict posture")'
+          changed_by: human:buger
+obligation_class: type_mismatch

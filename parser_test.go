@@ -248,6 +248,23 @@ var deleteTests = []DeleteTest{
 		path: []string{"a", "b"},
 		data: `{"a":{"b":  `,
 	},
+	{
+		// OSS-Fuzz testcase 4649128545288192: leading garbage comma
+		// caused findTokenStart to return offset 0, which then made the
+		// trailing-comma cleanup branch reassign keyOffset=0, which made
+		// lastToken(data[:0]) return -1, which made data[prevTok] panic
+		// with "index out of range [-1]" at parser.go.
+		desc: "OSS-Fuzz: leading-comma malformed input must not panic in Delete",
+		json: `,{"test":1{}`,
+		path: []string{"test"},
+		data: `}`,
+	},
+	{
+		desc: "OSS-Fuzz variant: leading comma + empty string then object must not panic in Delete",
+		json: `,""{"test":0}`,
+		path: []string{"test"},
+		data: `}`,
+	},
 }
 
 var setTests = []SetTest{
@@ -1332,6 +1349,7 @@ func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner fu
 }
 
 // Verifies: SYS-REQ-010 [example]
+// STK-REQ-005:AC-2:acceptance
 // MCDC SYS-REQ-010: delete_path_is_provided=F, delete_returns_empty_document_without_path=T => TRUE
 // Verifies: SYS-REQ-033 [example]
 // MCDC SYS-REQ-033: delete_path_is_provided=T, delete_target_exists=T, delete_returns_document_without_target=T => TRUE
@@ -1351,6 +1369,7 @@ func TestDelete(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [example]
+// STK-REQ-001:AC-1:acceptance
 // MCDC SYS-REQ-001: addressed_path_exists=F, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=F => TRUE
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=F, key_path_is_provided=T, returns_existing_path_lookup_result=F => TRUE
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=F, returns_existing_path_lookup_result=F => TRUE
@@ -1500,6 +1519,7 @@ func TestGetRequirementSlices(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-002 [example]
+// STK-REQ-002:AC-1:acceptance
 // MCDC SYS-REQ-002: addressed_value_is_string=F, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=F => TRUE
 // MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=F, returns_getstring_decoded_value=F => TRUE
 // MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=F => FALSE
@@ -1518,6 +1538,7 @@ func TestGetString(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-011 [example]
+// STK-REQ-006:AC-1:acceptance
 // MCDC SYS-REQ-011: addressed_value_is_string=F, returns_unsafe_string_view=F => TRUE
 // MCDC SYS-REQ-011: addressed_value_is_string=T, returns_unsafe_string_view=F => FALSE
 // MCDC SYS-REQ-011: addressed_value_is_string=T, returns_unsafe_string_view=T => TRUE
@@ -1535,6 +1556,7 @@ func TestGetUnsafeString(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-003 [example]
+// STK-REQ-003:AC-1:acceptance
 // MCDC SYS-REQ-003: addressed_value_is_number=F, raw_number_token_is_integer_parseable=T, returns_getint_value=F => TRUE
 // MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=F, returns_getint_value=F => TRUE
 // MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=T, returns_getint_value=F => FALSE
@@ -1553,6 +1575,7 @@ func TestGetInt(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-004 [example]
+// STK-REQ-003:AC-2:acceptance
 // MCDC SYS-REQ-004: addressed_value_is_number=F, raw_number_token_is_float_parseable=T, returns_getfloat_value=F => TRUE
 // MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=F, returns_getfloat_value=F => TRUE
 // MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=T, returns_getfloat_value=F => FALSE
@@ -1571,6 +1594,7 @@ func TestGetFloat(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-005 [example]
+// STK-REQ-003:AC-3:acceptance
 // MCDC SYS-REQ-005: addressed_value_is_boolean=F, raw_boolean_token_is_well_formed=T, returns_getboolean_value=F => TRUE
 // MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=F, returns_getboolean_value=F => TRUE
 // MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=T, returns_getboolean_value=F => FALSE
@@ -1604,6 +1628,7 @@ func TestGetSlice(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-006 [example]
+// STK-REQ-004:AC-1:acceptance
 // MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=F => FALSE
 // MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=T => TRUE
 func TestArrayEach(t *testing.T) {
@@ -1850,6 +1875,7 @@ var objectEachTests = []ObjectEachTest{
 // Verifies: SYS-REQ-030 [example]
 // MCDC SYS-REQ-030: addressed_object_is_empty=T, addressed_object_is_well_formed=T, empty_object_produces_no_entries=T => TRUE
 // Verifies: SYS-REQ-007 [example]
+// STK-REQ-004:AC-2:acceptance
 // MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=T, object_callback_receives_entries=F => FALSE
 // MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=T, object_callback_receives_entries=T => TRUE
 func TestObjectEach(t *testing.T) {
@@ -1963,6 +1989,7 @@ var testJson = []byte(`{
 }`)
 
 // Verifies: SYS-REQ-008 [example]
+// STK-REQ-004:AC-3:acceptance
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => FALSE
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=T, multipath_requests_are_provided=T => TRUE
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=T, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => TRUE
@@ -2190,6 +2217,7 @@ func runParseTests(t *testing.T, testKind string, tests []ParseTest, runner func
 // Verifies: SYS-REQ-036 [example]
 // MCDC SYS-REQ-036: raw_boolean_literal_is_valid=F, returns_parseboolean_error=T => TRUE
 // Verifies: SYS-REQ-012 [example]
+// STK-REQ-007:AC-1:acceptance
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=F, returns_parseboolean_value=F => TRUE
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=T, returns_parseboolean_value=F => FALSE
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=T, returns_parseboolean_value=T => TRUE
@@ -2208,6 +2236,7 @@ func TestParseBoolean(t *testing.T) {
 // Verifies: SYS-REQ-037 [example]
 // MCDC SYS-REQ-037: raw_float_token_is_well_formed=F, returns_parsefloat_error=T => TRUE
 // Verifies: SYS-REQ-013 [example]
+// STK-REQ-007:AC-2:acceptance
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=F, returns_parsefloat_value=F => TRUE
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=T, returns_parsefloat_value=F => FALSE
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=T, returns_parsefloat_value=T => TRUE
@@ -2311,6 +2340,7 @@ var parseStringTest = []ParseTest{
 // Verifies: SYS-REQ-038 [example]
 // MCDC SYS-REQ-038: raw_string_literal_is_well_formed=F, returns_parsestring_error=T => TRUE
 // Verifies: SYS-REQ-014 [example]
+// STK-REQ-007:AC-3:acceptance
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=F, returns_parsestring_value=F => TRUE
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=T, returns_parsestring_value=F => FALSE
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=T, returns_parsestring_value=T => TRUE
@@ -2331,6 +2361,7 @@ func TestParseString(t *testing.T) {
 // Verifies: SYS-REQ-039 [example]
 // MCDC SYS-REQ-039: raw_int_token_overflows_int64=T, returns_parseint_overflow_error=T => TRUE
 // Verifies: SYS-REQ-015 [example]
+// STK-REQ-007:AC-4:acceptance
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=F, returns_parseint_value=F => TRUE
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=F => FALSE
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=T => TRUE

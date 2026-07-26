@@ -24,6 +24,7 @@ import (
 
 // Just for emulating field access, so it will not throw "evaluated but not used"
 // Benchmark helper for STK-REQ-001, STK-REQ-003, STK-REQ-004, STK-REQ-005, and STK-REQ-007.
+// reqproof:proptest:skip no-op benchmark helper; performs no work, returns immediately, no behavioral variance to property-test
 func nothing(_ ...interface{}) {}
 
 /*
@@ -39,6 +40,7 @@ func nothing(_ ...interface{}) {}
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		jsonparser.Get(smallFixture, "uuid")
@@ -60,6 +62,7 @@ func BenchmarkJsonParserSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserEachKeyManualSmall(b *testing.B) {
 	paths := [][]string{
 		[]string{"uuid"},
@@ -94,6 +97,7 @@ func BenchmarkJsonParserEachKeyManualSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserEachKeyStructSmall(b *testing.B) {
 	paths := [][]string{
 		[]string{"uuid"},
@@ -134,6 +138,7 @@ func BenchmarkJsonParserEachKeyStructSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserObjectEachStructSmall(b *testing.B) {
 	uuidKey, tzKey, uaKey, stKey := []byte("uuid"), []byte("tz"), []byte("ua"), []byte("st")
 	errStop := errors.New("stop")
@@ -182,6 +187,7 @@ func BenchmarkJsonParserObjectEachStructSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserSetSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		jsonparser.Set(smallFixture, []byte(`"c90927dd-1588-4fe7-a14f-8a8950cfcbd8"`), "uuid")
@@ -203,6 +209,7 @@ func BenchmarkJsonParserSetSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserDelSmall(b *testing.B) {
 	fixture := make([]byte, 0, len(smallFixture))
 	b.ResetTimer()
@@ -230,6 +237,7 @@ func BenchmarkJsonParserDelSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonStructSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data SmallPayload
@@ -249,6 +257,7 @@ func BenchmarkEncodingJsonStructSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonInterfaceSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data interface{}
@@ -272,6 +281,7 @@ func BenchmarkEncodingJsonInterfaceSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkGabsSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		json, _ := gabs.ParseJSON(smallFixture)
@@ -298,6 +308,7 @@ func BenchmarkGabsSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkGoSimplejsonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		json, _ := simplejson.NewJson(smallFixture)
@@ -321,6 +332,7 @@ func BenchmarkGoSimplejsonSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkGoSimplejsonSetSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		json, _ := simplejson.NewJson(smallFixture)
@@ -347,6 +359,7 @@ func BenchmarkGoSimplejsonSetSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkFFJsonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data SmallPayload
@@ -369,6 +382,7 @@ func BenchmarkFFJsonSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJasonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		json, _ := jason.NewObjectFromBytes(smallFixture)
@@ -395,6 +409,7 @@ func BenchmarkJasonSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkUjsonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		json, _ := ujson.NewFromBytes(smallFixture)
@@ -421,6 +436,7 @@ func BenchmarkUjsonSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkDjsonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		m, _ := djson.DecodeObject(smallFixture)
@@ -441,6 +457,7 @@ func BenchmarkDjsonSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkUgirjiSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		decoder := codec.NewDecoderBytes(smallFixture, new(codec.JsonHandle))
@@ -464,6 +481,7 @@ func BenchmarkUgirjiSmall(b *testing.B) {
 // MCDC STK-REQ-005: N/A
 // Verifies: STK-REQ-007
 // MCDC STK-REQ-007: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEasyJsonSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		lexer := &jlexer.Lexer{Data: smallFixture}

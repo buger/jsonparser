@@ -1,0 +1,139 @@
+schema_version: 1
+id: DEFECT-260726-QS2V
+title: Empty-string key path component panics (hazard-sweep finding)
+introduced_in: inception
+source:
+    type: audit_finding
+    reference: 'hazard-sweep: panic_free_input_handling'
+classification:
+    defect_class: missing_validation
+    surface: security_behavior
+    severity: high
+    security_relevant: true
+root_cause:
+    missing_requirement: false
+    missing_test_partition: true
+    missing_mcdc_variable: false
+    notes: |
+        The security/hazard-sweep role identified the same panic bug class as the
+        OSS-Fuzz Delete panic (caller-controlled input -> unguarded `[]` index),
+        but on the path side. Every fuzz harness hardcodes non-empty path strings,
+        so the empty-string key component partition was never exercised. Six
+        unguarded `keys[i][0]` / `p[level][0]` dereference sites in searchKeys,
+        EachKey, createInsertComponent, and calcAllocateSpace panicked with
+        `runtime error: index out of range [0] with length 0` when a caller
+        passed an empty-string path component. The correct `len(...) > 0` guard
+        pattern already existed in Delete (parser.go:835) but was not applied
+        consistently to the other dereference sites.
+impact_analysis:
+    affected_requirements:
+        - SYS-REQ-016
+        - SYS-REQ-008
+        - SYS-REQ-009
+        - SYS-REQ-034
+        - SYS-REQ-035
+    affected_interfaces:
+        - Get
+        - GetString
+        - GetInt
+        - GetFloat
+        - GetBoolean
+        - GetUnsafeString
+        - EachKey
+        - Set
+        - Delete
+    affected_code:
+        - parser.go
+    affected_functions:
+        - searchKeys
+        - EachKey
+        - createInsertComponent
+        - calcAllocateSpace
+description: |
+    A blind discovery pass (hazard-sweep for the `panic_free_input_handling`
+    obligation class) found that passing `""` as a path component to any of
+    `Get`, `GetString`, `GetInt`, `GetFloat`, `GetBoolean`, `GetUnsafeString`,
+    `EachKey`, `Set`, or `Delete` crashed the goroutine with
+    `runtime error: index out of range [0] with length 0` because the path-side
+    code indexed `keys[i][0]` / `p[level][0]` without first checking that the
+    component string was non-empty.
+
+    Verified reproducers (pre-fix):
+      Get([]byte(`[1,2,3]`), "")                  // PANIC parser.go:409 (searchKeys)
+      Get([]byte(`{"a":[1]}`), "a", "")           // PANIC parser.go:409 (searchKeys)
+      EachKey([]byte(`[1,2,3]`), cb, []string{""})// PANIC parser.go:614
+      Set([]byte(`{}`), []byte("v"), "")          // PANIC parser.go:719 (createInsertComponent)
+
+    The root cause is identical in shape to the OSS-Fuzz Delete panic fixed
+    earlier: a caller-controlled byte reaches an unguarded slice index. The fix
+    pattern (`len(...) > 0 && ...[0] == "["`) already existed in Delete and has
+    now been applied to all seven remaining dereference sites. The hazard is
+    FIXED in this same change; the linked KnownIssue KI-260726-001 records the
+    fixed state and the regression tests in empty_key_path_test.go.
+disposition:
+    status: covered_by_requirement
+    owner: human:buger
+    requirements:
+        - SYS-REQ-016
+        - SYS-REQ-008
+        - SYS-REQ-009
+        - SYS-REQ-034
+        - SYS-REQ-035
+    evidence:
+        verified_by:
+            - empty_key_path_test.go:TestGetEmptyKeyPathComponent
+            - empty_key_path_test.go:TestTypedGetEmptyKeyPathComponent
+            - empty_key_path_test.go:TestEachKeyEmptyKeyPathComponent
+            - empty_key_path_test.go:TestSetEmptyKeyPathComponent
+            - empty_key_path_test.go:TestDeleteEmptyKeyPathComponent
+        related_known_issues:
+            - KI-1
+    reviewer: human:buger
+    reviewed_at: "2026-07-26T15:10:00Z"
+    resolution_note: |
+        Fixed. The existing Delete-style `len(...) > 0` guard was applied to all
+        seven unguarded `keys[i][0]` / `p[level][0]` dereference sites
+        (empty-key guard at parser.go:410,616,722,744,755,773,796). Regression
+        coverage in empty_key_path_test.go locks the panic-free degradation:
+        an empty-string key component now surfaces a typed not-found outcome
+        (or, for Set, a defined document) rather than an index-out-of-range
+        panic. The linked KnownIssue KI-1 is status: fixed (same change).
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-016
+        - SYS-REQ-008
+        - SYS-REQ-009
+        - SYS-REQ-034
+        - SYS-REQ-035
+    regression_tests:
+        - empty_key_path_test.go:TestGetEmptyKeyPathComponent
+        - empty_key_path_test.go:TestTypedGetEmptyKeyPathComponent
+        - empty_key_path_test.go:TestEachKeyEmptyKeyPathComponent
+        - empty_key_path_test.go:TestSetEmptyKeyPathComponent
+        - empty_key_path_test.go:TestDeleteEmptyKeyPathComponent
+    related_known_issues:
+        - KI-1
+    sibling_sweep:
+        scope:
+            - parser.go (all keys[i][0] / p[level][0] dereference sites in searchKeys, EachKey, createInsertComponent, calcAllocateSpace, Delete)
+        checked_at: "2026-07-26"
+        reviewer: human:buger
+        result: clean
+        notes: |
+            The hazard-sweep audited every caller-controlled path-component
+            dereference site; all seven unguarded sites (parser.go:410,616,722,
+            744,755,773,796) now carry the `len(...) > 0` guard pattern that
+            already existed in Delete (parser.go:835). No further live instances
+            of the unguarded-index anti-pattern remain in parser.go.
+history:
+    - at: "2026-07-26T13:12:22Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T13:13:00Z"
+      by: human:buger
+      action: enriched
+      note: 'added root_cause, impact_analysis, description; hazard fixed in-tree'
+    - at: "2026-07-26T15:10:00Z"
+      by: human:buger
+      action: closed
+      note: 'disposition -> covered_by_requirement; empty-key guard at parser.go:410,616,722,744,755,773,796 + regression in empty_key_path_test.go; KI-1 fixed'

@@ -16,12 +16,15 @@ rationale: The Parse* helpers are public token-level conversion utilities and th
 tags:
     - parse
     - decomposition
+    - parser
+    - accepts_user_data
 variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-04-27T06:25:19.208511Z"
-    reviewed_by: human:leonidbugaev
+    reviewed_at: "2026-07-26T13:25:50.888301Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:c4bcccf80f217d2a3f2a2fa7f3deca7267247483c30354f4e22f3d7f0ec90cb0
 verification:
     assurance_level: E
     formalization_status: none
@@ -33,15 +36,93 @@ verification:
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:21:50Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T12:54:17Z"
+obligation_checklist:
+    - boundary
+    - determinism
+    - edge_case
+    - empty_input
+    - encoding_safety
+    - malformed_input
+    - nil_safety
+    - nominal
+    - partial_literal
+    - truncated_escape_sequence
+obligation_suppressions:
+    - id: denial_of_service_resistant
+      reason: Decomposed at SYS-REQ-036 (ParseBoolean), SYS-REQ-037 (ParseFloat), SYS-REQ-038 (ParseString), SYS-REQ-040 (ParseInt) — each Parse* helper runs a single-pass byte scan over the caller-supplied token slice with no recursion, backtracking, or unbounded copy.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:49Z"
+      framework_refs:
+        - CWE CWE-400,CWE-1333
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V11.1.4
+    - id: encoding_aware
+      reason: Decomposed at SYS-REQ-038 (ParseString MalformedStringError on invalid encoding), SYS-REQ-067 (ParseString surrogate-pair handling); ParseInt/ParseFloat/ParseBoolean operate on ASCII tokens per RFC 8259 and reject non-ASCII via MalformedValueError.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:49Z"
+      framework_refs:
+        - CWE CWE-176,CWE-180,CWE-838
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: length_prefix_validated
+      reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:07:07Z"
+      framework_refs:
+        - CWE CWE-130,CWE-805,CWE-119
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 21.18
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: malformed_recovers_or_errors_loudly
+      reason: Decomposed at SYS-REQ-036/037/038/040 (each Parse* helper returns the documented MalformedValueError on invalid token shape), SYS-REQ-064 (ParseInt overflow error); Parse* helpers fail-loud rather than returning partial values.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:49Z"
+      framework_refs:
+        - CWE CWE-20,CWE-755
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10,SI-11
+        - OWASP-ASVS-v4 V5.1.3,V5.5.3
+obligation_hazards:
+    - class: boundary
+      worst_case: ParseInt on input like 9223372036854775808 (int64 max+1) must return OverflowIntegerError; if parseInt overflow flag regresses the result silently wraps to a negative int64.
+      severity: medium
+    - class: determinism
+      worst_case: ParseFloat on the same numeric token must return the same float64 across calls; a regression in parseFloat rounding direction produces non-deterministic results across calls.
+      severity: medium
+    - class: edge_case
+      worst_case: ParseBoolean on the empty token []byte returns (false, MalformedValueError); a regression returns (false,nil) and silently misreads empty input as boolean false.
+      severity: medium
+    - class: empty_input
+      worst_case: ParseInt on a zero-length []byte drives parseInt to ok=false; the caller receives MalformedValueError but a regression silently returns 0 instead, masking the empty-input case.
+      severity: medium
+    - class: encoding_safety
+      worst_case: ParseString on a JSON string containing invalid UTF-8 bytes passes them through Unescape; the returned Go string contains invalid UTF-8, corrupting downstream rendering and string operations.
+      severity: high
+    - class: malformed_input
+      worst_case: ParseFloat on a token like 1.2.3 drives parseFloat to error; a regression in the malformed check returns 1.2 (the partial parse) instead of MalformedValueError, silently corrupting numeric output.
+      severity: medium
+    - class: nil_safety
+      worst_case: ParseString(nil) flows into Unescape(b, stackbuf[:]); the b[i] dereference inside Unescape panics with nil-slice index-out-of-range on the nil token.
+      severity: high
+    - class: partial_literal
+      worst_case: ParseBoolean on a truncated tru or fals token fails bytes.Equal and returns MalformedValueError; a regression in the partial-literal check feeds the truncated bytes to a downstream consumer that panics on the short slice.
+      severity: high
+    - class: truncated_escape_sequence
+      worst_case: ParseString on a token ending in a truncated u-escape like abc\u31 drives Unescape hex-digit scan past the token end; if the bounds check regresses the parser reads past len(b) and panics.
+      severity: high
 stakeholder:
     persona: Go developers converting raw JSON scalar tokens into typed values
     story: As a Go developer working with raw JSON scalar tokens, I want Parse helpers that convert boolean, integer, float, and string tokens into Go values with deterministic malformed-input behavior so that I can safely reuse the parser below full document traversal.
     acceptance_criteria:
         - id: AC-1
           text: A caller can parse raw boolean tokens through ParseBoolean and receive the expected bool value or the documented malformed-token error.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-012
             - SYS-REQ-036
@@ -49,14 +130,14 @@ stakeholder:
             - SYS-REQ-066
         - id: AC-2
           text: A caller can parse raw floating-point tokens through ParseFloat and receive the expected float64 value or the documented malformed-token error.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-013
             - SYS-REQ-037
             - SYS-REQ-065
         - id: AC-3
           text: A caller can parse raw string tokens through ParseString and receive the expected decoded Go string value or the documented malformed-token error.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-014
             - SYS-REQ-038
@@ -67,7 +148,7 @@ stakeholder:
             - SYS-REQ-067
         - id: AC-4
           text: A caller can parse raw integer tokens through ParseInt and receive the expected int64 value, the documented overflow error, or the documented malformed-token error.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-015
             - SYS-REQ-039
@@ -79,17 +160,6 @@ stakeholder:
             - SYS-REQ-107
             - SYS-REQ-108
             - SYS-REQ-109
-    obligation_checklist:
-        - nominal
-        - malformed_input
-        - boundary
-        - partial_literal
-        - truncated_escape_sequence
-        - empty_input
-        - determinism
-        - nil_safety
-        - encoding_safety
-        - edge_case
 lifecycle:
     change_history:
         - date: "2026-04-13T17:27:00Z"
