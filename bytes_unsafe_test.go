@@ -18,13 +18,11 @@ var (
 )
 
 // Test helper for SYS-REQ-001 and SYS-REQ-008.
-// reqproof:proptest:skip test-helper wrapping the safe equalStr implementation; thin delegation already covered by the underlying production function
 func bytesEqualStrSafe(abytes []byte, bstr string) bool {
 	return bstr == string(abytes)
 }
 
 // Test helper for SYS-REQ-001 and SYS-REQ-008.
-// reqproof:proptest:skip test-helper wrapping the unsafe equalStr implementation; thin delegation already covered by the underlying production function
 func bytesEqualStrUnsafeSlower(abytes *[]byte, bstr string) bool {
 	aslicehdr := (*reflect.SliceHeader)(unsafe.Pointer(abytes))
 	astrhdr := reflect.StringHeader{Data: aslicehdr.Data, Len: aslicehdr.Len}
@@ -33,7 +31,6 @@ func bytesEqualStrUnsafeSlower(abytes *[]byte, bstr string) bool {
 
 // Verifies: SYS-REQ-001
 // MCDC SYS-REQ-001: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEqual(t *testing.T) {
 	if !equalStr(&[]byte{}, "") {
 		t.Errorf(`equalStr("", ""): expected true, obtained false`)
@@ -58,7 +55,6 @@ func TestEqual(t *testing.T) {
 
 // Verifies: SYS-REQ-001
 // MCDC SYS-REQ-001: N/A
-// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEqualStr(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		equalStr(&benchmarkBytes, benchmarkString)
@@ -68,7 +64,6 @@ func BenchmarkEqualStr(b *testing.B) {
 // Alternative implementation without using unsafe
 // Verifies: SYS-REQ-001
 // MCDC SYS-REQ-001: N/A
-// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkBytesEqualStrSafe(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		bytesEqualStrSafe(benchmarkBytes, benchmarkString)
@@ -78,7 +73,6 @@ func BenchmarkBytesEqualStrSafe(b *testing.B) {
 // Alternative implementation using unsafe, but that is slower than the current implementation
 // Verifies: SYS-REQ-001
 // MCDC SYS-REQ-001: N/A
-// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkBytesEqualStrUnsafeSlower(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		bytesEqualStrUnsafeSlower(&benchmarkBytes, benchmarkString)

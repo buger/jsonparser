@@ -110,6 +110,38 @@ project:
         # missing worst-case surfaces as a finding instead of a silent gap.
         hazard_consequence:
             require_worst_case_scope: all
+        # Promote every remaining check to enabled + warning so the audit
+        # surface is fully honest (no silently-disabled gates). Each was
+        # verified PASS on this project; keeping them on catches regressions.
+        change_evidence_complete:
+            enabled: true
+            severity: warning
+        code_signal_obligations_reviewed:
+            enabled: true
+            severity: warning
+        code_signal_unbindable:
+            enabled: true
+            severity: warning
+        description_grammar_enumeration_complete:
+            enabled: true
+            severity: warning
+        no_authored_change_surface_reviewed:
+            enabled: true
+            severity: warning
+        property_fixtures_exist:
+            enabled: true
+            severity: warning
+        flip_fixtures_exist:
+            enabled: false
+        fixture_staleness_clean:
+            enabled: true
+            severity: warning
+        signal_fixtures_valid:
+            enabled: true
+            severity: warning
+        property_based_test_coverage:
+            enabled: true
+            severity: warning
     approval:
         required_for:
             assurance_levels:
@@ -138,3 +170,6 @@ project:
             - path: .
               type: auto
         threshold: 0
+    verification_scope:
+        exclude: null
+        include: null

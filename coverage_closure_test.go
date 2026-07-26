@@ -15,7 +15,6 @@ import (
 
 // Verifies: SYS-REQ-008 [fuzz]
 // MCDC SYS-REQ-008: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestFuzzEachKeyHarnessCoverage(t *testing.T) {
 	// FuzzEachKey exercises EachKey with 12 hard-coded paths against
 	// arbitrary data. The function always returns 1 regardless of whether
@@ -49,7 +48,6 @@ func TestFuzzEachKeyHarnessCoverage(t *testing.T) {
 
 // Verifies: SYS-REQ-010 [fuzz]
 // MCDC SYS-REQ-010: delete_path_is_provided=T, delete_returns_empty_document_without_path=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestFuzzDeleteHarnessCoverage(t *testing.T) {
 	// FuzzDelete calls Delete(data, "test") and always returns 1.
 	// Exercise it with data that contains and does not contain the key.
@@ -73,7 +71,6 @@ func TestFuzzDeleteHarnessCoverage(t *testing.T) {
 
 // Verifies: SYS-REQ-007 [fuzz]
 // MCDC SYS-REQ-007: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestFuzzObjectEachHarnessCoverage(t *testing.T) {
 	// FuzzObjectEach calls ObjectEach with a no-op callback and returns 1.
 	// Exercise it with various inputs covering both branches.
@@ -105,7 +102,6 @@ func TestFuzzObjectEachHarnessCoverage(t *testing.T) {
 
 // Verifies: SYS-REQ-010 [boundary]
 // MCDC SYS-REQ-010: delete_path_is_provided=F, delete_returns_empty_document_without_path=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_010_Row1_NoPathNoEmpty(t *testing.T) {
 	// Witness row 1: no path provided AND the function does NOT return an
 	// empty document. This is a requirement violation scenario -- it cannot
@@ -124,7 +120,6 @@ func TestMCDC_SYS_REQ_010_Row1_NoPathNoEmpty(t *testing.T) {
 
 // Verifies: SYS-REQ-010 [boundary]
 // MCDC SYS-REQ-010: delete_path_is_provided=T, delete_returns_empty_document_without_path=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_010_Row3_PathProvided(t *testing.T) {
 	// Witness row 3: path IS provided, but delete_returns_empty_document
 	// is FALSE (irrelevant when path is provided). The formula evaluates

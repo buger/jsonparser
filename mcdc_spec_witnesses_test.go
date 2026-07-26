@@ -29,7 +29,6 @@ import (
 
 // Verifies: SYS-REQ-001
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=F, key_path_is_provided=T, returns_existing_path_lookup_result=F => TRUE [no-action: Get returns nil value and non-nil error, no existing-path result emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_001_Row2_TriggerFalse(t *testing.T) {
 	// Malformed input where the addressed key would exist if the payload were
 	// well-formed. The parser must NOT emit a successful existing-path lookup
@@ -45,7 +44,6 @@ func TestMCDC_SYS_REQ_001_Row2_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-001
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_001_Row4_InvariantViolation(t *testing.T) {
 	// Row 4 is an invariant-violation row: it would require Get on
 	// well-formed JSON with a key path that exists to return NO existing-path
@@ -67,7 +65,6 @@ func TestMCDC_SYS_REQ_001_Row4_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-002
 // MCDC SYS-REQ-002: addressed_value_is_string=F, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=F => TRUE [no-action: GetString returns empty string and non-nil error, no decoded value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_002_Row1_TriggerFalse(t *testing.T) {
 	// Addressed value is NOT a string (it is a number) but the raw token is a
 	// well-formed JSON value. GetString must not decode a value.
@@ -86,7 +83,6 @@ func TestMCDC_SYS_REQ_002_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-003
 // MCDC SYS-REQ-003: addressed_value_is_number=F, raw_number_token_is_integer_parseable=T, returns_getint_value=F => TRUE [no-action: GetInt returns 0 and non-nil error, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_003_Row1_TriggerFalse(t *testing.T) {
 	// Addressed value is NOT a number (it is a string) even though a
 	// well-formed number-like token exists in the payload. GetInt must not
@@ -106,7 +102,6 @@ func TestMCDC_SYS_REQ_003_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-004
 // MCDC SYS-REQ-004: addressed_value_is_number=F, raw_number_token_is_float_parseable=T, returns_getfloat_value=F => TRUE [no-action: GetFloat returns 0 and non-nil error, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_004_Row1_TriggerFalse(t *testing.T) {
 	value, err := GetFloat([]byte(`{"a":"1.5"}`), "a")
 	if err == nil {
@@ -123,7 +118,6 @@ func TestMCDC_SYS_REQ_004_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-005
 // MCDC SYS-REQ-005: addressed_value_is_boolean=F, raw_boolean_token_is_well_formed=T, returns_getboolean_value=F => TRUE [no-action: GetBoolean returns false and non-nil error, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_005_Row1_TriggerFalse(t *testing.T) {
 	value, err := GetBoolean([]byte(`{"a":"true"}`), "a")
 	if err == nil {
@@ -140,7 +134,6 @@ func TestMCDC_SYS_REQ_005_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-006
 // MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=F, array_callback_receives_elements_in_order=F => TRUE [no-action: callback counter == 0, ArrayEach returns error, no in-order delivery]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_006_Row1_TriggerFalse(t *testing.T) {
 	// Malformed array (just opening bracket, not parseable as elements). The
 	// callback must never fire.
@@ -158,7 +151,6 @@ func TestMCDC_SYS_REQ_006_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-006
 // MCDC SYS-REQ-006: addressed_array_is_empty=T, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_006_Row4_EmptyArray(t *testing.T) {
 	// Empty well-formed array: callback must not fire because there are no
 	// elements to deliver.
@@ -180,7 +172,6 @@ func TestMCDC_SYS_REQ_006_Row4_EmptyArray(t *testing.T) {
 
 // Verifies: SYS-REQ-007
 // MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=F, object_callback_receives_entries=F => TRUE [no-action: callback counter == 0, ObjectEach returns error, no entries delivered]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_007_Row1_TriggerFalse(t *testing.T) {
 	callbackCalls := 0
 	err := ObjectEach([]byte(`{`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -197,7 +188,6 @@ func TestMCDC_SYS_REQ_007_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-007
 // MCDC SYS-REQ-007: addressed_object_is_empty=T, addressed_object_is_well_formed=T, object_callback_receives_entries=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_007_Row4_EmptyObject(t *testing.T) {
 	callbackCalls := 0
 	err := ObjectEach([]byte(`{}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -218,7 +208,6 @@ func TestMCDC_SYS_REQ_007_Row4_EmptyObject(t *testing.T) {
 
 // Verifies: SYS-REQ-008
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=F => TRUE [no-action: callback counter == 0, EachKey returns immediately because no paths are provided]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_008_Row1_TriggerFalse(t *testing.T) {
 	// EachKey with no paths exercises the antecedent-false branch
 	// (multipath_requests_are_provided = F).
@@ -237,7 +226,6 @@ func TestMCDC_SYS_REQ_008_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-009
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=F, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=F => TRUE [no-action: Set returns (nil, KeyPathNotFoundError) and input is not mutated]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_009_Row1_TriggerFalse(t *testing.T) {
 	// Set without any keys: returns nil + KeyPathNotFoundError. No document
 	// update action is performed.
@@ -260,7 +248,6 @@ func TestMCDC_SYS_REQ_009_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-011
 // MCDC SYS-REQ-011: addressed_value_is_string=F, returns_unsafe_string_view=F => TRUE [no-action: GetUnsafeString returns empty string and KeyPathNotFoundError, no view emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_011_Row1_TriggerFalse(t *testing.T) {
 	// Addressed path does not resolve to any value, so no unsafe string view
 	// is returned.
@@ -279,7 +266,6 @@ func TestMCDC_SYS_REQ_011_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-012
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=F, returns_parseboolean_value=F => TRUE [no-action: ParseBoolean returns false and non-nil error, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_012_Row1_TriggerFalse(t *testing.T) {
 	value, err := ParseBoolean([]byte(`notabool`))
 	if err == nil {
@@ -296,7 +282,6 @@ func TestMCDC_SYS_REQ_012_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-013
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=F, returns_parsefloat_value=F => TRUE [no-action: ParseFloat returns 0 and non-nil error, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_013_Row1_TriggerFalse(t *testing.T) {
 	value, err := ParseFloat([]byte(`notafloat`))
 	if err == nil {
@@ -313,7 +298,6 @@ func TestMCDC_SYS_REQ_013_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-014
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=F, returns_parsestring_value=F => TRUE [no-action: ParseString returns empty string and MalformedValueError, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_014_Row1_TriggerFalse(t *testing.T) {
 	// Malformed escape sequence forces Unescape to fail; ParseString wraps
 	// the failure as MalformedValueError and returns an empty string.
@@ -332,7 +316,6 @@ func TestMCDC_SYS_REQ_014_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-015
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=F, returns_parseint_value=F => TRUE [no-action: ParseInt returns 0 and non-nil error, no value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_015_Row1_TriggerFalse(t *testing.T) {
 	value, err := ParseInt([]byte(`notanint`))
 	if err == nil {
@@ -349,7 +332,6 @@ func TestMCDC_SYS_REQ_015_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-016
 // MCDC SYS-REQ-016: addressed_path_exists=F, json_input_is_well_formed=F, key_path_is_provided=T, returns_missing_path_result_for_well_formed_lookup=F => TRUE [no-action: Get returns non-nil error and value=nil on malformed input, no missing-path-result action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_016_Row1_TriggerFalse(t *testing.T) {
 	value, _, _, err := Get([]byte(`{"a":`), "missing")
 	if err == nil {
@@ -362,7 +344,6 @@ func TestMCDC_SYS_REQ_016_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-016
 // MCDC SYS-REQ-016: addressed_path_exists=F, json_input_is_well_formed=T, key_path_is_provided=F, returns_missing_path_result_for_well_formed_lookup=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_016_Row2_NoKeyPath(t *testing.T) {
 	// No key path provided: the formula is satisfied via !key_path_is_provided
 	// regardless of the missing-path-result action. Drive Get on well-formed
@@ -378,7 +359,6 @@ func TestMCDC_SYS_REQ_016_Row2_NoKeyPath(t *testing.T) {
 
 // Verifies: SYS-REQ-016
 // MCDC SYS-REQ-016: addressed_path_exists=F, json_input_is_well_formed=T, key_path_is_provided=T, returns_missing_path_result_for_well_formed_lookup=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_016_Row3_InvariantViolation(t *testing.T) {
 	// Invariant-violation row: Get on well-formed JSON with a key path that
 	// does not exist must return the missing-path-result (Row 4). Drive the
@@ -394,7 +374,6 @@ func TestMCDC_SYS_REQ_016_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-016
 // MCDC SYS-REQ-016: addressed_path_exists=F, json_input_is_well_formed=T, key_path_is_provided=T, returns_missing_path_result_for_well_formed_lookup=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_016_Row4_MissingPathResult(t *testing.T) {
 	_, dataType, offset, err := Get([]byte(`{"a":1}`), "missing")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -407,7 +386,6 @@ func TestMCDC_SYS_REQ_016_Row4_MissingPathResult(t *testing.T) {
 
 // Verifies: SYS-REQ-016
 // MCDC SYS-REQ-016: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=T, returns_missing_path_result_for_well_formed_lookup=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_016_Row5_AddressedPathExists(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -424,7 +402,6 @@ func TestMCDC_SYS_REQ_016_Row5_AddressedPathExists(t *testing.T) {
 
 // Verifies: SYS-REQ-017
 // MCDC SYS-REQ-017: input_is_incomplete_during_lookup=F, returns_parse_error_for_incomplete_lookup=F => TRUE [no-action: Get returns nil error on complete input, no parse-error action fires]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_017_Row1_TriggerFalse(t *testing.T) {
 	value, _, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -437,7 +414,6 @@ func TestMCDC_SYS_REQ_017_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-017
 // MCDC SYS-REQ-017: input_is_incomplete_during_lookup=T, returns_parse_error_for_incomplete_lookup=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_017_Row2_InvariantViolation(t *testing.T) {
 	// Invariant-violation row: incomplete input without a parse error cannot
 	// occur in a correct build. Drive the positive path (Row 3) to prove this
@@ -449,7 +425,6 @@ func TestMCDC_SYS_REQ_017_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-017
 // MCDC SYS-REQ-017: input_is_incomplete_during_lookup=T, returns_parse_error_for_incomplete_lookup=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_017_Row3_ParseErrorReturned(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected parse error on incomplete input, got nil")
@@ -463,7 +438,6 @@ func TestMCDC_SYS_REQ_017_Row3_ParseErrorReturned(t *testing.T) {
 
 // Verifies: SYS-REQ-018
 // MCDC SYS-REQ-018: json_input_is_well_formed=F, key_path_is_provided=F, returns_root_value_without_key_path=F => TRUE [no-action: Get on malformed input without key path returns error, no root value emitted]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_018_Row1_TriggerFalse(t *testing.T) {
 	value, _, _, err := Get([]byte(`{"a":`))
 	if err == nil {
@@ -476,7 +450,6 @@ func TestMCDC_SYS_REQ_018_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-018
 // MCDC SYS-REQ-018: json_input_is_well_formed=T, key_path_is_provided=F, returns_root_value_without_key_path=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_018_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: Get on well-formed JSON without a key path MUST
 	// return the root value (Row 3). Witness the positive path.
@@ -491,7 +464,6 @@ func TestMCDC_SYS_REQ_018_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-018
 // MCDC SYS-REQ-018: json_input_is_well_formed=T, key_path_is_provided=F, returns_root_value_without_key_path=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_018_Row3_RootValueReturned(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`))
 	if err != nil {
@@ -504,7 +476,6 @@ func TestMCDC_SYS_REQ_018_Row3_RootValueReturned(t *testing.T) {
 
 // Verifies: SYS-REQ-018
 // MCDC SYS-REQ-018: json_input_is_well_formed=T, key_path_is_provided=T, returns_root_value_without_key_path=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_018_Row4_KeyPathProvided(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -521,7 +492,6 @@ func TestMCDC_SYS_REQ_018_Row4_KeyPathProvided(t *testing.T) {
 
 // Verifies: SYS-REQ-019
 // MCDC SYS-REQ-019: json_input_is_empty=F, key_path_is_provided=T, returns_missing_path_result_for_empty_input=F => TRUE [no-action: Get on non-empty input does not invoke the empty-input missing-path action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_019_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "missing")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -534,7 +504,6 @@ func TestMCDC_SYS_REQ_019_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-019
 // MCDC SYS-REQ-019: json_input_is_empty=T, key_path_is_provided=F, returns_missing_path_result_for_empty_input=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_019_Row2_EmptyNoKeyPath(t *testing.T) {
 	// Empty input without key path: formula satisfied via !key_path_is_provided.
 	// Get on empty input without key path.
@@ -549,7 +518,6 @@ func TestMCDC_SYS_REQ_019_Row2_EmptyNoKeyPath(t *testing.T) {
 
 // Verifies: SYS-REQ-019
 // MCDC SYS-REQ-019: json_input_is_empty=T, key_path_is_provided=T, returns_missing_path_result_for_empty_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_019_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: empty input + key path MUST return missing-path
 	// result (Row 4). Drive the positive path.
@@ -564,7 +532,6 @@ func TestMCDC_SYS_REQ_019_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-019
 // MCDC SYS-REQ-019: json_input_is_empty=T, key_path_is_provided=T, returns_missing_path_result_for_empty_input=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_019_Row4_EmptyMissingPath(t *testing.T) {
 	_, dataType, offset, err := Get([]byte(""), "a")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -581,7 +548,6 @@ func TestMCDC_SYS_REQ_019_Row4_EmptyMissingPath(t *testing.T) {
 
 // Verifies: SYS-REQ-020
 // MCDC SYS-REQ-020: path_segment_is_object_key=F, returns_value_from_current_scope_object_key=F, segment_is_evaluated_at_current_scope=T => TRUE [no-action: array-index segment does not invoke object-key lookup]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_020_Row1_TriggerFalse(t *testing.T) {
 	// Use an array-index segment; the object-key lookup action must not fire.
 	value, dataType, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[1]")
@@ -595,7 +561,6 @@ func TestMCDC_SYS_REQ_020_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-020
 // MCDC SYS-REQ-020: path_segment_is_object_key=T, returns_value_from_current_scope_object_key=F, segment_is_evaluated_at_current_scope=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_020_Row2_NotEvaluated(t *testing.T) {
 	// Path segment is an object key, but evaluation stops before this segment
 	// because an earlier segment did not match. Get returns not-found.
@@ -607,7 +572,6 @@ func TestMCDC_SYS_REQ_020_Row2_NotEvaluated(t *testing.T) {
 
 // Verifies: SYS-REQ-020
 // MCDC SYS-REQ-020: path_segment_is_object_key=T, returns_value_from_current_scope_object_key=F, segment_is_evaluated_at_current_scope=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_020_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: an evaluated object-key segment MUST return a value
 	// from the current scope (Row 4). Drive the positive path.
@@ -622,7 +586,6 @@ func TestMCDC_SYS_REQ_020_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-020
 // MCDC SYS-REQ-020: path_segment_is_object_key=T, returns_value_from_current_scope_object_key=T, segment_is_evaluated_at_current_scope=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_020_Row4_ObjectKeyMatched(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":{"b":2}}`), "a", "b")
 	if err != nil {
@@ -639,7 +602,6 @@ func TestMCDC_SYS_REQ_020_Row4_ObjectKeyMatched(t *testing.T) {
 
 // Verifies: SYS-REQ-021
 // MCDC SYS-REQ-021: array_index_is_in_bounds=F, array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_value_from_in_bounds_array_index=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_021_Row1_OutOfBounds(t *testing.T) {
 	_, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[9]")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -649,7 +611,6 @@ func TestMCDC_SYS_REQ_021_Row1_OutOfBounds(t *testing.T) {
 
 // Verifies: SYS-REQ-021
 // MCDC SYS-REQ-021: array_index_is_in_bounds=T, array_index_segment_is_valid=F, path_segment_is_array_index=T, returns_value_from_in_bounds_array_index=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_021_Row2_InvalidSegment(t *testing.T) {
 	_, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -659,7 +620,6 @@ func TestMCDC_SYS_REQ_021_Row2_InvalidSegment(t *testing.T) {
 
 // Verifies: SYS-REQ-021
 // MCDC SYS-REQ-021: array_index_is_in_bounds=T, array_index_segment_is_valid=T, path_segment_is_array_index=F, returns_value_from_in_bounds_array_index=F => TRUE [no-action: non-array-index segment does not invoke in-bounds-array-index action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_021_Row3_NotArraySegment(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":[1,2]}`), "a")
 	if err != nil {
@@ -675,7 +635,6 @@ func TestMCDC_SYS_REQ_021_Row3_NotArraySegment(t *testing.T) {
 
 // Verifies: SYS-REQ-021
 // MCDC SYS-REQ-021: array_index_is_in_bounds=T, array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_value_from_in_bounds_array_index=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_021_Row4_InvariantViolation(t *testing.T) {
 	// Invariant violation: in-bounds valid array index MUST return the element
 	// (Row 5). Drive the positive path.
@@ -690,7 +649,6 @@ func TestMCDC_SYS_REQ_021_Row4_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-021
 // MCDC SYS-REQ-021: array_index_is_in_bounds=T, array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_value_from_in_bounds_array_index=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_021_Row5_InBoundsReturned(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[1]")
 	if err != nil {
@@ -707,7 +665,6 @@ func TestMCDC_SYS_REQ_021_Row5_InBoundsReturned(t *testing.T) {
 
 // Verifies: SYS-REQ-022
 // MCDC SYS-REQ-022: array_index_segment_is_valid=F, path_segment_is_array_index=F, returns_invalid_array_index_not_found=F => TRUE [no-action: non-array-index segment does not invoke the invalid-array-index action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_022_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -720,7 +677,6 @@ func TestMCDC_SYS_REQ_022_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-022
 // MCDC SYS-REQ-022: array_index_segment_is_valid=F, path_segment_is_array_index=T, returns_invalid_array_index_not_found=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_022_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: invalid array index segment MUST return not-found
 	// (Row 3). Drive the positive path.
@@ -732,7 +688,6 @@ func TestMCDC_SYS_REQ_022_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-022
 // MCDC SYS-REQ-022: array_index_segment_is_valid=F, path_segment_is_array_index=T, returns_invalid_array_index_not_found=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_022_Row3_InvalidIndexNotFound(t *testing.T) {
 	_, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -742,7 +697,6 @@ func TestMCDC_SYS_REQ_022_Row3_InvalidIndexNotFound(t *testing.T) {
 
 // Verifies: SYS-REQ-022
 // MCDC SYS-REQ-022: array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_invalid_array_index_not_found=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_022_Row4_ValidSegment(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[0]")
 	if err != nil {
@@ -759,7 +713,6 @@ func TestMCDC_SYS_REQ_022_Row4_ValidSegment(t *testing.T) {
 
 // Verifies: SYS-REQ-023
 // MCDC SYS-REQ-023: array_index_is_out_of_bounds=F, array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_oob_array_index_not_found=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_023_Row1_InBounds(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[0]")
 	if err != nil {
@@ -772,7 +725,6 @@ func TestMCDC_SYS_REQ_023_Row1_InBounds(t *testing.T) {
 
 // Verifies: SYS-REQ-023
 // MCDC SYS-REQ-023: array_index_is_out_of_bounds=T, array_index_segment_is_valid=F, path_segment_is_array_index=T, returns_oob_array_index_not_found=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_023_Row2_InvalidOutOfBounds(t *testing.T) {
 	_, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -782,7 +734,6 @@ func TestMCDC_SYS_REQ_023_Row2_InvalidOutOfBounds(t *testing.T) {
 
 // Verifies: SYS-REQ-023
 // MCDC SYS-REQ-023: array_index_is_out_of_bounds=T, array_index_segment_is_valid=T, path_segment_is_array_index=F, returns_oob_array_index_not_found=F => TRUE [no-action: non-array-index segment does not invoke the oob action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_023_Row3_NotArraySegment(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -798,7 +749,6 @@ func TestMCDC_SYS_REQ_023_Row3_NotArraySegment(t *testing.T) {
 
 // Verifies: SYS-REQ-023
 // MCDC SYS-REQ-023: array_index_is_out_of_bounds=T, array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_oob_array_index_not_found=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_023_Row4_InvariantViolation(t *testing.T) {
 	// Invariant violation: out-of-bounds valid array index MUST return
 	// not-found (Row 5). Drive the positive path.
@@ -810,7 +760,6 @@ func TestMCDC_SYS_REQ_023_Row4_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-023
 // MCDC SYS-REQ-023: array_index_is_out_of_bounds=T, array_index_segment_is_valid=T, path_segment_is_array_index=T, returns_oob_array_index_not_found=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_023_Row5_OobNotFound(t *testing.T) {
 	_, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[9]")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -824,7 +773,6 @@ func TestMCDC_SYS_REQ_023_Row5_OobNotFound(t *testing.T) {
 
 // Verifies: SYS-REQ-024
 // MCDC SYS-REQ-024: decoded_path_segment_matches_escaped_key=F, escaped_json_object_key_is_present=T, returns_value_from_decoded_escaped_key=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_024_Row1_NoMatch(t *testing.T) {
 	// Escaped key is present, but the path segment doesn't match it.
 	_, _, _, err := Get([]byte(`{"a\u00B0b":1}`), "axb")
@@ -835,7 +783,6 @@ func TestMCDC_SYS_REQ_024_Row1_NoMatch(t *testing.T) {
 
 // Verifies: SYS-REQ-024
 // MCDC SYS-REQ-024: decoded_path_segment_matches_escaped_key=T, escaped_json_object_key_is_present=F, returns_value_from_decoded_escaped_key=F => TRUE [no-action: no escaped key present means no decoded-escaped-key lookup action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_024_Row2_TriggerFalse(t *testing.T) {
 	// No escaped key in payload; the decoded-escaped-key action cannot fire.
 	value, dataType, _, err := Get([]byte(`{"plain":1}`), "plain")
@@ -849,7 +796,6 @@ func TestMCDC_SYS_REQ_024_Row2_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-024
 // MCDC SYS-REQ-024: decoded_path_segment_matches_escaped_key=T, escaped_json_object_key_is_present=T, returns_value_from_decoded_escaped_key=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_024_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: matching decoded escaped key MUST return value (Row 4).
 	value, dataType, _, err := Get([]byte(`{"a\u00B0b":1}`), "a°b")
@@ -863,7 +809,6 @@ func TestMCDC_SYS_REQ_024_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-024
 // MCDC SYS-REQ-024: decoded_path_segment_matches_escaped_key=T, escaped_json_object_key_is_present=T, returns_value_from_decoded_escaped_key=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_024_Row4_DecodedEscapedMatched(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a\u00B0b":1}`), "a°b")
 	if err != nil {
@@ -880,7 +825,6 @@ func TestMCDC_SYS_REQ_024_Row4_DecodedEscapedMatched(t *testing.T) {
 
 // Verifies: SYS-REQ-025
 // MCDC SYS-REQ-025: addressed_value_is_string=F, returns_unquoted_raw_string_contents=F => TRUE [no-action: Get on non-string does not return unquoted raw string contents]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_025_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":123}`), "a")
 	if err != nil {
@@ -896,7 +840,6 @@ func TestMCDC_SYS_REQ_025_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-025
 // MCDC SYS-REQ-025: addressed_value_is_string=T, returns_unquoted_raw_string_contents=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_025_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: string value MUST return unquoted contents (Row 3).
 	value, dataType, _, err := Get([]byte(`{"a":"hello"}`), "a")
@@ -910,7 +853,6 @@ func TestMCDC_SYS_REQ_025_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-025
 // MCDC SYS-REQ-025: addressed_value_is_string=T, returns_unquoted_raw_string_contents=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_025_Row3_StringUnquoted(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":"hello"}`), "a")
 	if err != nil {
@@ -927,7 +869,6 @@ func TestMCDC_SYS_REQ_025_Row3_StringUnquoted(t *testing.T) {
 
 // Verifies: SYS-REQ-026
 // MCDC SYS-REQ-026: addressed_token_can_be_isolated=F, malformed_input_outside_addressed_token=T, returns_best_effort_lookup_result=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_026_Row1_CannotIsolate(t *testing.T) {
 	// Malformed input that prevents token isolation: Get returns an error
 	// instead of a best-effort result.
@@ -938,7 +879,6 @@ func TestMCDC_SYS_REQ_026_Row1_CannotIsolate(t *testing.T) {
 
 // Verifies: SYS-REQ-026
 // MCDC SYS-REQ-026: addressed_token_can_be_isolated=T, malformed_input_outside_addressed_token=F, returns_best_effort_lookup_result=F => TRUE [no-action: no malformed input outside token, no best-effort action fires]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_026_Row2_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -951,7 +891,6 @@ func TestMCDC_SYS_REQ_026_Row2_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-026
 // MCDC SYS-REQ-026: addressed_token_can_be_isolated=T, malformed_input_outside_addressed_token=T, returns_best_effort_lookup_result=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_026_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: malformed input outside an isolatable addressed
 	// token MUST yield a best-effort result (Row 4). Drive the positive path.
@@ -966,7 +905,6 @@ func TestMCDC_SYS_REQ_026_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-026
 // MCDC SYS-REQ-026: addressed_token_can_be_isolated=T, malformed_input_outside_addressed_token=T, returns_best_effort_lookup_result=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_026_Row4_BestEffortSuccess(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1]`), "a")
 	if err != nil {
@@ -983,7 +921,6 @@ func TestMCDC_SYS_REQ_026_Row4_BestEffortSuccess(t *testing.T) {
 
 // Verifies: SYS-REQ-027
 // MCDC SYS-REQ-027: addressed_token_shape_is_invalid=F, returns_value_type_error=F => TRUE [no-action: valid token shape does not invoke value-type-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_027_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -996,7 +933,6 @@ func TestMCDC_SYS_REQ_027_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-027
 // MCDC SYS-REQ-027: addressed_token_shape_is_invalid=T, returns_value_type_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_027_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: invalid token shape MUST return value-type-error (Row 3).
 	if _, _, _, err := Get([]byte(`{"a":u}`), "a"); !errors.Is(err, UnknownValueTypeError) {
@@ -1006,7 +942,6 @@ func TestMCDC_SYS_REQ_027_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-027
 // MCDC SYS-REQ-027: addressed_token_shape_is_invalid=T, returns_value_type_error=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_027_Row3_ValueTypeError(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":u}`), "a"); !errors.Is(err, UnknownValueTypeError) {
 		t.Fatalf("expected UnknownValueTypeError, got %v", err)
@@ -1019,7 +954,6 @@ func TestMCDC_SYS_REQ_027_Row3_ValueTypeError(t *testing.T) {
 
 // Verifies: SYS-REQ-028
 // MCDC SYS-REQ-028: addressed_array_is_empty=F, addressed_array_is_well_formed=T, empty_array_produces_no_callbacks=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_028_Row1_NonEmptyWellFormed(t *testing.T) {
 	// Non-empty well-formed array: callback fires for each element so the
 	// "empty-array produces no callbacks" action is FALSE.
@@ -1036,7 +970,6 @@ func TestMCDC_SYS_REQ_028_Row1_NonEmptyWellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-028
 // MCDC SYS-REQ-028: addressed_array_is_empty=T, addressed_array_is_well_formed=F, empty_array_produces_no_callbacks=F => TRUE [no-action: callback counter == 0 on malformed input, no empty-array action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_028_Row2_EmptyMalformed(t *testing.T) {
 	calls := 0
 	_, err := ArrayEach([]byte(`[`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -1052,7 +985,6 @@ func TestMCDC_SYS_REQ_028_Row2_EmptyMalformed(t *testing.T) {
 
 // Verifies: SYS-REQ-028
 // MCDC SYS-REQ-028: addressed_array_is_empty=T, addressed_array_is_well_formed=T, empty_array_produces_no_callbacks=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_028_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: empty well-formed array MUST produce no callbacks
 	// (Row 4). Drive the positive path to prove unreachable.
@@ -1073,7 +1005,6 @@ func TestMCDC_SYS_REQ_028_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-029
 // MCDC SYS-REQ-029: addressed_array_is_well_formed=F, malformed_array_input_returns_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_029_Row1_InvariantViolation(t *testing.T) {
 	// Invariant violation: malformed array input MUST return error (Row 2).
 	if _, err := ArrayEach([]byte(`[1,2`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
@@ -1083,7 +1014,6 @@ func TestMCDC_SYS_REQ_029_Row1_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-029
 // MCDC SYS-REQ-029: addressed_array_is_well_formed=T, malformed_array_input_returns_error=F => TRUE [no-action: well-formed array does not invoke the malformed-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_029_Row2_WellFormed(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -1102,7 +1032,6 @@ func TestMCDC_SYS_REQ_029_Row2_WellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-030
 // MCDC SYS-REQ-030: addressed_object_is_empty=F, addressed_object_is_well_formed=T, empty_object_produces_no_entries=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_030_Row1_NonEmptyWellFormed(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{"a":1,"b":2}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -1118,7 +1047,6 @@ func TestMCDC_SYS_REQ_030_Row1_NonEmptyWellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-030
 // MCDC SYS-REQ-030: addressed_object_is_empty=T, addressed_object_is_well_formed=F, empty_object_produces_no_entries=F => TRUE [no-action: callback counter == 0 on malformed input, no empty-object action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_030_Row2_EmptyMalformed(t *testing.T) {
 	calls := 0
 	err := ObjectEach([]byte(`{`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -1135,7 +1063,6 @@ func TestMCDC_SYS_REQ_030_Row2_EmptyMalformed(t *testing.T) {
 
 // Verifies: SYS-REQ-030
 // MCDC SYS-REQ-030: addressed_object_is_empty=T, addressed_object_is_well_formed=T, empty_object_produces_no_entries=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_030_Row3_InvariantViolation(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -1155,7 +1082,6 @@ func TestMCDC_SYS_REQ_030_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-031
 // MCDC SYS-REQ-031: addressed_object_is_well_formed=F, malformed_object_input_returns_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_031_Row1_InvariantViolation(t *testing.T) {
 	if err := ObjectEach([]byte(`{"a":1`), func(key []byte, value []byte, dataType ValueType, offset int) error { return nil }); err == nil {
 		t.Fatal("expected error on malformed object input, got nil")
@@ -1164,7 +1090,6 @@ func TestMCDC_SYS_REQ_031_Row1_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-031
 // MCDC SYS-REQ-031: addressed_object_is_well_formed=T, malformed_object_input_returns_error=F => TRUE [no-action: well-formed object does not invoke the malformed-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_031_Row2_WellFormed(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{"a":1}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -1185,7 +1110,6 @@ func TestMCDC_SYS_REQ_031_Row2_WellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-032
 // MCDC SYS-REQ-032: addressed_object_is_well_formed=F, object_callback_error_is_returned=F, object_callback_returns_error=T => TRUE [no-action: malformed input returns parse error before callback runs, callback-error action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_032_Row1_TriggerFalse(t *testing.T) {
  sentinelErr := errors.New("sentinel callback error")
 	err := ObjectEach([]byte(`{`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -1201,7 +1125,6 @@ func TestMCDC_SYS_REQ_032_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-032
 // MCDC SYS-REQ-032: addressed_object_is_well_formed=T, object_callback_error_is_returned=F, object_callback_returns_error=F => TRUE [no-action: callback returns nil, callback-error action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_032_Row2_NoCallbackError(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{"a":1}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -1217,7 +1140,6 @@ func TestMCDC_SYS_REQ_032_Row2_NoCallbackError(t *testing.T) {
 
 // Verifies: SYS-REQ-032
 // MCDC SYS-REQ-032: addressed_object_is_well_formed=T, object_callback_error_is_returned=F, object_callback_returns_error=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_032_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: callback that returns an error on well-formed
 	// input MUST propagate that error (Row 4).
@@ -1236,7 +1158,6 @@ func TestMCDC_SYS_REQ_032_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-033
 // MCDC SYS-REQ-033: delete_path_is_provided=F, delete_returns_document_without_target=F, delete_target_exists=T => TRUE [no-action: no path provided means Delete does not perform a targeted removal]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_033_Row1_TriggerFalse(t *testing.T) {
 	// No path: Delete returns data[:0]; no targeted-removal action fires.
 	data := []byte(`{"a":1}`)
@@ -1248,7 +1169,6 @@ func TestMCDC_SYS_REQ_033_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-033
 // MCDC SYS-REQ-033: delete_path_is_provided=T, delete_returns_document_without_target=F, delete_target_exists=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_033_Row2_MissingTarget(t *testing.T) {
 	data := []byte(`{"a":1}`)
 	result := Delete(data, "missing")
@@ -1259,7 +1179,6 @@ func TestMCDC_SYS_REQ_033_Row2_MissingTarget(t *testing.T) {
 
 // Verifies: SYS-REQ-033
 // MCDC SYS-REQ-033: delete_path_is_provided=T, delete_returns_document_without_target=F, delete_target_exists=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_033_Row3_InvariantViolation(t *testing.T) {
 	// Invariant violation: existing target with a provided path MUST be
 	// removed (Row 4). Drive the positive path.
@@ -1276,7 +1195,6 @@ func TestMCDC_SYS_REQ_033_Row3_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-034
 // MCDC SYS-REQ-034: delete_input_is_unusable_for_requested_path=F, delete_path_is_provided=F, delete_preserves_input_when_target_missing=F, delete_target_exists=F => TRUE [no-action: no path provided, preserve-on-missing-target action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_034_Row1_TriggerFalse(t *testing.T) {
 	data := []byte(`{"a":1}`)
 	result := Delete(data)
@@ -1287,7 +1205,6 @@ func TestMCDC_SYS_REQ_034_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-034
 // MCDC SYS-REQ-034: delete_input_is_unusable_for_requested_path=F, delete_path_is_provided=T, delete_preserves_input_when_target_missing=F, delete_target_exists=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_034_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: usable input + provided path + missing target MUST
 	// preserve the input (Row 3). Drive the positive path.
@@ -1300,7 +1217,6 @@ func TestMCDC_SYS_REQ_034_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-034
 // MCDC SYS-REQ-034: delete_input_is_unusable_for_requested_path=F, delete_path_is_provided=T, delete_preserves_input_when_target_missing=F, delete_target_exists=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_034_Row3_TargetExistsUsable(t *testing.T) {
 	data := []byte(`{"a":1,"b":2}`)
 	result := Delete(data, "a")
@@ -1311,7 +1227,6 @@ func TestMCDC_SYS_REQ_034_Row3_TargetExistsUsable(t *testing.T) {
 
 // Verifies: SYS-REQ-034
 // MCDC SYS-REQ-034: delete_input_is_unusable_for_requested_path=T, delete_path_is_provided=T, delete_preserves_input_when_target_missing=F, delete_target_exists=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_034_Row4_UnusableInput(t *testing.T) {
 	// Unusable (malformed) input with a path: Delete returns input unchanged.
 	data := []byte(`{"a":`)
@@ -1327,7 +1242,6 @@ func TestMCDC_SYS_REQ_034_Row4_UnusableInput(t *testing.T) {
 
 // Verifies: SYS-REQ-035
 // MCDC SYS-REQ-035: delete_completes_without_panic=F, delete_input_is_unusable_for_requested_path=F, delete_path_is_provided=T, delete_returns_original_input_on_unusable_input=F => TRUE [no-action: usable input does not invoke the return-original-on-unusable action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_035_Row1_TriggerFalse(t *testing.T) {
 	data := []byte(`{"a":1,"b":2}`)
 	result := Delete(data, "a")
@@ -1338,7 +1252,6 @@ func TestMCDC_SYS_REQ_035_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-035
 // MCDC SYS-REQ-035: delete_completes_without_panic=F, delete_input_is_unusable_for_requested_path=T, delete_path_is_provided=F, delete_returns_original_input_on_unusable_input=F => TRUE [no-action: no path provided, return-original-on-unusable action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_035_Row2_NoPathUnusable(t *testing.T) {
 	data := []byte(`{"a":`)
 	result := Delete(data)
@@ -1349,7 +1262,6 @@ func TestMCDC_SYS_REQ_035_Row2_NoPathUnusable(t *testing.T) {
 
 // Verifies: SYS-REQ-035
 // MCDC SYS-REQ-035: delete_completes_without_panic=F, delete_input_is_unusable_for_requested_path=T, delete_path_is_provided=T, delete_returns_original_input_on_unusable_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_035_Row3_InvariantViolationPanic(t *testing.T) {
 	// Invariant violation: unusable input + provided path MUST NOT panic AND
 	// MUST return original input (Row 5). Drive the positive path.
@@ -1362,7 +1274,6 @@ func TestMCDC_SYS_REQ_035_Row3_InvariantViolationPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-035
 // MCDC SYS-REQ-035: delete_completes_without_panic=F, delete_input_is_unusable_for_requested_path=T, delete_path_is_provided=T, delete_returns_original_input_on_unusable_input=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_035_Row4_InvariantViolationOriginal(t *testing.T) {
 	// Same driver as Row 5; witnessing that the panic-free completion is
 	// coupled to original-input return.
@@ -1375,7 +1286,6 @@ func TestMCDC_SYS_REQ_035_Row4_InvariantViolationOriginal(t *testing.T) {
 
 // Verifies: SYS-REQ-035
 // MCDC SYS-REQ-035: delete_completes_without_panic=T, delete_input_is_unusable_for_requested_path=T, delete_path_is_provided=T, delete_returns_original_input_on_unusable_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_035_Row5_InvariantViolationNoPanic(t *testing.T) {
 	data := []byte(`{"a":`)
 	result := Delete(data, "a")
@@ -1390,7 +1300,6 @@ func TestMCDC_SYS_REQ_035_Row5_InvariantViolationNoPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-036
 // MCDC SYS-REQ-036: raw_boolean_literal_is_valid=F, returns_parseboolean_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_036_Row1_InvariantViolation(t *testing.T) {
 	if _, err := ParseBoolean([]byte(`notabool`)); err == nil {
 		t.Fatal("expected error on malformed boolean literal, got nil")
@@ -1399,7 +1308,6 @@ func TestMCDC_SYS_REQ_036_Row1_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-036
 // MCDC SYS-REQ-036: raw_boolean_literal_is_valid=T, returns_parseboolean_error=F => TRUE [no-action: valid boolean literal does not invoke the parse-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_036_Row2_ValidLiteral(t *testing.T) {
 	v, err := ParseBoolean([]byte(`true`))
 	if err != nil {
@@ -1416,7 +1324,6 @@ func TestMCDC_SYS_REQ_036_Row2_ValidLiteral(t *testing.T) {
 
 // Verifies: SYS-REQ-037
 // MCDC SYS-REQ-037: raw_float_token_is_well_formed=F, returns_parsefloat_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_037_Row1_InvariantViolation(t *testing.T) {
 	if _, err := ParseFloat([]byte(`notafloat`)); err == nil {
 		t.Fatal("expected error on malformed float token, got nil")
@@ -1425,7 +1332,6 @@ func TestMCDC_SYS_REQ_037_Row1_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-037
 // MCDC SYS-REQ-037: raw_float_token_is_well_formed=T, returns_parsefloat_error=F => TRUE [no-action: well-formed float does not invoke the parse-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_037_Row2_WellFormed(t *testing.T) {
 	v, err := ParseFloat([]byte(`3.14`))
 	if err != nil {
@@ -1442,7 +1348,6 @@ func TestMCDC_SYS_REQ_037_Row2_WellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-038
 // MCDC SYS-REQ-038: raw_string_literal_is_well_formed=F, returns_parsestring_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_038_Row1_InvariantViolation(t *testing.T) {
 	if _, err := ParseString([]byte(`abc\q`)); err == nil {
 		t.Fatal("expected error on malformed string literal, got nil")
@@ -1451,7 +1356,6 @@ func TestMCDC_SYS_REQ_038_Row1_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-038
 // MCDC SYS-REQ-038: raw_string_literal_is_well_formed=T, returns_parsestring_error=F => TRUE [no-action: well-formed string does not invoke the parse-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_038_Row2_WellFormed(t *testing.T) {
 	v, err := ParseString([]byte(`hello`))
 	if err != nil {
@@ -1468,7 +1372,6 @@ func TestMCDC_SYS_REQ_038_Row2_WellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-039
 // MCDC SYS-REQ-039: raw_int_token_overflows_int64=F, returns_parseint_overflow_error=F => TRUE [no-action: non-overflow integer does not invoke the overflow-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_039_Row1_NoOverflow(t *testing.T) {
 	v, err := ParseInt([]byte(`42`))
 	if err != nil {
@@ -1481,7 +1384,6 @@ func TestMCDC_SYS_REQ_039_Row1_NoOverflow(t *testing.T) {
 
 // Verifies: SYS-REQ-039
 // MCDC SYS-REQ-039: raw_int_token_overflows_int64=T, returns_parseint_overflow_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_039_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseInt([]byte(`99999999999999999999999`)); err == nil {
 		t.Fatal("expected overflow error, got nil")
@@ -1494,7 +1396,6 @@ func TestMCDC_SYS_REQ_039_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-040
 // MCDC SYS-REQ-040: raw_int_token_is_well_formed=F, raw_int_token_overflows_int64=F, returns_parseint_malformed_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_040_Row1_InvariantViolation(t *testing.T) {
 	if _, err := ParseInt([]byte(`notanint`)); err == nil {
 		t.Fatal("expected malformed error, got nil")
@@ -1503,7 +1404,6 @@ func TestMCDC_SYS_REQ_040_Row1_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-040
 // MCDC SYS-REQ-040: raw_int_token_is_well_formed=F, raw_int_token_overflows_int64=T, returns_parseint_malformed_error=F => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_040_Row2_MalformedOrOverflow(t *testing.T) {
 	// Token is malformed in the parseInt sense and also beyond int64; the
 	// implementation returns the malformed error first.
@@ -1514,7 +1414,6 @@ func TestMCDC_SYS_REQ_040_Row2_MalformedOrOverflow(t *testing.T) {
 
 // Verifies: SYS-REQ-040
 // MCDC SYS-REQ-040: raw_int_token_is_well_formed=T, raw_int_token_overflows_int64=F, returns_parseint_malformed_error=F => TRUE [no-action: well-formed non-overflow integer does not invoke the malformed-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_040_Row3_WellFormed(t *testing.T) {
 	v, err := ParseInt([]byte(`42`))
 	if err != nil {
@@ -1531,7 +1430,6 @@ func TestMCDC_SYS_REQ_040_Row3_WellFormed(t *testing.T) {
 
 // Verifies: SYS-REQ-041
 // MCDC SYS-REQ-041: input_is_truncated_at_value_boundary=F, returns_error_for_truncated_value_boundary=F => TRUE [no-action: non-truncated input does not invoke the truncated-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_041_Row1_TriggerFalse(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("Get returned error: %v", err)
@@ -1540,7 +1438,6 @@ func TestMCDC_SYS_REQ_041_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-041
 // MCDC SYS-REQ-041: input_is_truncated_at_value_boundary=T, returns_error_for_truncated_value_boundary=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_041_Row2_InvariantViolation(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected parse error on truncated-at-value-boundary input, got nil")
@@ -1549,7 +1446,6 @@ func TestMCDC_SYS_REQ_041_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-041
 // MCDC SYS-REQ-041: input_is_truncated_at_value_boundary=T, returns_error_for_truncated_value_boundary=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_041_Row3_TruncatedError(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected parse error on truncated-at-value-boundary input, got nil")
@@ -1562,7 +1458,6 @@ func TestMCDC_SYS_REQ_041_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-042
 // MCDC SYS-REQ-042: input_is_truncated_mid_structure=F, returns_error_for_truncated_mid_structure=F => TRUE [no-action: non-truncated input does not invoke the truncated-mid-structure action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_042_Row1_TriggerFalse(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":[1,2]}`), "a"); err != nil {
 		t.Fatalf("Get returned error: %v", err)
@@ -1571,7 +1466,6 @@ func TestMCDC_SYS_REQ_042_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-042
 // MCDC SYS-REQ-042: input_is_truncated_mid_structure=T, returns_error_for_truncated_mid_structure=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_042_Row2_InvariantViolation(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":[1,2`), "a"); err == nil {
 		t.Fatal("expected parse error on truncated-mid-structure input, got nil")
@@ -1580,7 +1474,6 @@ func TestMCDC_SYS_REQ_042_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-042
 // MCDC SYS-REQ-042: input_is_truncated_mid_structure=T, returns_error_for_truncated_mid_structure=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_042_Row3_TruncatedError(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":[1,2`), "a"); err == nil {
 		t.Fatal("expected parse error on truncated-mid-structure input, got nil")
@@ -1593,7 +1486,6 @@ func TestMCDC_SYS_REQ_042_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-043
 // MCDC SYS-REQ-043: input_is_truncated_mid_key=F, returns_error_for_truncated_mid_key=F => TRUE [no-action: non-truncated input does not invoke the truncated-mid-key action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_043_Row1_TriggerFalse(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("Get returned error: %v", err)
@@ -1602,7 +1494,6 @@ func TestMCDC_SYS_REQ_043_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-043
 // MCDC SYS-REQ-043: input_is_truncated_mid_key=T, returns_error_for_truncated_mid_key=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_043_Row2_InvariantViolation(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"abc`), "abc"); err == nil {
 		t.Fatal("expected parse error on truncated-mid-key input, got nil")
@@ -1611,7 +1502,6 @@ func TestMCDC_SYS_REQ_043_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-043
 // MCDC SYS-REQ-043: input_is_truncated_mid_key=T, returns_error_for_truncated_mid_key=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_043_Row3_TruncatedError(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"abc`), "abc"); err == nil {
 		t.Fatal("expected parse error on truncated-mid-key input, got nil")
@@ -1624,7 +1514,6 @@ func TestMCDC_SYS_REQ_043_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-044
 // MCDC SYS-REQ-044: caller_bounds_checks_tokenEnd_sentinel=F, tokenEnd_returns_len_data=F => TRUE [no-action: tokenEnd never returns len(data) for this input, bounds-check action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_044_Row1_TriggerFalse(t *testing.T) {
 	// A normal lookup where tokenEnd never returns the len(data) sentinel.
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
@@ -1634,7 +1523,6 @@ func TestMCDC_SYS_REQ_044_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-044
 // MCDC SYS-REQ-044: caller_bounds_checks_tokenEnd_sentinel=F, tokenEnd_returns_len_data=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_044_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: when tokenEnd returns len(data) the caller MUST
 	// bounds-check (Row 3). Drive a path where tokenEnd reaches len(data).
@@ -1651,7 +1539,6 @@ func TestMCDC_SYS_REQ_044_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-044
 // MCDC SYS-REQ-044: caller_bounds_checks_tokenEnd_sentinel=T, tokenEnd_returns_len_data=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_044_Row3_BoundsChecked(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`42`))
 	if err != nil {
@@ -1668,7 +1555,6 @@ func TestMCDC_SYS_REQ_044_Row3_BoundsChecked(t *testing.T) {
 
 // Verifies: SYS-REQ-045
 // MCDC SYS-REQ-045: caller_handles_stringEnd_sentinel=F, stringEnd_returns_negative_one=F => TRUE [no-action: stringEnd never returns -1 here, sentinel-handling action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_045_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":"b"}`), "a")
 	if err != nil {
@@ -1681,7 +1567,6 @@ func TestMCDC_SYS_REQ_045_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-045
 // MCDC SYS-REQ-045: caller_handles_stringEnd_sentinel=F, stringEnd_returns_negative_one=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_045_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: when stringEnd returns -1 the caller MUST handle
 	// it (Row 3). Truncated mid-key forces stringEnd to never find a closing
@@ -1693,7 +1578,6 @@ func TestMCDC_SYS_REQ_045_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-045
 // MCDC SYS-REQ-045: caller_handles_stringEnd_sentinel=T, stringEnd_returns_negative_one=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_045_Row3_SentinelHandled(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":"b`), "a"); err == nil {
 		t.Fatal("expected parse error on truncated string, got nil")
@@ -1706,7 +1590,6 @@ func TestMCDC_SYS_REQ_045_Row3_SentinelHandled(t *testing.T) {
 
 // Verifies: SYS-REQ-046
 // MCDC SYS-REQ-046: blockEnd_returns_negative_one=F, caller_handles_blockEnd_sentinel=F => TRUE [no-action: blockEnd never returns -1 here, sentinel-handling action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_046_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":[1,2]}`), "a")
 	if err != nil {
@@ -1719,7 +1602,6 @@ func TestMCDC_SYS_REQ_046_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-046
 // MCDC SYS-REQ-046: blockEnd_returns_negative_one=T, caller_handles_blockEnd_sentinel=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_046_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: when blockEnd returns -1 the caller MUST handle
 	// it (Row 3). Truncated-mid-structure forces blockEnd to return -1.
@@ -1730,7 +1612,6 @@ func TestMCDC_SYS_REQ_046_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-046
 // MCDC SYS-REQ-046: blockEnd_returns_negative_one=T, caller_handles_blockEnd_sentinel=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_046_Row3_SentinelHandled(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":[1,2`), "a"); err == nil {
 		t.Fatal("expected parse error on truncated structure, got nil")
@@ -1743,7 +1624,6 @@ func TestMCDC_SYS_REQ_046_Row3_SentinelHandled(t *testing.T) {
 
 // Verifies: SYS-REQ-047
 // MCDC SYS-REQ-047: path_segment_is_negative_array_index=F, returns_not_found_for_negative_array_index=F => TRUE [no-action: non-negative index does not invoke the negative-index action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_047_Row1_TriggerFalse(t *testing.T) {
 	value, dataType, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[1]")
 	if err != nil {
@@ -1756,7 +1636,6 @@ func TestMCDC_SYS_REQ_047_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-047
 // MCDC SYS-REQ-047: path_segment_is_negative_array_index=T, returns_not_found_for_negative_array_index=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_047_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: negative array index MUST return not-found (Row 3).
 	_, _, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[-1]")
@@ -1767,7 +1646,6 @@ func TestMCDC_SYS_REQ_047_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-047
 // MCDC SYS-REQ-047: path_segment_is_negative_array_index=T, returns_not_found_for_negative_array_index=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_047_Row3_NegativeNotFound(t *testing.T) {
 	_, _, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[-1]")
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -1781,7 +1659,6 @@ func TestMCDC_SYS_REQ_047_Row3_NegativeNotFound(t *testing.T) {
 
 // Verifies: SYS-REQ-048
 // MCDC SYS-REQ-048: delete_completes_without_panic_on_truncated_value=F, delete_input_is_truncated_at_value_boundary=F, delete_returns_original_input_on_truncated_value=F => TRUE [no-action: non-truncated input does not invoke the truncated-value action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_048_Row1_TriggerFalse(t *testing.T) {
 	data := []byte(`{"a":1,"b":2}`)
 	result := Delete(data, "a")
@@ -1792,7 +1669,6 @@ func TestMCDC_SYS_REQ_048_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-048
 // MCDC SYS-REQ-048: delete_completes_without_panic_on_truncated_value=F, delete_input_is_truncated_at_value_boundary=T, delete_returns_original_input_on_truncated_value=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_048_Row2_InvariantViolationPanic(t *testing.T) {
 	// Invariant violation: truncated input + Delete MUST NOT panic AND MUST
 	// return original input (Row 5). Drive the positive path.
@@ -1805,7 +1681,6 @@ func TestMCDC_SYS_REQ_048_Row2_InvariantViolationPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-048
 // MCDC SYS-REQ-048: delete_completes_without_panic_on_truncated_value=F, delete_input_is_truncated_at_value_boundary=T, delete_returns_original_input_on_truncated_value=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_048_Row3_InvariantViolationOriginal(t *testing.T) {
 	data := []byte(`{"a":`)
 	result := Delete(data, "a")
@@ -1816,7 +1691,6 @@ func TestMCDC_SYS_REQ_048_Row3_InvariantViolationOriginal(t *testing.T) {
 
 // Verifies: SYS-REQ-048
 // MCDC SYS-REQ-048: delete_completes_without_panic_on_truncated_value=T, delete_input_is_truncated_at_value_boundary=T, delete_returns_original_input_on_truncated_value=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_048_Row4_InvariantViolationNoPanic(t *testing.T) {
 	data := []byte(`{"a":`)
 	result := Delete(data, "a")
@@ -1827,7 +1701,6 @@ func TestMCDC_SYS_REQ_048_Row4_InvariantViolationNoPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-048
 // MCDC SYS-REQ-048: delete_completes_without_panic_on_truncated_value=T, delete_input_is_truncated_at_value_boundary=T, delete_returns_original_input_on_truncated_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_048_Row5_TruncatedValue(t *testing.T) {
 	data := []byte(`{"a":`)
 	result := Delete(data, "a")
@@ -1843,7 +1716,6 @@ func TestMCDC_SYS_REQ_048_Row5_TruncatedValue(t *testing.T) {
 
 // Verifies: SYS-REQ-049
 // MCDC SYS-REQ-049: delete_discards_internalGet_error=F, delete_propagates_internalGet_error=F => TRUE [no-action: well-formed input does not invoke the propagate-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_049_Row1_TriggerFalse(t *testing.T) {
 	data := []byte(`{"a":1,"b":2}`)
 	result := Delete(data, "a")
@@ -1854,7 +1726,6 @@ func TestMCDC_SYS_REQ_049_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-049
 // MCDC SYS-REQ-049: delete_discards_internalGet_error=T, delete_propagates_internalGet_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_049_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: if Delete would discard the error it MUST still
 	// propagate (Row 3). Drive the positive path: Delete on unusable input
@@ -1868,7 +1739,6 @@ func TestMCDC_SYS_REQ_049_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-049
 // MCDC SYS-REQ-049: delete_discards_internalGet_error=T, delete_propagates_internalGet_error=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_049_Row3_PropagatedError(t *testing.T) {
 	data := []byte(`{"a":`)
 	result := Delete(data, "a")
@@ -1883,7 +1753,6 @@ func TestMCDC_SYS_REQ_049_Row3_PropagatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-050
 // MCDC SYS-REQ-050: delete_array_input_is_truncated=F, delete_completes_without_panic_on_truncated_array=F, delete_returns_original_input_on_truncated_array=F => TRUE [no-action: non-truncated array input does not invoke the truncated-array action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_050_Row1_TriggerFalse(t *testing.T) {
 	data := []byte(`{"a":[1,2,3]}`)
 	result := Delete(data, "a", "[1]")
@@ -1899,7 +1768,6 @@ func TestMCDC_SYS_REQ_050_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-050
 // MCDC SYS-REQ-050: delete_array_input_is_truncated=T, delete_completes_without_panic_on_truncated_array=F, delete_returns_original_input_on_truncated_array=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_050_Row2_InvariantViolationPanic(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a", "[1]")
@@ -1910,7 +1778,6 @@ func TestMCDC_SYS_REQ_050_Row2_InvariantViolationPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-050
 // MCDC SYS-REQ-050: delete_array_input_is_truncated=T, delete_completes_without_panic_on_truncated_array=F, delete_returns_original_input_on_truncated_array=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_050_Row3_InvariantViolationOriginal(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a", "[1]")
@@ -1921,7 +1788,6 @@ func TestMCDC_SYS_REQ_050_Row3_InvariantViolationOriginal(t *testing.T) {
 
 // Verifies: SYS-REQ-050
 // MCDC SYS-REQ-050: delete_array_input_is_truncated=T, delete_completes_without_panic_on_truncated_array=T, delete_returns_original_input_on_truncated_array=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_050_Row4_InvariantViolationNoPanic(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a", "[1]")
@@ -1932,7 +1798,6 @@ func TestMCDC_SYS_REQ_050_Row4_InvariantViolationNoPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-050
 // MCDC SYS-REQ-050: delete_array_input_is_truncated=T, delete_completes_without_panic_on_truncated_array=T, delete_returns_original_input_on_truncated_array=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_050_Row5_TruncatedArray(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a", "[1]")
@@ -1947,7 +1812,6 @@ func TestMCDC_SYS_REQ_050_Row5_TruncatedArray(t *testing.T) {
 
 // Verifies: SYS-REQ-051
 // MCDC SYS-REQ-051: set_input_is_truncated=F, set_returns_error_for_truncated_input=F => TRUE [no-action: non-truncated input does not invoke the truncated-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_051_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -1956,7 +1820,6 @@ func TestMCDC_SYS_REQ_051_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-051
 // MCDC SYS-REQ-051: set_input_is_truncated=T, set_returns_error_for_truncated_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_051_Row2_InvariantViolation(t *testing.T) {
 	if _, err := Set([]byte(`{"a":`), []byte(`42`), "a"); err == nil {
 		t.Fatal("expected error on truncated Set input, got nil")
@@ -1965,7 +1828,6 @@ func TestMCDC_SYS_REQ_051_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-051
 // MCDC SYS-REQ-051: set_input_is_truncated=T, set_returns_error_for_truncated_input=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_051_Row3_TruncatedError(t *testing.T) {
 	if _, err := Set([]byte(`{"a":`), []byte(`42`), "a"); err == nil {
 		t.Fatal("expected error on truncated Set input, got nil")
@@ -1978,7 +1840,6 @@ func TestMCDC_SYS_REQ_051_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-052
 // MCDC SYS-REQ-052: array_callback_error_is_propagated=F, array_callback_returns_error=F => TRUE [no-action: callback returns nil, propagate-error action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_052_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -1997,7 +1858,6 @@ func TestMCDC_SYS_REQ_052_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-053
 // MCDC SYS-REQ-053: array_is_truncated_mid_element=F, returns_error_for_truncated_array_element=F => TRUE [no-action: non-truncated array does not invoke the truncated-element action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_053_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -2012,7 +1872,6 @@ func TestMCDC_SYS_REQ_053_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-053
 // MCDC SYS-REQ-053: array_is_truncated_mid_element=T, returns_error_for_truncated_array_element=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_053_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[1,2,`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on truncated array element, got nil")
@@ -2021,7 +1880,6 @@ func TestMCDC_SYS_REQ_053_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-053
 // MCDC SYS-REQ-053: array_is_truncated_mid_element=T, returns_error_for_truncated_array_element=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_053_Row3_TruncatedError(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[1,2,`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on truncated array element, got nil")
@@ -2034,7 +1892,6 @@ func TestMCDC_SYS_REQ_053_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-054
 // MCDC SYS-REQ-054: object_is_truncated_mid_entry=F, returns_error_for_truncated_object_entry=F => TRUE [no-action: non-truncated object does not invoke the truncated-entry action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_054_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{"a":1,"b":2}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -2050,7 +1907,6 @@ func TestMCDC_SYS_REQ_054_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-054
 // MCDC SYS-REQ-054: object_is_truncated_mid_entry=T, returns_error_for_truncated_object_entry=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_054_Row2_InvariantViolation(t *testing.T) {
 	if err := ObjectEach([]byte(`{"a":1,"b":`), func(key []byte, value []byte, dataType ValueType, offset int) error { return nil }); err == nil {
 		t.Fatal("expected error on truncated object entry, got nil")
@@ -2059,7 +1915,6 @@ func TestMCDC_SYS_REQ_054_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-054
 // MCDC SYS-REQ-054: object_is_truncated_mid_entry=T, returns_error_for_truncated_object_entry=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_054_Row3_TruncatedError(t *testing.T) {
 	if err := ObjectEach([]byte(`{"a":1,"b":`), func(key []byte, value []byte, dataType ValueType, offset int) error { return nil }); err == nil {
 		t.Fatal("expected error on truncated object entry, got nil")
@@ -2072,7 +1927,6 @@ func TestMCDC_SYS_REQ_054_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-055
 // MCDC SYS-REQ-055: array_has_malformed_delimiter=F, returns_error_for_malformed_array_delimiter=F => TRUE [no-action: well-formed delimiters do not invoke the malformed-delimiter action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_055_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -2087,7 +1941,6 @@ func TestMCDC_SYS_REQ_055_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-055
 // MCDC SYS-REQ-055: array_has_malformed_delimiter=T, returns_error_for_malformed_array_delimiter=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_055_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[1,,2]`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on malformed array delimiter, got nil")
@@ -2096,7 +1949,6 @@ func TestMCDC_SYS_REQ_055_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-055
 // MCDC SYS-REQ-055: array_has_malformed_delimiter=T, returns_error_for_malformed_array_delimiter=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_055_Row3_MalformedError(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[1,,2]`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on malformed array delimiter, got nil")
@@ -2109,7 +1961,6 @@ func TestMCDC_SYS_REQ_055_Row3_MalformedError(t *testing.T) {
 
 // Verifies: SYS-REQ-056
 // MCDC SYS-REQ-056: delete_completes_without_panic_on_truncated_structure=F, delete_input_is_truncated_mid_structure=F, delete_returns_original_input_on_truncated_structure=F => TRUE [no-action: non-truncated input does not invoke the truncated-structure action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_056_Row1_TriggerFalse(t *testing.T) {
 	data := []byte(`{"a":{"b":1}}`)
 	result := Delete(data, "a")
@@ -2120,7 +1971,6 @@ func TestMCDC_SYS_REQ_056_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-056
 // MCDC SYS-REQ-056: delete_completes_without_panic_on_truncated_structure=F, delete_input_is_truncated_mid_structure=T, delete_returns_original_input_on_truncated_structure=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_056_Row2_InvariantViolationPanic(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a")
@@ -2131,7 +1981,6 @@ func TestMCDC_SYS_REQ_056_Row2_InvariantViolationPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-056
 // MCDC SYS-REQ-056: delete_completes_without_panic_on_truncated_structure=F, delete_input_is_truncated_mid_structure=T, delete_returns_original_input_on_truncated_structure=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_056_Row3_InvariantViolationOriginal(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a")
@@ -2142,7 +1991,6 @@ func TestMCDC_SYS_REQ_056_Row3_InvariantViolationOriginal(t *testing.T) {
 
 // Verifies: SYS-REQ-056
 // MCDC SYS-REQ-056: delete_completes_without_panic_on_truncated_structure=T, delete_input_is_truncated_mid_structure=T, delete_returns_original_input_on_truncated_structure=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_056_Row4_InvariantViolationNoPanic(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a")
@@ -2153,7 +2001,6 @@ func TestMCDC_SYS_REQ_056_Row4_InvariantViolationNoPanic(t *testing.T) {
 
 // Verifies: SYS-REQ-056
 // MCDC SYS-REQ-056: delete_completes_without_panic_on_truncated_structure=T, delete_input_is_truncated_mid_structure=T, delete_returns_original_input_on_truncated_structure=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_056_Row5_TruncatedStructure(t *testing.T) {
 	data := []byte(`{"a":[1,2`)
 	result := Delete(data, "a")
@@ -2168,7 +2015,6 @@ func TestMCDC_SYS_REQ_056_Row5_TruncatedStructure(t *testing.T) {
 
 // Verifies: SYS-REQ-057
 // MCDC SYS-REQ-057: raw_boolean_literal_is_partial=F, returns_error_for_partial_boolean_literal=F => TRUE [no-action: non-partial literal does not invoke the partial-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_057_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseBoolean([]byte(`true`))
 	if err != nil {
@@ -2181,7 +2027,6 @@ func TestMCDC_SYS_REQ_057_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-057
 // MCDC SYS-REQ-057: raw_boolean_literal_is_partial=T, returns_error_for_partial_boolean_literal=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_057_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseBoolean([]byte(`tru`)); err == nil {
 		t.Fatal("expected error on partial boolean literal, got nil")
@@ -2190,7 +2035,6 @@ func TestMCDC_SYS_REQ_057_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-057
 // MCDC SYS-REQ-057: raw_boolean_literal_is_partial=T, returns_error_for_partial_boolean_literal=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_057_Row3_PartialError(t *testing.T) {
 	if _, err := ParseBoolean([]byte(`tru`)); err == nil {
 		t.Fatal("expected error on partial boolean literal, got nil")
@@ -2203,7 +2047,6 @@ func TestMCDC_SYS_REQ_057_Row3_PartialError(t *testing.T) {
 
 // Verifies: SYS-REQ-058
 // MCDC SYS-REQ-058: raw_int_token_is_at_int64_max_boundary=F, returns_correct_value_at_int64_boundary=F => TRUE [no-action: non-boundary integer does not invoke the boundary-value action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_058_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseInt([]byte(`42`))
 	if err != nil {
@@ -2216,7 +2059,6 @@ func TestMCDC_SYS_REQ_058_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-058
 // MCDC SYS-REQ-058: raw_int_token_is_at_int64_max_boundary=T, returns_correct_value_at_int64_boundary=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_058_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: int64 max boundary MUST return correct value (Row 3).
 	v, err := ParseInt([]byte(`9223372036854775807`))
@@ -2230,7 +2072,6 @@ func TestMCDC_SYS_REQ_058_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-058
 // MCDC SYS-REQ-058: raw_int_token_is_at_int64_max_boundary=T, returns_correct_value_at_int64_boundary=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_058_Row3_BoundaryValue(t *testing.T) {
 	v, err := ParseInt([]byte(`9223372036854775807`))
 	if err != nil {
@@ -2247,7 +2088,6 @@ func TestMCDC_SYS_REQ_058_Row3_BoundaryValue(t *testing.T) {
 
 // Verifies: SYS-REQ-059
 // MCDC SYS-REQ-059: raw_int_token_is_at_int64_max_plus_one=F, returns_overflow_at_int64_max_plus_one=F => TRUE [no-action: non-overflow integer does not invoke the overflow action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_059_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseInt([]byte(`42`))
 	if err != nil {
@@ -2260,7 +2100,6 @@ func TestMCDC_SYS_REQ_059_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-059
 // MCDC SYS-REQ-059: raw_int_token_is_at_int64_max_plus_one=T, returns_overflow_at_int64_max_plus_one=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_059_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseInt([]byte(`9223372036854775808`)); err == nil {
 		t.Fatal("expected overflow error, got nil")
@@ -2269,7 +2108,6 @@ func TestMCDC_SYS_REQ_059_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-059
 // MCDC SYS-REQ-059: raw_int_token_is_at_int64_max_plus_one=T, returns_overflow_at_int64_max_plus_one=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_059_Row3_OverflowError(t *testing.T) {
 	if _, err := ParseInt([]byte(`9223372036854775808`)); err == nil {
 		t.Fatal("expected overflow error, got nil")
@@ -2282,7 +2120,6 @@ func TestMCDC_SYS_REQ_059_Row3_OverflowError(t *testing.T) {
 
 // Verifies: SYS-REQ-060
 // MCDC SYS-REQ-060: raw_string_has_truncated_escape_sequence=F, returns_error_for_truncated_escape_sequence=F => TRUE [no-action: complete escape sequence does not invoke the truncated-escape action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_060_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseString([]byte(`hello`))
 	if err != nil {
@@ -2295,7 +2132,6 @@ func TestMCDC_SYS_REQ_060_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-060
 // MCDC SYS-REQ-060: raw_string_has_truncated_escape_sequence=T, returns_error_for_truncated_escape_sequence=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_060_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseString([]byte(`abc\`)); err == nil {
 		t.Fatal("expected error on truncated escape sequence, got nil")
@@ -2304,7 +2140,6 @@ func TestMCDC_SYS_REQ_060_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-060
 // MCDC SYS-REQ-060: raw_string_has_truncated_escape_sequence=T, returns_error_for_truncated_escape_sequence=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_060_Row3_TruncatedEscapeError(t *testing.T) {
 	if _, err := ParseString([]byte(`abc\`)); err == nil {
 		t.Fatal("expected error on truncated escape sequence, got nil")
@@ -2317,7 +2152,6 @@ func TestMCDC_SYS_REQ_060_Row3_TruncatedEscapeError(t *testing.T) {
 
 // Verifies: SYS-REQ-065
 // MCDC SYS-REQ-065: parsefloat_input_is_empty=F, returns_parsefloat_malformed_for_empty=F => TRUE [no-action: non-empty input does not invoke the empty-malformed action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_065_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseFloat([]byte(`3.14`))
 	if err != nil {
@@ -2330,7 +2164,6 @@ func TestMCDC_SYS_REQ_065_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-065
 // MCDC SYS-REQ-065: parsefloat_input_is_empty=T, returns_parsefloat_malformed_for_empty=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_065_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseFloat([]byte(``)); err == nil {
 		t.Fatal("expected malformed error on empty input, got nil")
@@ -2339,7 +2172,6 @@ func TestMCDC_SYS_REQ_065_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-065
 // MCDC SYS-REQ-065: parsefloat_input_is_empty=T, returns_parsefloat_malformed_for_empty=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_065_Row3_EmptyMalformed(t *testing.T) {
 	if _, err := ParseFloat([]byte(``)); err == nil {
 		t.Fatal("expected malformed error on empty input, got nil")
@@ -2352,7 +2184,6 @@ func TestMCDC_SYS_REQ_065_Row3_EmptyMalformed(t *testing.T) {
 
 // Verifies: SYS-REQ-066
 // MCDC SYS-REQ-066: parseboolean_input_is_empty=F, returns_parseboolean_malformed_for_empty=F => TRUE [no-action: non-empty input does not invoke the empty-malformed action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_066_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseBoolean([]byte(`true`))
 	if err != nil {
@@ -2365,7 +2196,6 @@ func TestMCDC_SYS_REQ_066_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-066
 // MCDC SYS-REQ-066: parseboolean_input_is_empty=T, returns_parseboolean_malformed_for_empty=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_066_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseBoolean([]byte(``)); err == nil {
 		t.Fatal("expected malformed error on empty input, got nil")
@@ -2374,7 +2204,6 @@ func TestMCDC_SYS_REQ_066_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-066
 // MCDC SYS-REQ-066: parseboolean_input_is_empty=T, returns_parseboolean_malformed_for_empty=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_066_Row3_EmptyMalformed(t *testing.T) {
 	if _, err := ParseBoolean([]byte(``)); err == nil {
 		t.Fatal("expected malformed error on empty input, got nil")
@@ -2387,7 +2216,6 @@ func TestMCDC_SYS_REQ_066_Row3_EmptyMalformed(t *testing.T) {
 
 // Verifies: SYS-REQ-067
 // MCDC SYS-REQ-067: parsestring_input_is_empty=F, returns_parsestring_identity_for_empty=F => TRUE [no-action: non-empty input does not invoke the empty-identity action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_067_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseString([]byte(`hello`))
 	if err != nil {
@@ -2400,7 +2228,6 @@ func TestMCDC_SYS_REQ_067_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-067
 // MCDC SYS-REQ-067: parsestring_input_is_empty=T, returns_parsestring_identity_for_empty=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_067_Row2_InvariantViolation(t *testing.T) {
 	v, err := ParseString([]byte(``))
 	if err != nil {
@@ -2413,7 +2240,6 @@ func TestMCDC_SYS_REQ_067_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-067
 // MCDC SYS-REQ-067: parsestring_input_is_empty=T, returns_parsestring_identity_for_empty=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_067_Row3_EmptyIdentity(t *testing.T) {
 	v, err := ParseString([]byte(``))
 	if err != nil {
@@ -2430,7 +2256,6 @@ func TestMCDC_SYS_REQ_067_Row3_EmptyIdentity(t *testing.T) {
 
 // Verifies: SYS-REQ-068
 // MCDC SYS-REQ-068: set_path_points_beyond_eof=F, set_returns_error_for_path_beyond_eof=F => TRUE [no-action: valid path does not invoke the beyond-eof action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_068_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "b"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -2439,7 +2264,6 @@ func TestMCDC_SYS_REQ_068_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-068
 // MCDC SYS-REQ-068: set_path_points_beyond_eof=T, set_returns_error_for_path_beyond_eof=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_068_Row2_InvariantViolation(t *testing.T) {
 	// Set on a non-object root (scalar) with a path attempts to set beyond EOF.
 	if _, err := Set([]byte(`42`), []byte(`1`), "a"); err == nil {
@@ -2449,7 +2273,6 @@ func TestMCDC_SYS_REQ_068_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-068
 // MCDC SYS-REQ-068: set_path_points_beyond_eof=T, set_returns_error_for_path_beyond_eof=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_068_Row3_BeyondEofError(t *testing.T) {
 	if _, err := Set([]byte(`42`), []byte(`1`), "a"); err == nil {
 		t.Fatal("expected error on Set path beyond EOF, got nil")
@@ -2462,7 +2285,6 @@ func TestMCDC_SYS_REQ_068_Row3_BeyondEofError(t *testing.T) {
 
 // Verifies: SYS-REQ-069
 // MCDC SYS-REQ-069: set_performs_nested_mutation_correctly=F, set_target_is_nested_in_existing_structure=F => TRUE [no-action: non-nested target does not invoke the nested-mutation action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_069_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -2471,7 +2293,6 @@ func TestMCDC_SYS_REQ_069_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-069
 // MCDC SYS-REQ-069: set_performs_nested_mutation_correctly=F, set_target_is_nested_in_existing_structure=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_069_Row2_InvariantViolation(t *testing.T) {
 	// Invariant violation: nested target in existing structure MUST be set correctly (Row 3).
 	value, err := Set([]byte(`{"a":{"b":1}}`), []byte(`42`), "a", "b")
@@ -2489,7 +2310,6 @@ func TestMCDC_SYS_REQ_069_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-069
 // MCDC SYS-REQ-069: set_performs_nested_mutation_correctly=T, set_target_is_nested_in_existing_structure=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_069_Row3_NestedMutation(t *testing.T) {
 	value, err := Set([]byte(`{"a":{"b":1}}`), []byte(`42`), "a", "b")
 	if err != nil {
@@ -2510,7 +2330,6 @@ func TestMCDC_SYS_REQ_069_Row3_NestedMutation(t *testing.T) {
 
 // Verifies: SYS-REQ-070
 // MCDC SYS-REQ-070: set_called_without_path=F, set_returns_error_without_path=F => TRUE [no-action: Set with path does not invoke the no-path-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_070_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -2519,7 +2338,6 @@ func TestMCDC_SYS_REQ_070_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-070
 // MCDC SYS-REQ-070: set_called_without_path=T, set_returns_error_without_path=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_070_Row2_InvariantViolation(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`)); !errors.Is(err, KeyPathNotFoundError) {
 		t.Fatalf("expected KeyPathNotFoundError, got %v", err)
@@ -2528,7 +2346,6 @@ func TestMCDC_SYS_REQ_070_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-070
 // MCDC SYS-REQ-070: set_called_without_path=T, set_returns_error_without_path=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_070_Row3_NoPathError(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`)); !errors.Is(err, KeyPathNotFoundError) {
 		t.Fatalf("expected KeyPathNotFoundError, got %v", err)
@@ -2541,7 +2358,6 @@ func TestMCDC_SYS_REQ_070_Row3_NoPathError(t *testing.T) {
 
 // Verifies: SYS-REQ-071
 // MCDC SYS-REQ-071: getstring_input_is_malformed=F, returns_getstring_error_for_malformed=F => TRUE [no-action: well-formed input does not invoke the malformed-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_071_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -2550,7 +2366,6 @@ func TestMCDC_SYS_REQ_071_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-071
 // MCDC SYS-REQ-071: getstring_input_is_malformed=T, returns_getstring_error_for_malformed=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_071_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetString input, got nil")
@@ -2559,7 +2374,6 @@ func TestMCDC_SYS_REQ_071_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-071
 // MCDC SYS-REQ-071: getstring_input_is_malformed=T, returns_getstring_error_for_malformed=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_071_Row3_MalformedError(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetString input, got nil")
@@ -2572,7 +2386,6 @@ func TestMCDC_SYS_REQ_071_Row3_MalformedError(t *testing.T) {
 
 // Verifies: SYS-REQ-072
 // MCDC SYS-REQ-072: getstring_value_has_truncated_escape=F, returns_getstring_error_for_truncated_escape=F => TRUE [no-action: complete escape does not invoke the truncated-escape action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_072_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -2581,7 +2394,6 @@ func TestMCDC_SYS_REQ_072_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-072
 // MCDC SYS-REQ-072: getstring_value_has_truncated_escape=T, returns_getstring_error_for_truncated_escape=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_072_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b\`), "a"); err == nil {
 		t.Fatal("expected error on truncated escape in GetString, got nil")
@@ -2590,7 +2402,6 @@ func TestMCDC_SYS_REQ_072_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-072
 // MCDC SYS-REQ-072: getstring_value_has_truncated_escape=T, returns_getstring_error_for_truncated_escape=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_072_Row3_TruncatedEscapeError(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b\`), "a"); err == nil {
 		t.Fatal("expected error on truncated escape in GetString, got nil")
@@ -2603,7 +2414,6 @@ func TestMCDC_SYS_REQ_072_Row3_TruncatedEscapeError(t *testing.T) {
 
 // Verifies: SYS-REQ-073
 // MCDC SYS-REQ-073: getstring_addressed_value_is_not_string=F, returns_getstring_type_mismatch_error=F => TRUE [no-action: addressed value is a string, type-mismatch action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_073_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -2612,7 +2422,6 @@ func TestMCDC_SYS_REQ_073_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-073
 // MCDC SYS-REQ-073: getstring_addressed_value_is_not_string=T, returns_getstring_type_mismatch_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_073_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":123}`), "a"); err == nil {
 		t.Fatal("expected type-mismatch error, got nil")
@@ -2621,7 +2430,6 @@ func TestMCDC_SYS_REQ_073_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-073
 // MCDC SYS-REQ-073: getstring_addressed_value_is_not_string=T, returns_getstring_type_mismatch_error=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_073_Row3_TypeMismatchError(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":123}`), "a"); err == nil {
 		t.Fatal("expected type-mismatch error, got nil")
@@ -2634,7 +2442,6 @@ func TestMCDC_SYS_REQ_073_Row3_TypeMismatchError(t *testing.T) {
 
 // Verifies: SYS-REQ-074
 // MCDC SYS-REQ-074: getstring_input_is_empty=F, returns_getstring_error_for_empty_input=F => TRUE [no-action: non-empty input does not invoke the empty-input action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_074_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -2643,7 +2450,6 @@ func TestMCDC_SYS_REQ_074_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-074
 // MCDC SYS-REQ-074: getstring_input_is_empty=T, returns_getstring_error_for_empty_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_074_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetString([]byte(``), "a"); err == nil {
 		t.Fatal("expected error on empty GetString input, got nil")
@@ -2652,7 +2458,6 @@ func TestMCDC_SYS_REQ_074_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-074
 // MCDC SYS-REQ-074: getstring_input_is_empty=T, returns_getstring_error_for_empty_input=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_074_Row3_EmptyInputError(t *testing.T) {
 	if _, err := GetString([]byte(``), "a"); err == nil {
 		t.Fatal("expected error on empty GetString input, got nil")
@@ -2665,7 +2470,6 @@ func TestMCDC_SYS_REQ_074_Row3_EmptyInputError(t *testing.T) {
 
 // Verifies: SYS-REQ-075
 // MCDC SYS-REQ-075: getint_input_is_malformed=F, returns_getint_error_for_malformed=F => TRUE [no-action: well-formed input does not invoke the malformed-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_075_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -2674,7 +2478,6 @@ func TestMCDC_SYS_REQ_075_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-075
 // MCDC SYS-REQ-075: getint_input_is_malformed=T, returns_getint_error_for_malformed=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_075_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetInt input, got nil")
@@ -2683,7 +2486,6 @@ func TestMCDC_SYS_REQ_075_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-075
 // MCDC SYS-REQ-075: getint_input_is_malformed=T, returns_getint_error_for_malformed=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_075_Row3_MalformedError(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetInt input, got nil")
@@ -2696,7 +2498,6 @@ func TestMCDC_SYS_REQ_075_Row3_MalformedError(t *testing.T) {
 
 // Verifies: SYS-REQ-076
 // MCDC SYS-REQ-076: getint_value_overflows_int64=F, returns_getint_overflow_error=F => TRUE [no-action: non-overflow value does not invoke the overflow action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_076_Row1_TriggerFalse(t *testing.T) {
 	v, err := GetInt([]byte(`{"a":42}`), "a")
 	if err != nil {
@@ -2709,7 +2510,6 @@ func TestMCDC_SYS_REQ_076_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-076
 // MCDC SYS-REQ-076: getint_value_overflows_int64=T, returns_getint_overflow_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_076_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":99999999999999999999999}`), "a"); err == nil {
 		t.Fatal("expected overflow error, got nil")
@@ -2718,7 +2518,6 @@ func TestMCDC_SYS_REQ_076_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-076
 // MCDC SYS-REQ-076: getint_value_overflows_int64=T, returns_getint_overflow_error=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_076_Row3_OverflowError(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":99999999999999999999999}`), "a"); err == nil {
 		t.Fatal("expected overflow error, got nil")
@@ -2731,7 +2530,6 @@ func TestMCDC_SYS_REQ_076_Row3_OverflowError(t *testing.T) {
 
 // Verifies: SYS-REQ-077
 // MCDC SYS-REQ-077: getint_addressed_value_is_not_number=F, returns_getint_type_mismatch_error=F => TRUE [no-action: addressed value is a number, type-mismatch action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_077_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -2740,7 +2538,6 @@ func TestMCDC_SYS_REQ_077_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-077
 // MCDC SYS-REQ-077: getint_addressed_value_is_not_number=T, returns_getint_type_mismatch_error=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_077_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":"string"}`), "a"); err == nil {
 		t.Fatal("expected type-mismatch error, got nil")
@@ -2749,7 +2546,6 @@ func TestMCDC_SYS_REQ_077_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-077
 // MCDC SYS-REQ-077: getint_addressed_value_is_not_number=T, returns_getint_type_mismatch_error=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_077_Row3_TypeMismatchError(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":"string"}`), "a"); err == nil {
 		t.Fatal("expected type-mismatch error, got nil")
@@ -2762,7 +2558,6 @@ func TestMCDC_SYS_REQ_077_Row3_TypeMismatchError(t *testing.T) {
 
 // Verifies: SYS-REQ-078
 // MCDC SYS-REQ-078: getint_input_is_empty=F, returns_getint_error_for_empty_input=F => TRUE [no-action: non-empty input does not invoke the empty-input action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_078_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -2771,7 +2566,6 @@ func TestMCDC_SYS_REQ_078_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-078
 // MCDC SYS-REQ-078: getint_input_is_empty=T, returns_getint_error_for_empty_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_078_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetInt([]byte(``), "a"); err == nil {
 		t.Fatal("expected error on empty GetInt input, got nil")
@@ -2780,7 +2574,6 @@ func TestMCDC_SYS_REQ_078_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-078
 // MCDC SYS-REQ-078: getint_input_is_empty=T, returns_getint_error_for_empty_input=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_078_Row3_EmptyInputError(t *testing.T) {
 	if _, err := GetInt([]byte(``), "a"); err == nil {
 		t.Fatal("expected error on empty GetInt input, got nil")
@@ -2793,7 +2586,6 @@ func TestMCDC_SYS_REQ_078_Row3_EmptyInputError(t *testing.T) {
 
 // Verifies: SYS-REQ-079
 // MCDC SYS-REQ-079: getboolean_addressed_value_is_partial_literal=F, returns_getboolean_error_for_partial=F => TRUE [no-action: non-partial literal does not invoke the partial-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_079_Row1_TriggerFalse(t *testing.T) {
 	v, err := GetBoolean([]byte(`{"a":true}`), "a")
 	if err != nil {
@@ -2806,7 +2598,6 @@ func TestMCDC_SYS_REQ_079_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-079
 // MCDC SYS-REQ-079: getboolean_addressed_value_is_partial_literal=T, returns_getboolean_error_for_partial=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_079_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetBoolean([]byte(`{"a":tru`), "a"); err == nil {
 		t.Fatal("expected error on partial boolean literal, got nil")
@@ -2815,7 +2606,6 @@ func TestMCDC_SYS_REQ_079_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-079
 // MCDC SYS-REQ-079: getboolean_addressed_value_is_partial_literal=T, returns_getboolean_error_for_partial=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_079_Row3_PartialError(t *testing.T) {
 	if _, err := GetBoolean([]byte(`{"a":tru`), "a"); err == nil {
 		t.Fatal("expected error on partial boolean literal, got nil")
@@ -2828,7 +2618,6 @@ func TestMCDC_SYS_REQ_079_Row3_PartialError(t *testing.T) {
 
 // Verifies: SYS-REQ-080
 // MCDC SYS-REQ-080: getunsafestring_input_is_malformed=F, returns_getunsafestring_error_for_malformed=F => TRUE [no-action: well-formed input does not invoke the malformed-error action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_080_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -2837,7 +2626,6 @@ func TestMCDC_SYS_REQ_080_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-080
 // MCDC SYS-REQ-080: getunsafestring_input_is_malformed=T, returns_getunsafestring_error_for_malformed=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_080_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetUnsafeString input, got nil")
@@ -2846,7 +2634,6 @@ func TestMCDC_SYS_REQ_080_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-080
 // MCDC SYS-REQ-080: getunsafestring_input_is_malformed=T, returns_getunsafestring_error_for_malformed=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_080_Row3_MalformedError(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetUnsafeString input, got nil")
@@ -2859,7 +2646,6 @@ func TestMCDC_SYS_REQ_080_Row3_MalformedError(t *testing.T) {
 
 // Verifies: SYS-REQ-081
 // MCDC SYS-REQ-081: getunsafestring_input_is_empty=F, returns_getunsafestring_error_for_empty=F => TRUE [no-action: non-empty input does not invoke the empty-input action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_081_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -2868,7 +2654,6 @@ func TestMCDC_SYS_REQ_081_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-081
 // MCDC SYS-REQ-081: getunsafestring_input_is_empty=T, returns_getunsafestring_error_for_empty=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_081_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(``), "a"); err == nil {
 		t.Fatal("expected error on empty GetUnsafeString input, got nil")
@@ -2877,7 +2662,6 @@ func TestMCDC_SYS_REQ_081_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-081
 // MCDC SYS-REQ-081: getunsafestring_input_is_empty=T, returns_getunsafestring_error_for_empty=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_081_Row3_EmptyInputError(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(``), "a"); err == nil {
 		t.Fatal("expected error on empty GetUnsafeString input, got nil")
@@ -2890,7 +2674,6 @@ func TestMCDC_SYS_REQ_081_Row3_EmptyInputError(t *testing.T) {
 
 // Verifies: SYS-REQ-082
 // MCDC SYS-REQ-082: getunsafestring_input_is_truncated_at_value_boundary=F, returns_getunsafestring_error_for_truncated_value=F => TRUE [no-action: non-truncated input does not invoke the truncated-value action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_082_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -2899,7 +2682,6 @@ func TestMCDC_SYS_REQ_082_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-082
 // MCDC SYS-REQ-082: getunsafestring_input_is_truncated_at_value_boundary=T, returns_getunsafestring_error_for_truncated_value=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_082_Row2_InvariantViolation(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on truncated GetUnsafeString input, got nil")
@@ -2908,7 +2690,6 @@ func TestMCDC_SYS_REQ_082_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-082
 // MCDC SYS-REQ-082: getunsafestring_input_is_truncated_at_value_boundary=T, returns_getunsafestring_error_for_truncated_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_082_Row3_TruncatedValueError(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on truncated GetUnsafeString input, got nil")
@@ -2921,7 +2702,6 @@ func TestMCDC_SYS_REQ_082_Row3_TruncatedValueError(t *testing.T) {
 
 // Verifies: SYS-REQ-083
 // MCDC SYS-REQ-083: arrayeach_input_is_truncated_at_value_boundary=F, returns_error_for_arrayeach_truncated_value=F => TRUE [no-action: non-truncated input does not invoke the truncated-value action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_083_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -2936,7 +2716,6 @@ func TestMCDC_SYS_REQ_083_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-083
 // MCDC SYS-REQ-083: arrayeach_input_is_truncated_at_value_boundary=T, returns_error_for_arrayeach_truncated_value=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_083_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[1,`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on truncated ArrayEach input, got nil")
@@ -2945,7 +2724,6 @@ func TestMCDC_SYS_REQ_083_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-083
 // MCDC SYS-REQ-083: arrayeach_input_is_truncated_at_value_boundary=T, returns_error_for_arrayeach_truncated_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_083_Row3_TruncatedError(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[1,`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on truncated ArrayEach input, got nil")
@@ -2958,7 +2736,6 @@ func TestMCDC_SYS_REQ_083_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-084
 // MCDC SYS-REQ-084: objecteach_input_is_truncated_mid_structure=F, returns_error_for_objecteach_truncated_structure=F => TRUE [no-action: non-truncated input does not invoke the truncated-structure action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_084_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{"a":1,"b":2}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -2974,7 +2751,6 @@ func TestMCDC_SYS_REQ_084_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-084
 // MCDC SYS-REQ-084: objecteach_input_is_truncated_mid_structure=T, returns_error_for_objecteach_truncated_structure=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_084_Row2_InvariantViolation(t *testing.T) {
 	if err := ObjectEach([]byte(`{"a":{"b":1`), func(key []byte, value []byte, dataType ValueType, offset int) error { return nil }); err == nil {
 		t.Fatal("expected error on truncated ObjectEach input, got nil")
@@ -2983,7 +2759,6 @@ func TestMCDC_SYS_REQ_084_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-084
 // MCDC SYS-REQ-084: objecteach_input_is_truncated_mid_structure=T, returns_error_for_objecteach_truncated_structure=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_084_Row3_TruncatedError(t *testing.T) {
 	if err := ObjectEach([]byte(`{"a":{"b":1`), func(key []byte, value []byte, dataType ValueType, offset int) error { return nil }); err == nil {
 		t.Fatal("expected error on truncated ObjectEach input, got nil")
@@ -2996,7 +2771,6 @@ func TestMCDC_SYS_REQ_084_Row3_TruncatedError(t *testing.T) {
 
 // Verifies: SYS-REQ-085
 // MCDC SYS-REQ-085: eachkey_handles_sentinel_safely=F, eachkey_tokenEnd_sentinel_reached=F => TRUE [no-action: sentinel never reached, sentinel-handling action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_085_Row1_TriggerFalse(t *testing.T) {
 	called := false
 	EachKey([]byte(`{"a":1}`), func(i int, value []byte, vt ValueType, err error) {
@@ -3009,7 +2783,6 @@ func TestMCDC_SYS_REQ_085_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-085
 // MCDC SYS-REQ-085: eachkey_handles_sentinel_safely=F, eachkey_tokenEnd_sentinel_reached=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_085_Row2_InvariantViolation(t *testing.T) {
 	// EachKey on empty/malformed input must not crash even when tokenEnd
 	// reaches its sentinel; the call returns without panic.
@@ -3018,7 +2791,6 @@ func TestMCDC_SYS_REQ_085_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-085
 // MCDC SYS-REQ-085: eachkey_handles_sentinel_safely=T, eachkey_tokenEnd_sentinel_reached=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_085_Row3_SentinelHandled(t *testing.T) {
 	EachKey([]byte(``), func(i int, value []byte, vt ValueType, err error) {}, []string{"a"})
 }
@@ -3029,7 +2801,6 @@ func TestMCDC_SYS_REQ_085_Row3_SentinelHandled(t *testing.T) {
 
 // Verifies: SYS-REQ-061
 // MCDC SYS-REQ-061: raw_string_has_missing_low_surrogate=F, returns_error_for_missing_low_surrogate=F => TRUE [no-action: complete surrogate pair does not invoke the missing-low-surrogate action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_061_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseString([]byte(`hello`)); err != nil {
 		t.Fatalf("ParseString returned error: %v", err)
@@ -3038,7 +2809,6 @@ func TestMCDC_SYS_REQ_061_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-061
 // MCDC SYS-REQ-061: raw_string_has_missing_low_surrogate=T, returns_error_for_missing_low_surrogate=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_061_Row2_InvariantViolation(t *testing.T) {
 	// High surrogate followed by non-surrogate: missing low surrogate.
 	if _, err := ParseString([]byte(`\uD800x`)); err == nil {
@@ -3048,7 +2818,6 @@ func TestMCDC_SYS_REQ_061_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-061
 // MCDC SYS-REQ-061: raw_string_has_missing_low_surrogate=T, returns_error_for_missing_low_surrogate=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_061_Row3_MissingLowSurrogateError(t *testing.T) {
 	if _, err := ParseString([]byte(`\uD800x`)); err == nil {
 		t.Fatal("expected error on missing low surrogate, got nil")
@@ -3061,7 +2830,6 @@ func TestMCDC_SYS_REQ_061_Row3_MissingLowSurrogateError(t *testing.T) {
 
 // Verifies: SYS-REQ-062
 // MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=F, returns_error_for_invalid_low_surrogate=F => TRUE [no-action: valid (or no) surrogate pair does not invoke the invalid-low-surrogate action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_062_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseString([]byte(`hello`)); err != nil {
 		t.Fatalf("ParseString returned error: %v", err)
@@ -3070,7 +2838,6 @@ func TestMCDC_SYS_REQ_062_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-062
 // MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=T, returns_error_for_invalid_low_surrogate=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_062_Row2_InvariantViolation(t *testing.T) {
 	// High surrogate followed by an out-of-range low surrogate.
 	if _, err := ParseString([]byte(`\uD800\uD800`)); err == nil {
@@ -3080,7 +2847,6 @@ func TestMCDC_SYS_REQ_062_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-062
 // MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=T, returns_error_for_invalid_low_surrogate=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_062_Row3_InvalidLowSurrogateError(t *testing.T) {
 	if _, err := ParseString([]byte(`\uD800\uD800`)); err == nil {
 		t.Fatal("expected error on invalid low surrogate, got nil")
@@ -3093,7 +2859,6 @@ func TestMCDC_SYS_REQ_062_Row3_InvalidLowSurrogateError(t *testing.T) {
 
 // Verifies: SYS-REQ-063
 // MCDC SYS-REQ-063: raw_string_has_backslash_at_end=F, returns_error_for_backslash_at_end=F => TRUE [no-action: no trailing backslash does not invoke the trailing-backslash action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_063_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseString([]byte(`hello`)); err != nil {
 		t.Fatalf("ParseString returned error: %v", err)
@@ -3102,7 +2867,6 @@ func TestMCDC_SYS_REQ_063_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-063
 // MCDC SYS-REQ-063: raw_string_has_backslash_at_end=T, returns_error_for_backslash_at_end=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_063_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseString([]byte(`abc\`)); err == nil {
 		t.Fatal("expected error on trailing backslash, got nil")
@@ -3111,7 +2875,6 @@ func TestMCDC_SYS_REQ_063_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-063
 // MCDC SYS-REQ-063: raw_string_has_backslash_at_end=T, returns_error_for_backslash_at_end=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_063_Row3_TrailingBackslashError(t *testing.T) {
 	if _, err := ParseString([]byte(`abc\`)); err == nil {
 		t.Fatal("expected error on trailing backslash, got nil")
@@ -3124,7 +2887,6 @@ func TestMCDC_SYS_REQ_063_Row3_TrailingBackslashError(t *testing.T) {
 
 // Verifies: SYS-REQ-064
 // MCDC SYS-REQ-064: parseint_input_is_empty=F, returns_parseint_malformed_for_empty=F => TRUE [no-action: non-empty input does not invoke the empty-malformed action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_064_Row1_TriggerFalse(t *testing.T) {
 	v, err := ParseInt([]byte(`42`))
 	if err != nil {
@@ -3137,7 +2899,6 @@ func TestMCDC_SYS_REQ_064_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-064
 // MCDC SYS-REQ-064: parseint_input_is_empty=T, returns_parseint_malformed_for_empty=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_064_Row2_InvariantViolation(t *testing.T) {
 	if _, err := ParseInt([]byte(``)); err == nil {
 		t.Fatal("expected malformed error on empty input, got nil")
@@ -3146,7 +2907,6 @@ func TestMCDC_SYS_REQ_064_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-064
 // MCDC SYS-REQ-064: parseint_input_is_empty=T, returns_parseint_malformed_for_empty=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_064_Row3_EmptyMalformed(t *testing.T) {
 	if _, err := ParseInt([]byte(``)); err == nil {
 		t.Fatal("expected malformed error on empty input, got nil")
@@ -3159,7 +2919,6 @@ func TestMCDC_SYS_REQ_064_Row3_EmptyMalformed(t *testing.T) {
 
 // Verifies: SYS-REQ-086
 // MCDC SYS-REQ-086: get_called_twice_with_same_input=F, get_returns_identical_results=F => TRUE [no-action: only one call made, identical-results action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_086_Row1_TriggerFalse(t *testing.T) {
 	v1, _, _, err := Get([]byte(`{"a":1}`), "a")
 	if err != nil {
@@ -3172,7 +2931,6 @@ func TestMCDC_SYS_REQ_086_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-086
 // MCDC SYS-REQ-086: get_called_twice_with_same_input=T, get_returns_identical_results=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_086_Row2_InvariantViolation(t *testing.T) {
 	v1, t1, o1, _ := Get([]byte(`{"a":1}`), "a")
 	v2, t2, o2, _ := Get([]byte(`{"a":1}`), "a")
@@ -3187,7 +2945,6 @@ func TestMCDC_SYS_REQ_086_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-087
 // MCDC SYS-REQ-087: get_called_on_valid_input=F, get_does_not_mutate_input=F => TRUE [no-action: Get never called, mutation check does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_087_Row1_TriggerFalse(t *testing.T) {
 	// Drive Get on malformed input — the "valid input" antecedent is FALSE.
 	if _, _, _, err := Get([]byte(`{"a":`), "a"); err == nil {
@@ -3197,7 +2954,6 @@ func TestMCDC_SYS_REQ_087_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-087
 // MCDC SYS-REQ-087: get_called_on_valid_input=T, get_does_not_mutate_input=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_087_Row2_InvariantViolation(t *testing.T) {
 	original := []byte(`{"a":1}`)
 	snapshot := append([]byte(nil), original...)
@@ -3215,7 +2971,6 @@ func TestMCDC_SYS_REQ_087_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-088
 // MCDC SYS-REQ-088: get_input_is_nil=F, get_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_088_Row1_TriggerFalse(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("Get returned error: %v", err)
@@ -3224,7 +2979,6 @@ func TestMCDC_SYS_REQ_088_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-088
 // MCDC SYS-REQ-088: get_input_is_nil=T, get_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_088_Row2_InvariantViolation(t *testing.T) {
 	// Get on nil must not panic; returns a safe not-found/error result.
 	value, dataType, offset, err := Get(nil, "a")
@@ -3242,7 +2996,6 @@ func TestMCDC_SYS_REQ_088_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-089
 // MCDC SYS-REQ-089: get_handles_deep_nesting_safely=F, get_input_is_deeply_nested=F => TRUE [no-action: shallow input does not invoke the deep-nesting action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_089_Row1_TriggerFalse(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("Get returned error: %v", err)
@@ -3251,7 +3004,6 @@ func TestMCDC_SYS_REQ_089_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-089
 // MCDC SYS-REQ-089: get_handles_deep_nesting_safely=F, get_input_is_deeply_nested=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_089_Row2_InvariantViolation(t *testing.T) {
 	// Build a 100-deep nested object {"a":{"a":...:1}} and Get the innermost.
 	doc := []byte(`{}`)
@@ -3282,7 +3034,6 @@ func TestMCDC_SYS_REQ_089_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-090
 // MCDC SYS-REQ-090: getstring_called_twice_with_same_input=F, getstring_returns_identical_results=F => TRUE [no-action: single call, identical-results action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_090_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -3291,7 +3042,6 @@ func TestMCDC_SYS_REQ_090_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-090
 // MCDC SYS-REQ-090: getstring_called_twice_with_same_input=T, getstring_returns_identical_results=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_090_Row2_InvariantViolation(t *testing.T) {
 	v1, e1 := GetString([]byte(`{"a":"b"}`), "a")
 	v2, e2 := GetString([]byte(`{"a":"b"}`), "a")
@@ -3306,7 +3056,6 @@ func TestMCDC_SYS_REQ_090_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-091
 // MCDC SYS-REQ-091: getstring_input_is_nil=F, getstring_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_091_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -3315,7 +3064,6 @@ func TestMCDC_SYS_REQ_091_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-091
 // MCDC SYS-REQ-091: getstring_input_is_nil=T, getstring_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_091_Row2_InvariantViolation(t *testing.T) {
 	v, err := GetString(nil, "a")
 	if err == nil {
@@ -3332,7 +3080,6 @@ func TestMCDC_SYS_REQ_091_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-092
 // MCDC SYS-REQ-092: getstring_decodes_and_preserves_semantics=F, getstring_input_has_escaped_unicode=F => TRUE [no-action: input without escaped unicode does not invoke the decode-escaped action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_092_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"plain"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -3341,7 +3088,6 @@ func TestMCDC_SYS_REQ_092_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-092
 // MCDC SYS-REQ-092: getstring_decodes_and_preserves_semantics=F, getstring_input_has_escaped_unicode=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_092_Row2_InvariantViolation(t *testing.T) {
 	v, err := GetString([]byte(`{"a"\u0041}`), "a")
 	// The decode-and-preserve-semantics path must fire on escaped unicode input.
@@ -3361,7 +3107,6 @@ func TestMCDC_SYS_REQ_092_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-093
 // MCDC SYS-REQ-093: getstring_handles_unicode_edges_safely=F, getstring_input_has_unicode_edge_cases=F => TRUE [no-action: ASCII-only input does not invoke the unicode-edge action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_093_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"abc"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -3370,7 +3115,6 @@ func TestMCDC_SYS_REQ_093_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-093
 // MCDC SYS-REQ-093: getstring_handles_unicode_edges_safely=F, getstring_input_has_unicode_edge_cases=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_093_Row2_InvariantViolation(t *testing.T) {
 	// High-surrogate followed by a low surrogate forms a valid pair; this
 	// exercises the unicode-edge handling path without panic.
@@ -3391,7 +3135,6 @@ func TestMCDC_SYS_REQ_093_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-094
 // MCDC SYS-REQ-094: typed_getter_called_twice_with_same_input=F, typed_getter_returns_identical_results=F => TRUE [no-action: single call, identical-results action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_094_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -3400,7 +3143,6 @@ func TestMCDC_SYS_REQ_094_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-094
 // MCDC SYS-REQ-094: typed_getter_called_twice_with_same_input=T, typed_getter_returns_identical_results=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_094_Row2_InvariantViolation(t *testing.T) {
 	v1, e1 := GetInt([]byte(`{"a":1}`), "a")
 	v2, e2 := GetInt([]byte(`{"a":1}`), "a")
@@ -3415,7 +3157,6 @@ func TestMCDC_SYS_REQ_094_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-095
 // MCDC SYS-REQ-095: typed_getter_input_is_nil=F, typed_getter_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_095_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -3424,7 +3165,6 @@ func TestMCDC_SYS_REQ_095_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-095
 // MCDC SYS-REQ-095: typed_getter_input_is_nil=T, typed_getter_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_095_Row2_InvariantViolation(t *testing.T) {
 	v, err := GetInt(nil, "a")
 	if err == nil {
@@ -3441,7 +3181,6 @@ func TestMCDC_SYS_REQ_095_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-096
 // MCDC SYS-REQ-096: getint_handles_large_numbers_safely=F, getint_input_has_large_number_edge_case=F => TRUE [no-action: small number does not invoke the large-number action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_096_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":42}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -3450,7 +3189,6 @@ func TestMCDC_SYS_REQ_096_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-096
 // MCDC SYS-REQ-096: getint_handles_large_numbers_safely=F, getint_input_has_large_number_edge_case=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_096_Row2_InvariantViolation(t *testing.T) {
 	// Drive the int64 boundary edge case — the safe-handling action MUST fire.
 	v, err := GetInt([]byte(`{"a":9223372036854775807}`), "a")
@@ -3468,7 +3206,6 @@ func TestMCDC_SYS_REQ_096_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-097
 // MCDC SYS-REQ-097: traversal_called_twice_with_same_input=F, traversal_returns_identical_results=F => TRUE [no-action: single call, identical-results action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_097_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -3480,7 +3217,6 @@ func TestMCDC_SYS_REQ_097_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-097
 // MCDC SYS-REQ-097: traversal_called_twice_with_same_input=T, traversal_returns_identical_results=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_097_Row2_InvariantViolation(t *testing.T) {
 	count := func() int {
 		n := 0
@@ -3498,7 +3234,6 @@ func TestMCDC_SYS_REQ_097_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-098
 // MCDC SYS-REQ-098: traversal_input_is_nil=F, traversal_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_098_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -3510,7 +3245,6 @@ func TestMCDC_SYS_REQ_098_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-098
 // MCDC SYS-REQ-098: traversal_input_is_nil=T, traversal_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_098_Row2_InvariantViolation(t *testing.T) {
 	calls := 0
 	_, err := ArrayEach(nil, func(value []byte, dataType ValueType, offset int, err error) {
@@ -3530,7 +3264,6 @@ func TestMCDC_SYS_REQ_098_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-099
 // MCDC SYS-REQ-099: traversal_handles_deep_nesting_safely=F, traversal_input_is_deeply_nested=F => TRUE [no-action: shallow input does not invoke the deep-nesting action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_099_Row1_TriggerFalse(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -3542,7 +3275,6 @@ func TestMCDC_SYS_REQ_099_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-099
 // MCDC SYS-REQ-099: traversal_handles_deep_nesting_safely=F, traversal_input_is_deeply_nested=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_099_Row2_InvariantViolation(t *testing.T) {
 	// ArrayEach on a deeply nested array must complete without panic.
 	calls := 0
@@ -3563,7 +3295,6 @@ func TestMCDC_SYS_REQ_099_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-100
 // MCDC SYS-REQ-100: set_applied_twice_with_same_args=F, set_second_call_produces_same_result=F => TRUE [no-action: single call, deterministic action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_100_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -3572,7 +3303,6 @@ func TestMCDC_SYS_REQ_100_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-100
 // MCDC SYS-REQ-100: set_applied_twice_with_same_args=T, set_second_call_produces_same_result=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_100_Row2_InvariantViolation(t *testing.T) {
 	r1, e1 := Set([]byte(`{"a":1}`), []byte(`42`), "a")
 	r2, e2 := Set([]byte(`{"a":1}`), []byte(`42`), "a")
@@ -3587,7 +3317,6 @@ func TestMCDC_SYS_REQ_100_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-101
 // MCDC SYS-REQ-101: mutation_input_is_nil=F, mutation_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_101_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -3596,7 +3325,6 @@ func TestMCDC_SYS_REQ_101_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-101
 // MCDC SYS-REQ-101: mutation_input_is_nil=T, mutation_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_101_Row2_InvariantViolation(t *testing.T) {
 	v, err := Set(nil, []byte(`42`), "a")
 	if err == nil {
@@ -3613,7 +3341,6 @@ func TestMCDC_SYS_REQ_101_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-102
 // MCDC SYS-REQ-102: mutation_handles_unicode_keys_safely=F, mutation_input_has_unicode_keys=F => TRUE [no-action: ASCII keys do not invoke the unicode-key action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_102_Row1_TriggerFalse(t *testing.T) {
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
 		t.Fatalf("Set returned error: %v", err)
@@ -3622,7 +3349,6 @@ func TestMCDC_SYS_REQ_102_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-102
 // MCDC SYS-REQ-102: mutation_handles_unicode_keys_safely=F, mutation_input_has_unicode_keys=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_102_Row2_InvariantViolation(t *testing.T) {
 	// Set with a unicode-decoded key (° encoded as \u00B0 in JSON).
 	v, err := Set([]byte(`{"a\u00B0b":1}`), []byte(`42`), "a°b")
@@ -3640,7 +3366,6 @@ func TestMCDC_SYS_REQ_102_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-103
 // MCDC SYS-REQ-103: getunsafestring_called_twice_with_same_input=F, getunsafestring_returns_identical_results=F => TRUE [no-action: single call, identical-results action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_103_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -3649,7 +3374,6 @@ func TestMCDC_SYS_REQ_103_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-103
 // MCDC SYS-REQ-103: getunsafestring_called_twice_with_same_input=T, getunsafestring_returns_identical_results=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_103_Row2_InvariantViolation(t *testing.T) {
 	v1, e1 := GetUnsafeString([]byte(`{"a":"b"}`), "a")
 	v2, e2 := GetUnsafeString([]byte(`{"a":"b"}`), "a")
@@ -3664,7 +3388,6 @@ func TestMCDC_SYS_REQ_103_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-104
 // MCDC SYS-REQ-104: getunsafestring_input_is_nil=F, getunsafestring_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_104_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -3673,7 +3396,6 @@ func TestMCDC_SYS_REQ_104_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-104
 // MCDC SYS-REQ-104: getunsafestring_input_is_nil=T, getunsafestring_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_104_Row2_InvariantViolation(t *testing.T) {
 	v, err := GetUnsafeString(nil, "a")
 	if err == nil {
@@ -3690,7 +3412,6 @@ func TestMCDC_SYS_REQ_104_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-105
 // MCDC SYS-REQ-105: getunsafestring_handles_unicode_edges_safely=F, getunsafestring_input_has_unicode_edge_cases=F => TRUE [no-action: ASCII-only input does not invoke the unicode-edge action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_105_Row1_TriggerFalse(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"abc"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -3699,7 +3420,6 @@ func TestMCDC_SYS_REQ_105_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-105
 // MCDC SYS-REQ-105: getunsafestring_handles_unicode_edges_safely=F, getunsafestring_input_has_unicode_edge_cases=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_105_Row2_InvariantViolation(t *testing.T) {
 	v, err := GetUnsafeString([]byte(`{"a"\u00B0}`), "a")
 	if err != nil {
@@ -3718,7 +3438,6 @@ func TestMCDC_SYS_REQ_105_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-106
 // MCDC SYS-REQ-106: parse_helper_called_twice_with_same_input=F, parse_helper_returns_identical_results=F => TRUE [no-action: single call, identical-results action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_106_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseInt([]byte(`42`)); err != nil {
 		t.Fatalf("ParseInt returned error: %v", err)
@@ -3727,7 +3446,6 @@ func TestMCDC_SYS_REQ_106_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-106
 // MCDC SYS-REQ-106: parse_helper_called_twice_with_same_input=T, parse_helper_returns_identical_results=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_106_Row2_InvariantViolation(t *testing.T) {
 	v1, e1 := ParseInt([]byte(`42`))
 	v2, e2 := ParseInt([]byte(`42`))
@@ -3742,7 +3460,6 @@ func TestMCDC_SYS_REQ_106_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-107
 // MCDC SYS-REQ-107: parse_helper_input_is_nil=F, parse_helper_returns_safe_result_for_nil=F => TRUE [no-action: non-nil input does not invoke the nil-safe action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_107_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseInt([]byte(`42`)); err != nil {
 		t.Fatalf("ParseInt returned error: %v", err)
@@ -3751,7 +3468,6 @@ func TestMCDC_SYS_REQ_107_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-107
 // MCDC SYS-REQ-107: parse_helper_input_is_nil=T, parse_helper_returns_safe_result_for_nil=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_107_Row2_InvariantViolation(t *testing.T) {
 	v, err := ParseInt(nil)
 	if err == nil {
@@ -3768,7 +3484,6 @@ func TestMCDC_SYS_REQ_107_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-108
 // MCDC SYS-REQ-108: parsestring_input_has_standard_escapes=F, parsestring_roundtrip_preserves_semantics=F => TRUE [no-action: no escapes in input, roundtrip action does not fire]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_108_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseString([]byte(`hello`)); err != nil {
 		t.Fatalf("ParseString returned error: %v", err)
@@ -3777,7 +3492,6 @@ func TestMCDC_SYS_REQ_108_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-108
 // MCDC SYS-REQ-108: parsestring_input_has_standard_escapes=T, parsestring_roundtrip_preserves_semantics=F => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_108_Row2_InvariantViolation(t *testing.T) {
 	v, err := ParseString([]byte(`a\nb`))
 	if err != nil {
@@ -3794,7 +3508,6 @@ func TestMCDC_SYS_REQ_108_Row2_InvariantViolation(t *testing.T) {
 
 // Verifies: SYS-REQ-109
 // MCDC SYS-REQ-109: parseint_handles_edge_numbers_safely=F, parseint_input_has_edge_case_number=F => TRUE [no-action: small number does not invoke the edge-number action]
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_109_Row1_TriggerFalse(t *testing.T) {
 	if _, err := ParseInt([]byte(`42`)); err != nil {
 		t.Fatalf("ParseInt returned error: %v", err)
@@ -3803,7 +3516,6 @@ func TestMCDC_SYS_REQ_109_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-109
 // MCDC SYS-REQ-109: parseint_handles_edge_numbers_safely=F, parseint_input_has_edge_case_number=T => FALSE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMCDC_SYS_REQ_109_Row2_InvariantViolation(t *testing.T) {
 	v, err := ParseInt([]byte(`-9223372036854775808`))
 	if err != nil {

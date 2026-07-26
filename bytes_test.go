@@ -102,7 +102,6 @@ var parseIntTests = []ParseIntTest{
 
 // Verifies: SYS-REQ-015 [boundary]
 // MCDC SYS-REQ-015: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestBytesParseInt(t *testing.T) {
 	for _, test := range parseIntTests {
 		out, ok, overflow := parseInt([]byte(test.in))
@@ -119,7 +118,6 @@ func TestBytesParseInt(t *testing.T) {
 
 // Verifies: SYS-REQ-015 [example]
 // MCDC SYS-REQ-015: N/A
-// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkParseInt(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
@@ -130,7 +128,6 @@ func BenchmarkParseInt(b *testing.B) {
 // Alternative implementation using unsafe and delegating to strconv.ParseInt
 // Verifies: SYS-REQ-015 [example]
 // MCDC SYS-REQ-015: N/A
-// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkParseIntUnsafeSlower(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
@@ -141,7 +138,6 @@ func BenchmarkParseIntUnsafeSlower(b *testing.B) {
 // Old implementation that did not check for overflows.
 // Verifies: SYS-REQ-015 [example]
 // MCDC SYS-REQ-015: N/A
-// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkParseIntOverflows(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
@@ -150,7 +146,6 @@ func BenchmarkParseIntOverflows(b *testing.B) {
 }
 
 // Test helper for SYS-REQ-015.
-// reqproof:proptest:skip test-helper checking overflow classification on a fixed sample set; assertion utility with no independently observable pure contract
 func parseIntOverflows(bytes []byte) (v int64, ok bool) {
 	if len(bytes) == 0 {
 		return 0, false

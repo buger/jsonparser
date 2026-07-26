@@ -13,7 +13,6 @@ import (
 var activeTest = ""
 
 // Test helper for SYS-REQ-006.
-// reqproof:proptest:skip test-helper collecting ArrayEach results into a slice; thin test-data adapter already covered by ArrayEach
 func toArray(data []byte) (result [][]byte) {
 	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
 		result = append(result, value)
@@ -23,7 +22,6 @@ func toArray(data []byte) (result [][]byte) {
 }
 
 // Test helper for SYS-REQ-006 and SYS-REQ-008.
-// reqproof:proptest:skip test-helper collecting ArrayEach results into a string slice; thin test-data adapter already covered by ArrayEach
 func toStringArray(data []byte) (result []string) {
 	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
 		result = append(result, string(value))
@@ -1208,7 +1206,6 @@ var getArrayTests = []GetTest{
 // checkFoundAndNoError checks the dataType and error return from Get*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Get*(), or false if the test is finished.
 // Test helper for SYS-REQ-001, SYS-REQ-002, SYS-REQ-003, SYS-REQ-004, SYS-REQ-005, and SYS-REQ-011.
-// reqproof:proptest:skip test-helper asserting Get found a value without error; assertion utility with no return value to compare
 func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
 	isFound := (err != KeyPathNotFoundError)
 	isErr := (err != nil && err != KeyPathNotFoundError)
@@ -1234,7 +1231,6 @@ func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jt
 }
 
 // Test helper for SYS-REQ-001, SYS-REQ-002, SYS-REQ-003, SYS-REQ-004, SYS-REQ-005, and SYS-REQ-011.
-// reqproof:proptest:skip test-runner that iterates a table of GetTest cases; test orchestration harness, not a pure function
 func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(GetTest) (interface{}, ValueType, error), resultChecker func(GetTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1265,7 +1261,6 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 }
 
 // Test helper for SYS-REQ-009.
-// reqproof:proptest:skip test-helper asserting Set found a value without error; assertion utility with no return value to compare
 func setTestCheckFoundAndNoError(t *testing.T, testKind string, test SetTest, value interface{}, err error) bool {
 	isFound := (err != KeyPathNotFoundError)
 	isErr := (err != nil && err != KeyPathNotFoundError)
@@ -1291,7 +1286,6 @@ func setTestCheckFoundAndNoError(t *testing.T, testKind string, test SetTest, va
 }
 
 // Test helper for SYS-REQ-009.
-// reqproof:proptest:skip test-runner that iterates a table of SetTest cases; test orchestration harness, not a pure function
 func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(SetTest) (interface{}, ValueType, error), resultChecker func(SetTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1319,7 +1313,6 @@ func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(Set
 }
 
 // Test helper for SYS-REQ-010.
-// reqproof:proptest:skip test-runner that iterates a table of DeleteTest cases; test orchestration harness, not a pure function
 func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner func(DeleteTest) (interface{}, []byte), resultChecker func(DeleteTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1362,7 +1355,6 @@ func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner fu
 // MCDC SYS-REQ-033: delete_path_is_provided=T, delete_target_exists=T, delete_returns_document_without_target=T => TRUE
 // Verifies: SYS-REQ-034 [example]
 // MCDC SYS-REQ-034: delete_path_is_provided=T, delete_target_exists=F, delete_input_is_unusable_for_requested_path=F, delete_preserves_input_when_target_missing=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDelete(t *testing.T) {
 	runDeleteTests(t, "Delete()", deleteTests,
 		func(test DeleteTest) (interface{}, []byte) {
@@ -1383,7 +1375,6 @@ func TestDelete(t *testing.T) {
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=F, returns_existing_path_lookup_result=F => TRUE
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=F => FALSE
 // MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGet(t *testing.T) {
 	runGetTests(t, "Get()", getTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1421,7 +1412,6 @@ func TestGet(t *testing.T) {
 // MCDC SYS-REQ-026: N/A
 // Verifies: SYS-REQ-027 [boundary]
 // MCDC SYS-REQ-027: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetRequirementSlices(t *testing.T) {
 	t.Run("well formed missing path returns not found", func(t *testing.T) {
 		value, dataType, offset, err := Get([]byte(`{"a":"b"}`), "missing")
@@ -1534,7 +1524,6 @@ func TestGetRequirementSlices(t *testing.T) {
 // MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=F, returns_getstring_decoded_value=F => TRUE
 // MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=F => FALSE
 // MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetString(t *testing.T) {
 	runGetTests(t, "GetString()", getStringTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1553,7 +1542,6 @@ func TestGetString(t *testing.T) {
 // MCDC SYS-REQ-011: addressed_value_is_string=F, returns_unsafe_string_view=F => TRUE
 // MCDC SYS-REQ-011: addressed_value_is_string=T, returns_unsafe_string_view=F => FALSE
 // MCDC SYS-REQ-011: addressed_value_is_string=T, returns_unsafe_string_view=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeString(t *testing.T) {
 	runGetTests(t, "GetUnsafeString()", getUnsafeStringTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1573,7 +1561,6 @@ func TestGetUnsafeString(t *testing.T) {
 // MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=F, returns_getint_value=F => TRUE
 // MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=T, returns_getint_value=F => FALSE
 // MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=T, returns_getint_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetInt(t *testing.T) {
 	runGetTests(t, "GetInt()", getIntTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1593,7 +1580,6 @@ func TestGetInt(t *testing.T) {
 // MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=F, returns_getfloat_value=F => TRUE
 // MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=T, returns_getfloat_value=F => FALSE
 // MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=T, returns_getfloat_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetFloat(t *testing.T) {
 	runGetTests(t, "GetFloat()", getFloatTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1613,7 +1599,6 @@ func TestGetFloat(t *testing.T) {
 // MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=F, returns_getboolean_value=F => TRUE
 // MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=T, returns_getboolean_value=F => FALSE
 // MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=T, returns_getboolean_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetBoolean(t *testing.T) {
 	runGetTests(t, "GetBoolean()", getBoolTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1629,7 +1614,6 @@ func TestGetBoolean(t *testing.T) {
 
 // Verifies: SYS-REQ-001 [example]
 // MCDC SYS-REQ-001: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetSlice(t *testing.T) {
 	runGetTests(t, "Get()-for-arrays", getArrayTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1647,7 +1631,6 @@ func TestGetSlice(t *testing.T) {
 // STK-REQ-004:AC-1:acceptance
 // MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=F => FALSE
 // MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEach(t *testing.T) {
 	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
 	count := 0
@@ -1680,7 +1663,6 @@ func TestArrayEach(t *testing.T) {
 
 // Verifies: SYS-REQ-029 [boundary]
 // MCDC SYS-REQ-029: addressed_array_is_well_formed=F, malformed_array_input_returns_error=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachWithWhiteSpace(t *testing.T) {
 	// Issue #159
 	count := 0
@@ -1733,7 +1715,6 @@ func TestArrayEachWithWhiteSpace(t *testing.T) {
 
 // Verifies: SYS-REQ-028 [boundary]
 // MCDC SYS-REQ-028: addressed_array_is_empty=T, addressed_array_is_well_formed=T, empty_array_produces_no_callbacks=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachEmpty(t *testing.T) {
 	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
 
@@ -1776,7 +1757,6 @@ type keyValueEntry struct {
 }
 
 // Test helper for SYS-REQ-007.
-// reqproof:proptest:skip test-only helper function with no independently observable pure contract to compare against a reference
 func (kv keyValueEntry) String() string {
 	return fmt.Sprintf("[%s: %s (%s)]", kv.key, kv.value, kv.valueType)
 }
@@ -1898,7 +1878,6 @@ var objectEachTests = []ObjectEachTest{
 // STK-REQ-004:AC-2:acceptance
 // MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=T, object_callback_receives_entries=F => FALSE
 // MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=T, object_callback_receives_entries=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObjectEach(t *testing.T) {
 	for _, test := range objectEachTests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1947,7 +1926,6 @@ func TestObjectEach(t *testing.T) {
 
 // Verifies: SYS-REQ-032 [boundary]
 // MCDC SYS-REQ-032: addressed_object_is_well_formed=T, object_callback_returns_error=T, object_callback_error_is_returned=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObjectEachNestedPathAndCallbackError(t *testing.T) {
 	t.Run("nested object path", func(t *testing.T) {
 		var entries []keyValueEntry
@@ -2016,7 +1994,6 @@ var testJson = []byte(`{
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=T, multipath_requests_are_provided=T => TRUE
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=T, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => TRUE
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=T, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEachKey(t *testing.T) {
 	paths := [][]string{
 		{"name"},
@@ -2199,7 +2176,6 @@ var parseFloatTest = []ParseTest{
 // parseTestCheckNoError checks the error return from Parse*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Parse*(), or false if the test is finished.
 // Test helper for SYS-REQ-012, SYS-REQ-013, SYS-REQ-014, and SYS-REQ-015.
-// reqproof:proptest:skip test-helper asserting a parse produced no error; assertion utility with no return value to compare
 func parseTestCheckNoError(t *testing.T, testKind string, test ParseTest, value interface{}, err error) bool {
 	if isErr := (err != nil); test.isErr != isErr {
 		// If the call didn't match the error expectation, fail
@@ -2215,7 +2191,6 @@ func parseTestCheckNoError(t *testing.T, testKind string, test ParseTest, value 
 }
 
 // Test helper for SYS-REQ-012, SYS-REQ-013, SYS-REQ-014, and SYS-REQ-015.
-// reqproof:proptest:skip test-runner that iterates a table of parse test cases; test orchestration harness, not a pure function
 func runParseTests(t *testing.T, testKind string, tests []ParseTest, runner func(ParseTest) (interface{}, error), resultChecker func(ParseTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		value, err := runner(test)
@@ -2246,7 +2221,6 @@ func runParseTests(t *testing.T, testKind string, tests []ParseTest, runner func
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=F, returns_parseboolean_value=F => TRUE
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=T, returns_parseboolean_value=F => FALSE
 // MCDC SYS-REQ-012: raw_boolean_literal_is_valid=T, returns_parseboolean_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseBoolean(t *testing.T) {
 	runParseTests(t, "ParseBoolean()", parseBoolTests,
 		func(test ParseTest) (value interface{}, err error) {
@@ -2266,7 +2240,6 @@ func TestParseBoolean(t *testing.T) {
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=F, returns_parsefloat_value=F => TRUE
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=T, returns_parsefloat_value=F => FALSE
 // MCDC SYS-REQ-013: raw_float_token_is_well_formed=T, returns_parsefloat_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseFloat(t *testing.T) {
 	runParseTests(t, "ParseFloat()", parseFloatTest,
 		func(test ParseTest) (value interface{}, err error) {
@@ -2281,7 +2254,6 @@ func TestParseFloat(t *testing.T) {
 
 // Verifies: SYS-REQ-013 [fuzz]
 // MCDC SYS-REQ-013: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestFuzzParseFloatHarnessCoverage(t *testing.T) {
 	if got := FuzzParseFloat([]byte(`1.25`)); got != 1 {
 		t.Fatalf("expected FuzzParseFloat success path to return 1, got %d", got)
@@ -2293,7 +2265,6 @@ func TestFuzzParseFloatHarnessCoverage(t *testing.T) {
 
 // Verifies: STK-REQ-001 [boundary]
 // MCDC STK-REQ-001: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestValueTypeString(t *testing.T) {
 	cases := []struct {
 		value    ValueType
@@ -2319,7 +2290,6 @@ func TestValueTypeString(t *testing.T) {
 
 // Verifies: STK-REQ-001 [boundary]
 // MCDC STK-REQ-001: N/A
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTokenStart(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -2374,7 +2344,6 @@ var parseStringTest = []ParseTest{
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=F, returns_parsestring_value=F => TRUE
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=T, returns_parsestring_value=F => FALSE
 // MCDC SYS-REQ-014: raw_string_literal_is_well_formed=T, returns_parsestring_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseString(t *testing.T) {
 	runParseTests(t, "ParseString()", parseStringTest,
 		func(test ParseTest) (value interface{}, err error) {
@@ -2396,7 +2365,6 @@ func TestParseString(t *testing.T) {
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=F, returns_parseint_value=F => TRUE
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=F => FALSE
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=T => TRUE
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseInt(t *testing.T) {
 	tests := []struct {
 		name    string

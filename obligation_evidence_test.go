@@ -22,7 +22,6 @@ import (
 
 // STK-REQ-001:malformed_input:negative
 // STK-REQ-001:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_001(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed input")
@@ -34,7 +33,6 @@ func TestObligation_STK_REQ_001(t *testing.T) {
 
 // STK-REQ-002:malformed_input:negative
 // STK-REQ-002:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_002(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetString input")
@@ -46,7 +44,6 @@ func TestObligation_STK_REQ_002(t *testing.T) {
 
 // STK-REQ-003:malformed_input:negative
 // STK-REQ-003:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_003(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetInt input")
@@ -58,7 +55,6 @@ func TestObligation_STK_REQ_003(t *testing.T) {
 
 // STK-REQ-004:malformed_input:negative
 // STK-REQ-004:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_004(t *testing.T) {
 	if _, err := ArrayEach([]byte(`[`), func(value []byte, dataType ValueType, offset int, err error) {}); err == nil {
 		t.Fatal("expected error on malformed ArrayEach input")
@@ -70,7 +66,6 @@ func TestObligation_STK_REQ_004(t *testing.T) {
 
 // STK-REQ-005:malformed_input:negative
 // STK-REQ-005:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_005(t *testing.T) {
 	if _, err := Set([]byte(`{"a":`), []byte(`42`), "a"); err == nil {
 		t.Fatal("expected error on malformed Set input")
@@ -82,7 +77,6 @@ func TestObligation_STK_REQ_005(t *testing.T) {
 
 // STK-REQ-006:malformed_input:negative
 // STK-REQ-006:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_006(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":`), "a"); err == nil {
 		t.Fatal("expected error on malformed GetUnsafeString input")
@@ -94,7 +88,6 @@ func TestObligation_STK_REQ_006(t *testing.T) {
 
 // STK-REQ-007:malformed_input:negative
 // STK-REQ-007:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_STK_REQ_007(t *testing.T) {
 	if _, err := ParseBoolean([]byte(`notabool`)); err == nil {
 		t.Fatal("expected error on malformed ParseBoolean input")
@@ -109,7 +102,6 @@ func TestObligation_STK_REQ_007(t *testing.T) {
 // -----------------------------------------------------------------------------
 
 // SYS-REQ-001:determinism:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_001(t *testing.T) {
 	v1, _, _, _ := Get([]byte(`{"a":1}`), "a")
 	v2, _, _, _ := Get([]byte(`{"a":1}`), "a")
@@ -121,7 +113,6 @@ func TestObligation_SYS_REQ_001(t *testing.T) {
 // SYS-REQ-002:determinism:nominal
 // SYS-REQ-002:edge_case:nominal
 // SYS-REQ-002:encoding_safety:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_002(t *testing.T) {
 	v1, _ := GetString([]byte(`{"a":"hello"}`), "a")
 	v2, _ := GetString([]byte(`{"a":"hello"}`), "a")
@@ -140,7 +131,6 @@ func TestObligation_SYS_REQ_002(t *testing.T) {
 }
 
 // SYS-REQ-003:determinism:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_003(t *testing.T) {
 	v1, _ := GetInt([]byte(`{"a":1}`), "a")
 	v2, _ := GetInt([]byte(`{"a":1}`), "a")
@@ -150,7 +140,6 @@ func TestObligation_SYS_REQ_003(t *testing.T) {
 }
 
 // SYS-REQ-006:determinism:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_006(t *testing.T) {
 	c1 := 0
 	ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) { c1++ })
@@ -162,14 +151,12 @@ func TestObligation_SYS_REQ_006(t *testing.T) {
 }
 
 // SYS-REQ-008:edge_case:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_008(t *testing.T) {
 	// EachKey on empty object must complete cleanly (edge case).
 	EachKey([]byte(`{}`), func(i int, value []byte, vt ValueType, err error) {}, []string{"a"})
 }
 
 // SYS-REQ-009:idempotency:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_009(t *testing.T) {
 	r1, _ := Set([]byte(`{"a":1}`), []byte(`42`), "a")
 	r2, _ := Set(r1, []byte(`42`), "a")
@@ -181,7 +168,6 @@ func TestObligation_SYS_REQ_009(t *testing.T) {
 // SYS-REQ-010:empty_input:nominal
 // SYS-REQ-010:nil_safety:nominal
 // SYS-REQ-010:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_010(t *testing.T) {
 	if got := Delete([]byte{}); len(got) != 0 {
 		t.Fatalf("expected empty result on empty input, got %s", string(got))
@@ -192,7 +178,6 @@ func TestObligation_SYS_REQ_010(t *testing.T) {
 }
 
 // SYS-REQ-011:determinism:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_011(t *testing.T) {
 	v1, _ := GetUnsafeString([]byte(`{"a":"b"}`), "a")
 	v2, _ := GetUnsafeString([]byte(`{"a":"b"}`), "a")
@@ -202,7 +187,6 @@ func TestObligation_SYS_REQ_011(t *testing.T) {
 }
 
 // SYS-REQ-012:determinism:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_012(t *testing.T) {
 	v1, _ := ParseBoolean([]byte(`true`))
 	v2, _ := ParseBoolean([]byte(`true`))
@@ -212,7 +196,6 @@ func TestObligation_SYS_REQ_012(t *testing.T) {
 }
 
 // SYS-REQ-014:encoding_safety:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_014(t *testing.T) {
 	if got, err := ParseString([]byte(`hello`)); err != nil || got != "hello" {
 		t.Fatalf("encoding roundtrip: got=%q err=%v", got, err)
@@ -222,7 +205,6 @@ func TestObligation_SYS_REQ_014(t *testing.T) {
 // SYS-REQ-015:edge_case:nominal
 // SYS-REQ-015:nil_safety:nominal
 // SYS-REQ-015:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_015(t *testing.T) {
 	if v, err := ParseInt([]byte(`0`)); err != nil || v != 0 {
 		t.Fatalf("edge-case zero: v=%d err=%v", v, err)
@@ -233,7 +215,6 @@ func TestObligation_SYS_REQ_015(t *testing.T) {
 }
 
 // SYS-REQ-016:missing_path:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_016(t *testing.T) {
 	// Witness the positive missing-path outcome: well-formed lookup that
 	// returns the documented NotFound tuple.
@@ -248,7 +229,6 @@ func TestObligation_SYS_REQ_016(t *testing.T) {
 
 // SYS-REQ-017:malformed_input:nominal
 // SYS-REQ-017:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_017(t *testing.T) {
 	// Positive path: complete input parses without error.
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
@@ -261,7 +241,6 @@ func TestObligation_SYS_REQ_017(t *testing.T) {
 }
 
 // SYS-REQ-018:idempotency:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_018(t *testing.T) {
 	v1, _, _, _ := Get([]byte(`{"a":1}`))
 	v2, _, _, _ := Get([]byte(`{"a":1}`))
@@ -273,7 +252,6 @@ func TestObligation_SYS_REQ_018(t *testing.T) {
 // SYS-REQ-019:empty_input:nominal
 // SYS-REQ-019:nil_safety:nominal
 // SYS-REQ-019:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_019(t *testing.T) {
 	// Empty input returns a documented not-found tuple.
 	_, dataType, offset, err := Get([]byte(""), "a")
@@ -290,7 +268,6 @@ func TestObligation_SYS_REQ_019(t *testing.T) {
 
 // SYS-REQ-023:boundary:nominal
 // SYS-REQ-023:edge_case:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_023(t *testing.T) {
 	// Boundary positive case: in-bounds index returns the element.
 	if v, _, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[0]"); err != nil || string(v) != "1" {
@@ -299,7 +276,6 @@ func TestObligation_SYS_REQ_023(t *testing.T) {
 }
 
 // SYS-REQ-027:type_mismatch:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_027(t *testing.T) {
 	// Positive path: well-formed value parses without invoking value-type-error.
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
@@ -310,7 +286,6 @@ func TestObligation_SYS_REQ_027(t *testing.T) {
 // SYS-REQ-028:empty_input:nominal
 // SYS-REQ-028:nil_safety:nominal
 // SYS-REQ-028:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_028(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -328,7 +303,6 @@ func TestObligation_SYS_REQ_028(t *testing.T) {
 
 // SYS-REQ-029:malformed_input:nominal
 // SYS-REQ-029:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_029(t *testing.T) {
 	// Positive path: well-formed array iterates without invoking the error path.
 	calls := 0
@@ -348,7 +322,6 @@ func TestObligation_SYS_REQ_029(t *testing.T) {
 
 // SYS-REQ-034:edge_case:nominal
 // SYS-REQ-034:missing_path:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_034(t *testing.T) {
 	// Missing target on usable input preserves the original document.
 	data := []byte(`{"a":1}`)
@@ -360,7 +333,6 @@ func TestObligation_SYS_REQ_034(t *testing.T) {
 
 // SYS-REQ-035:malformed_input:nominal
 // SYS-REQ-035:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_035(t *testing.T) {
 	// Positive path: Delete on well-formed input completes cleanly.
 	data := []byte(`{"a":1,"b":2}`)
@@ -377,7 +349,6 @@ func TestObligation_SYS_REQ_035(t *testing.T) {
 
 // SYS-REQ-036:malformed_input:nominal
 // SYS-REQ-036:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_036(t *testing.T) {
 	// Positive path: ParseBoolean on a valid literal returns the value.
 	if v, err := ParseBoolean([]byte(`true`)); err != nil || !v {
@@ -390,7 +361,6 @@ func TestObligation_SYS_REQ_036(t *testing.T) {
 }
 
 // SYS-REQ-039:boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_039(t *testing.T) {
 	// Positive path: non-overflow integer parses cleanly.
 	if v, err := ParseInt([]byte(`42`)); err != nil || v != 42 {
@@ -399,7 +369,6 @@ func TestObligation_SYS_REQ_039(t *testing.T) {
 }
 
 // SYS-REQ-041:truncated_at_value_boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_041(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("Get on non-truncated input returned error: %v", err)
@@ -407,7 +376,6 @@ func TestObligation_SYS_REQ_041(t *testing.T) {
 }
 
 // SYS-REQ-042:truncated_mid_structure:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_042(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":[1,2]}`), "a"); err != nil {
 		t.Fatalf("Get on non-truncated input returned error: %v", err)
@@ -415,7 +383,6 @@ func TestObligation_SYS_REQ_042(t *testing.T) {
 }
 
 // SYS-REQ-043:truncated_mid_key:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_043(t *testing.T) {
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("Get on non-truncated input returned error: %v", err)
@@ -423,7 +390,6 @@ func TestObligation_SYS_REQ_043(t *testing.T) {
 }
 
 // SYS-REQ-044:sentinel_value_boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_044(t *testing.T) {
 	// Positive path: standard lookup where sentinel is never reached.
 	if _, _, _, err := Get([]byte(`{"a":1}`), "a"); err != nil {
@@ -432,7 +398,6 @@ func TestObligation_SYS_REQ_044(t *testing.T) {
 }
 
 // SYS-REQ-047:negative_array_index:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_047(t *testing.T) {
 	// Positive path: valid (non-negative) in-bounds index succeeds.
 	if v, _, _, err := Get([]byte(`{"a":[1,2,3]}`), "a", "[1]"); err != nil || string(v) != "2" {
@@ -441,7 +406,6 @@ func TestObligation_SYS_REQ_047(t *testing.T) {
 }
 
 // SYS-REQ-048:truncated_at_value_boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_048(t *testing.T) {
 	// Positive path: Delete on non-truncated input.
 	data := []byte(`{"a":1,"b":2}`)
@@ -452,7 +416,6 @@ func TestObligation_SYS_REQ_048(t *testing.T) {
 }
 
 // SYS-REQ-049:error_propagation:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_049(t *testing.T) {
 	// Positive path: Delete on well-formed input completes cleanly.
 	data := []byte(`{"a":1,"b":2}`)
@@ -462,7 +425,6 @@ func TestObligation_SYS_REQ_049(t *testing.T) {
 }
 
 // SYS-REQ-052:callback_error_propagation:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_052(t *testing.T) {
 	// Positive path: callback that returns nil does not propagate an error.
 	called := 0
@@ -477,7 +439,6 @@ func TestObligation_SYS_REQ_052(t *testing.T) {
 }
 
 // SYS-REQ-053:truncated_mid_element:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_053(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -491,7 +452,6 @@ func TestObligation_SYS_REQ_053(t *testing.T) {
 }
 
 // SYS-REQ-056:truncated_mid_structure:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_056(t *testing.T) {
 	// Positive path: Delete on non-truncated mid-structure input.
 	data := []byte(`{"a":[1,2,3]}`)
@@ -502,7 +462,6 @@ func TestObligation_SYS_REQ_056(t *testing.T) {
 }
 
 // SYS-REQ-057:partial_literal:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_057(t *testing.T) {
 	// Positive path: complete boolean literal parses cleanly.
 	if v, err := ParseBoolean([]byte(`true`)); err != nil || !v {
@@ -511,7 +470,6 @@ func TestObligation_SYS_REQ_057(t *testing.T) {
 }
 
 // SYS-REQ-060:truncated_escape_sequence:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_060(t *testing.T) {
 	if v, err := ParseString([]byte(`hello`)); err != nil || v != "hello" {
 		t.Fatalf("ParseString(hello) = %q, err = %v", v, err)
@@ -519,7 +477,6 @@ func TestObligation_SYS_REQ_060(t *testing.T) {
 }
 
 // SYS-REQ-064:empty_input:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_064(t *testing.T) {
 	// Positive path: non-empty integer parses cleanly.
 	if v, err := ParseInt([]byte(`42`)); err != nil || v != 42 {
@@ -528,7 +485,6 @@ func TestObligation_SYS_REQ_064(t *testing.T) {
 }
 
 // SYS-REQ-069:nested_mutation:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_069(t *testing.T) {
 	v, err := Set([]byte(`{"a":{"b":1}}`), []byte(`42`), "a", "b")
 	if err != nil {
@@ -544,7 +500,6 @@ func TestObligation_SYS_REQ_069(t *testing.T) {
 }
 
 // SYS-REQ-070:no_path_provided:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_070(t *testing.T) {
 	// Positive path: Set with a provided path succeeds.
 	if _, err := Set([]byte(`{"a":1}`), []byte(`42`), "a"); err != nil {
@@ -554,7 +509,6 @@ func TestObligation_SYS_REQ_070(t *testing.T) {
 
 // SYS-REQ-071:malformed_input:nominal
 // SYS-REQ-071:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_071(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -565,7 +519,6 @@ func TestObligation_SYS_REQ_071(t *testing.T) {
 }
 
 // SYS-REQ-072:truncated_escape_sequence:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_072(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -573,7 +526,6 @@ func TestObligation_SYS_REQ_072(t *testing.T) {
 }
 
 // SYS-REQ-073:type_mismatch:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_073(t *testing.T) {
 	// Positive path: GetString on a string value succeeds.
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
@@ -584,7 +536,6 @@ func TestObligation_SYS_REQ_073(t *testing.T) {
 // SYS-REQ-074:empty_input:nominal
 // SYS-REQ-074:nil_safety:nominal
 // SYS-REQ-074:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_074(t *testing.T) {
 	if _, err := GetString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetString returned error: %v", err)
@@ -596,7 +547,6 @@ func TestObligation_SYS_REQ_074(t *testing.T) {
 
 // SYS-REQ-075:malformed_input:nominal
 // SYS-REQ-075:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_075(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -608,7 +558,6 @@ func TestObligation_SYS_REQ_075(t *testing.T) {
 
 // SYS-REQ-076:boundary:nominal
 // SYS-REQ-076:edge_case:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_076(t *testing.T) {
 	// Boundary positive: in-range integer parses cleanly.
 	if v, err := GetInt([]byte(`{"a":9223372036854775807}`), "a"); err != nil || v != 9223372036854775807 {
@@ -617,7 +566,6 @@ func TestObligation_SYS_REQ_076(t *testing.T) {
 }
 
 // SYS-REQ-077:type_mismatch:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_077(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -627,7 +575,6 @@ func TestObligation_SYS_REQ_077(t *testing.T) {
 // SYS-REQ-078:empty_input:nominal
 // SYS-REQ-078:nil_safety:nominal
 // SYS-REQ-078:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_078(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "a"); err != nil {
 		t.Fatalf("GetInt returned error: %v", err)
@@ -638,7 +585,6 @@ func TestObligation_SYS_REQ_078(t *testing.T) {
 }
 
 // SYS-REQ-079:partial_literal:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_079(t *testing.T) {
 	if v, err := GetBoolean([]byte(`{"a":true}`), "a"); err != nil || !v {
 		t.Fatalf("GetBoolean(true) = %v, err = %v", v, err)
@@ -647,7 +593,6 @@ func TestObligation_SYS_REQ_079(t *testing.T) {
 
 // SYS-REQ-080:malformed_input:nominal
 // SYS-REQ-080:malformed_input:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_080(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -660,7 +605,6 @@ func TestObligation_SYS_REQ_080(t *testing.T) {
 // SYS-REQ-081:empty_input:nominal
 // SYS-REQ-081:nil_safety:nominal
 // SYS-REQ-081:nil_safety:negative
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_081(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -672,7 +616,6 @@ func TestObligation_SYS_REQ_081(t *testing.T) {
 
 // SYS-REQ-082:edge_case:nominal
 // SYS-REQ-082:truncated_at_value_boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_082(t *testing.T) {
 	if _, err := GetUnsafeString([]byte(`{"a":"b"}`), "a"); err != nil {
 		t.Fatalf("GetUnsafeString returned error: %v", err)
@@ -680,7 +623,6 @@ func TestObligation_SYS_REQ_082(t *testing.T) {
 }
 
 // SYS-REQ-083:truncated_at_value_boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_083(t *testing.T) {
 	calls := 0
 	if _, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -694,7 +636,6 @@ func TestObligation_SYS_REQ_083(t *testing.T) {
 }
 
 // SYS-REQ-084:truncated_mid_structure:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_084(t *testing.T) {
 	calls := 0
 	if err := ObjectEach([]byte(`{"a":1,"b":2}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -709,7 +650,6 @@ func TestObligation_SYS_REQ_084(t *testing.T) {
 }
 
 // SYS-REQ-085:sentinel_value_boundary:nominal
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObligation_SYS_REQ_085(t *testing.T) {
 	called := false
 	EachKey([]byte(`{"a":1}`), func(i int, value []byte, vt ValueType, err error) {

@@ -20,7 +20,6 @@ import (
 
 // runNoPanic executes fn and fails the test if it panics, returning the
 // recovered value so callers can also assert on the post-fix result.
-// reqproof:proptest:skip test-helper that asserts a callback does not panic; assertion utility with no return value to compare against a reference
 func runNoPanic(t *testing.T, name string, fn func()) {
 	t.Helper()
 	defer func() {
@@ -38,7 +37,6 @@ func runNoPanic(t *testing.T, name string, fn func()) {
 // Verifies: SYS-REQ-016 [boundary]
 // An empty-string path component is not a resolvable object key or array index;
 // Get must surface KeyPathNotFoundError rather than panicking.
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetEmptyKeyPathComponent(t *testing.T) {
 	cases := []struct {
 		name string
@@ -81,7 +79,6 @@ func TestGetEmptyKeyPathComponent(t *testing.T) {
 // Verifies: SYS-REQ-016 [boundary]
 // Typed Get accessors must propagate KeyPathNotFoundError for an empty key
 // component instead of panicking on the underlying searchKeys dereference.
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTypedGetEmptyKeyPathComponent(t *testing.T) {
 	t.Run("GetString", func(t *testing.T) {
 		var err error
@@ -138,7 +135,6 @@ func TestTypedGetEmptyKeyPathComponent(t *testing.T) {
 // An empty-string path component cannot address an array index, so EachKey
 // must skip the path (missing-request => no callback) and must not panic on
 // the `p[level][0]` dereference.
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEachKeyEmptyKeyPathComponent(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -180,7 +176,6 @@ func TestEachKeyEmptyKeyPathComponent(t *testing.T) {
 // Set with an empty-string key component must not panic in
 // createInsertComponent / calcAllocateSpace. The empty key is treated as an
 // object property name (not an array index) and produces a defined document.
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetEmptyKeyPathComponent(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -221,7 +216,6 @@ func TestSetEmptyKeyPathComponent(t *testing.T) {
 // Delete with an empty-string key component cannot resolve a target; the
 // parser must return the original byte payload unchanged and must not panic
 // on the `keys[lk-1][0]` dereference.
-// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteEmptyKeyPathComponent(t *testing.T) {
 	cases := []struct {
 		name string
