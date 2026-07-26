@@ -13,6 +13,7 @@ import (
 // Verifies: SYS-REQ-041 [malformed]
 // When JSON input is truncated at a value boundary (e.g. '{"a":1' no closing
 // brace), Get shall return an error or not-found and shall not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTruncatedAtValueBoundary(t *testing.T) {
 	cases := []struct {
 		name string
@@ -44,6 +45,7 @@ func TestTruncatedAtValueBoundary(t *testing.T) {
 // Verifies: SYS-REQ-042 [malformed]
 // When JSON input is truncated mid-structure (e.g. '{"a":[1,2'), Get shall
 // return a parse-related error and shall not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTruncatedMidStructure(t *testing.T) {
 	cases := []struct {
 		name string
@@ -75,6 +77,7 @@ func TestTruncatedMidStructure(t *testing.T) {
 // Verifies: SYS-REQ-043 [malformed]
 // When JSON input is truncated mid-key (e.g. '{"a'), Get shall return a
 // parse-related error and shall not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTruncatedMidKey(t *testing.T) {
 	cases := []struct {
 		name string
@@ -109,6 +112,7 @@ func TestTruncatedMidKey(t *testing.T) {
 
 // Verifies: SYS-REQ-044 [boundary]
 // tokenEnd returns len(data) when no delimiter found. Callers must bounds-check.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTokenEndSentinel(t *testing.T) {
 	// tokenEnd on a value with no terminator returns len(data)
 	data := []byte(`123`)
@@ -134,6 +138,7 @@ func TestTokenEndSentinel(t *testing.T) {
 
 // Verifies: SYS-REQ-045 [boundary]
 // stringEnd returns -1 when no closing quote found. Callers must handle.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestStringEndSentinel(t *testing.T) {
 	// No closing quote
 	idx, _ := stringEnd([]byte(`hello`))
@@ -156,6 +161,7 @@ func TestStringEndSentinel(t *testing.T) {
 
 // Verifies: SYS-REQ-046 [boundary]
 // blockEnd returns -1 when no matching closing bracket/brace found.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestBlockEndSentinel(t *testing.T) {
 	// Unclosed array
 	end := blockEnd([]byte(`[1,2`), '[', ']')
@@ -182,6 +188,7 @@ func TestBlockEndSentinel(t *testing.T) {
 
 // Verifies: SYS-REQ-047 [boundary]
 // Negative array indices are not supported. Get shall return not-found.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestNegativeArrayIndex(t *testing.T) {
 	data := []byte(`{"arr":[10,20,30]}`)
 	_, _, _, err := Get(data, "arr", "[-1]")
@@ -197,6 +204,7 @@ func TestNegativeArrayIndex(t *testing.T) {
 // Verifies: SYS-REQ-048 [malformed]
 // Delete on input truncated at a value boundary (the PR #280 case) shall
 // return the original input unchanged and shall not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteTruncatedAtValueBoundary(t *testing.T) {
 	cases := []struct {
 		name string
@@ -227,6 +235,7 @@ func TestDeleteTruncatedAtValueBoundary(t *testing.T) {
 
 // Verifies: SYS-REQ-049 [malformed]
 // Delete where internalGet returns an error shall return original input unchanged.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteErrorPropagation(t *testing.T) {
 	cases := []struct {
 		name string
@@ -258,6 +267,7 @@ func TestDeleteErrorPropagation(t *testing.T) {
 // Verifies: SYS-REQ-050 [malformed]
 // Delete with array-element path on truncated array input shall return
 // original input unchanged and shall not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteTruncatedArrayInput(t *testing.T) {
 	cases := []struct {
 		name string
@@ -286,6 +296,7 @@ func TestDeleteTruncatedArrayInput(t *testing.T) {
 
 // Verifies: SYS-REQ-056 [malformed]
 // Delete on mid-structure truncation shall return original input and not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteTruncatedMidStructure(t *testing.T) {
 	cases := []struct {
 		name string
@@ -316,6 +327,7 @@ func TestDeleteTruncatedMidStructure(t *testing.T) {
 
 // Verifies: SYS-REQ-051 [malformed]
 // Set on truncated input shall return an error rather than corrupt output or panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetTruncatedInput(t *testing.T) {
 	cases := []struct {
 		name string
@@ -345,6 +357,7 @@ func TestSetTruncatedInput(t *testing.T) {
 
 // Verifies: SYS-REQ-068 [boundary]
 // Set with path pointing beyond EOF shall return error, not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetPathBeyondEOF(t *testing.T) {
 	func() {
 		defer func() {
@@ -360,6 +373,7 @@ func TestSetPathBeyondEOF(t *testing.T) {
 
 // Verifies: SYS-REQ-069 [boundary]
 // Set with multi-level path where intermediate levels exist but leaf does not.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetNestedMutation(t *testing.T) {
 	data := `{"a":{"b":1}}`
 	got, err := Set([]byte(data), []byte(`"newval"`), "a", "c")
@@ -378,6 +392,7 @@ func TestSetNestedMutation(t *testing.T) {
 
 // Verifies: SYS-REQ-070 [boundary]
 // Set without any path shall return KeyPathNotFoundError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetNoPath(t *testing.T) {
 	_, err := Set([]byte(`{"a":1}`), []byte(`"v"`))
 	if !errors.Is(err, KeyPathNotFoundError) {
@@ -391,6 +406,7 @@ func TestSetNoPath(t *testing.T) {
 
 // Verifies: SYS-REQ-052 [malformed]
 // ArrayEach shall propagate element-level Get errors to the caller.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachErrorPropagation(t *testing.T) {
 	// Array with a truncated element
 	_, err := ArrayEach([]byte(`[1, {"a":}`), func(value []byte, dataType ValueType, offset int, err error) {})
@@ -401,6 +417,7 @@ func TestArrayEachErrorPropagation(t *testing.T) {
 
 // Verifies: SYS-REQ-053 [malformed]
 // ArrayEach on truncated mid-element shall return error, not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachTruncatedMidElement(t *testing.T) {
 	cases := []struct {
 		name string
@@ -429,6 +446,7 @@ func TestArrayEachTruncatedMidElement(t *testing.T) {
 
 // Verifies: SYS-REQ-055 [malformed]
 // ArrayEach with malformed delimiter between elements shall return MalformedArrayError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachMalformedDelimiter(t *testing.T) {
 	cases := []struct {
 		name string
@@ -454,6 +472,7 @@ func TestArrayEachMalformedDelimiter(t *testing.T) {
 
 // Verifies: SYS-REQ-054 [malformed]
 // ObjectEach on truncated mid-entry shall return error, not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObjectEachTruncatedMidEntry(t *testing.T) {
 	cases := []struct {
 		name string
@@ -488,6 +507,7 @@ func TestObjectEachTruncatedMidEntry(t *testing.T) {
 
 // Verifies: SYS-REQ-057 [boundary]
 // Partial boolean literals shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseBooleanPartialLiterals(t *testing.T) {
 	cases := []string{"tru", "fals", "t", "f", "tr", "fa", "TRUE", "FALSE"}
 	for _, input := range cases {
@@ -506,6 +526,7 @@ func TestParseBooleanPartialLiterals(t *testing.T) {
 
 // Verifies: SYS-REQ-058 [boundary]
 // ParseInt at exact int64 boundary values shall return correct values.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseIntBoundaryValues(t *testing.T) {
 	// int64 max: 9223372036854775807
 	maxVal, err := ParseInt([]byte("9223372036854775807"))
@@ -528,6 +549,7 @@ func TestParseIntBoundaryValues(t *testing.T) {
 
 // Verifies: SYS-REQ-059 [boundary]
 // ParseInt one beyond int64 range shall return OverflowIntegerError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseIntOverflowBoundary(t *testing.T) {
 	// max + 1: 9223372036854775808
 	_, err := ParseInt([]byte("9223372036854775808"))
@@ -544,6 +566,7 @@ func TestParseIntOverflowBoundary(t *testing.T) {
 
 // Verifies: SYS-REQ-064 [boundary]
 // ParseInt on empty input shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseIntEmpty(t *testing.T) {
 	_, err := ParseInt([]byte(``))
 	if !errors.Is(err, MalformedValueError) {
@@ -557,6 +580,7 @@ func TestParseIntEmpty(t *testing.T) {
 
 // Verifies: SYS-REQ-065 [boundary]
 // ParseFloat on empty input shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseFloatEmpty(t *testing.T) {
 	_, err := ParseFloat([]byte(``))
 	if !errors.Is(err, MalformedValueError) {
@@ -570,6 +594,7 @@ func TestParseFloatEmpty(t *testing.T) {
 
 // Verifies: SYS-REQ-066 [boundary]
 // ParseBoolean on empty input shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseBooleanEmpty(t *testing.T) {
 	_, err := ParseBoolean([]byte(``))
 	if !errors.Is(err, MalformedValueError) {
@@ -583,6 +608,7 @@ func TestParseBooleanEmpty(t *testing.T) {
 
 // Verifies: SYS-REQ-067 [boundary]
 // ParseString on empty input shall return empty string without error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseStringEmpty(t *testing.T) {
 	val, err := ParseString([]byte(``))
 	if err != nil {
@@ -595,6 +621,7 @@ func TestParseStringEmpty(t *testing.T) {
 
 // Verifies: SYS-REQ-060 [malformed]
 // Truncated escape sequences in ParseString shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTruncatedEscapeSequences(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -616,6 +643,7 @@ func TestTruncatedEscapeSequences(t *testing.T) {
 
 // Verifies: SYS-REQ-061 [malformed]
 // High surrogate without low surrogate shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMissingSurrogateLow(t *testing.T) {
 	// \uD800 alone (high surrogate, no low)
 	_, err := ParseString([]byte(`\uD800`))
@@ -632,6 +660,7 @@ func TestMissingSurrogateLow(t *testing.T) {
 
 // Verifies: SYS-REQ-062 [malformed]
 // High surrogate followed by invalid low surrogate shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestInvalidSurrogateLow(t *testing.T) {
 	// \uD800\u0041 - valid unicode escape but not in low surrogate range
 	_, err := ParseString([]byte(`\uD800\u0041`))
@@ -642,6 +671,7 @@ func TestInvalidSurrogateLow(t *testing.T) {
 
 // Verifies: SYS-REQ-063 [malformed]
 // Backslash at end of string shall return MalformedValueError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestBackslashAtEnd(t *testing.T) {
 	_, err := ParseString([]byte(`\`))
 	if !errors.Is(err, MalformedValueError) {
@@ -655,6 +685,7 @@ func TestBackslashAtEnd(t *testing.T) {
 
 // Verifies: SYS-REQ-071 [malformed]
 // GetString on malformed input shall propagate Get error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringMalformedInput(t *testing.T) {
 	_, err := GetString([]byte(`{"a"::`), "a")
 	if err == nil {
@@ -664,6 +695,7 @@ func TestGetStringMalformedInput(t *testing.T) {
 
 // Verifies: SYS-REQ-072 [malformed]
 // GetString with truncated escape in value shall return error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringTruncatedEscape(t *testing.T) {
 	// Value has a truncated unicode escape
 	_, err := GetString([]byte(`{"a":"hello\\uD800"}`), "a")
@@ -674,6 +706,7 @@ func TestGetStringTruncatedEscape(t *testing.T) {
 
 // Verifies: SYS-REQ-073 [boundary]
 // GetString on non-string value shall return a type-mismatch error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringTypeMismatch(t *testing.T) {
 	cases := []struct {
 		name string
@@ -698,6 +731,7 @@ func TestGetStringTypeMismatch(t *testing.T) {
 
 // Verifies: SYS-REQ-074 [boundary]
 // GetString on empty input shall return error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringEmptyInput(t *testing.T) {
 	_, err := GetString([]byte(``), "a")
 	if err == nil {
@@ -711,6 +745,7 @@ func TestGetStringEmptyInput(t *testing.T) {
 
 // Verifies: SYS-REQ-075 [malformed]
 // GetInt on malformed input shall propagate Get error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetIntMalformedInput(t *testing.T) {
 	_, err := GetInt([]byte(`{"a"::`), "a")
 	if err == nil {
@@ -720,6 +755,7 @@ func TestGetIntMalformedInput(t *testing.T) {
 
 // Verifies: SYS-REQ-076 [boundary]
 // GetInt on overflow value shall return overflow error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetIntOverflow(t *testing.T) {
 	_, err := GetInt([]byte(`{"a":9223372036854775808}`), "a")
 	if !errors.Is(err, OverflowIntegerError) {
@@ -729,6 +765,7 @@ func TestGetIntOverflow(t *testing.T) {
 
 // Verifies: SYS-REQ-077 [boundary]
 // GetInt on non-number value shall return type-mismatch error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetIntTypeMismatch(t *testing.T) {
 	cases := []struct {
 		name string
@@ -753,6 +790,7 @@ func TestGetIntTypeMismatch(t *testing.T) {
 
 // Verifies: SYS-REQ-078 [boundary]
 // GetInt on empty input shall return error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetIntEmptyInput(t *testing.T) {
 	_, err := GetInt([]byte(``), "a")
 	if err == nil {
@@ -766,6 +804,7 @@ func TestGetIntEmptyInput(t *testing.T) {
 
 // Verifies: SYS-REQ-079 [boundary]
 // GetBoolean on partial boolean literal shall return error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetBooleanPartialLiteral(t *testing.T) {
 	// When a value is something like "tru" (not a real boolean), Get classifies it
 	// differently (Number or Unknown) and GetBoolean returns a type error.
@@ -786,6 +825,7 @@ func TestGetBooleanPartialLiteral(t *testing.T) {
 
 // Verifies: SYS-REQ-080 [malformed]
 // GetUnsafeString on malformed input shall propagate Get error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeStringMalformedInput(t *testing.T) {
 	_, err := GetUnsafeString([]byte(`{"a"::`), "a")
 	if err == nil {
@@ -795,6 +835,7 @@ func TestGetUnsafeStringMalformedInput(t *testing.T) {
 
 // Verifies: SYS-REQ-081 [boundary]
 // GetUnsafeString on empty input shall return error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeStringEmptyInput(t *testing.T) {
 	_, err := GetUnsafeString([]byte(``), "a")
 	if err == nil {
@@ -804,6 +845,7 @@ func TestGetUnsafeStringEmptyInput(t *testing.T) {
 
 // Verifies: SYS-REQ-082 [malformed]
 // GetUnsafeString on truncated-at-value-boundary input shall return error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeStringTruncatedValue(t *testing.T) {
 	func() {
 		defer func() {
@@ -823,6 +865,7 @@ func TestGetUnsafeStringTruncatedValue(t *testing.T) {
 
 // Verifies: SYS-REQ-083 [malformed]
 // ArrayEach on truncated-at-value-boundary input shall return error, not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachTruncatedAtValueBoundary(t *testing.T) {
 	cases := []struct {
 		name string
@@ -856,6 +899,7 @@ func TestArrayEachTruncatedAtValueBoundary(t *testing.T) {
 
 // Verifies: SYS-REQ-084 [malformed]
 // ObjectEach on truncated mid-structure input shall return error, not panic.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObjectEachTruncatedMidStructure(t *testing.T) {
 	cases := []struct {
 		name string
@@ -890,6 +934,7 @@ func TestObjectEachTruncatedMidStructure(t *testing.T) {
 
 // Verifies: SYS-REQ-085 [malformed]
 // EachKey on truncated input with tokenEnd sentinel shall handle safely.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEachKeySentinelHandling(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -939,6 +984,7 @@ func TestEachKeySentinelHandling(t *testing.T) {
 
 // Verifies: SYS-REQ-016 [boundary]
 // Not-found key returns NotExist, offset -1, KeyPathNotFoundError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetNotFoundResult(t *testing.T) {
 	data := []byte(`{"a":1,"b":2}`)
 	val, dt, off, err := Get(data, "missing")
@@ -958,6 +1004,7 @@ func TestGetNotFoundResult(t *testing.T) {
 
 // Verifies: SYS-REQ-017 [malformed]
 // Incomplete/truncated input returns parse error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetTruncatedReturnsError(t *testing.T) {
 	cases := []struct {
 		name string
@@ -979,6 +1026,7 @@ func TestGetTruncatedReturnsError(t *testing.T) {
 
 // Verifies: SYS-REQ-018 [boundary]
 // No key path returns root value.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetNoKeyPathReturnsRoot(t *testing.T) {
 	data := []byte(`{"a":1}`)
 	val, dt, _, err := Get(data)
@@ -995,6 +1043,7 @@ func TestGetNoKeyPathReturnsRoot(t *testing.T) {
 
 // Verifies: SYS-REQ-019 [boundary]
 // Empty input with key path returns KeyPathNotFoundError.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetEmptyInputWithPath(t *testing.T) {
 	_, dt, off, err := Get([]byte(``), "a")
 	if err == nil {
@@ -1006,6 +1055,7 @@ func TestGetEmptyInputWithPath(t *testing.T) {
 
 // Verifies: SYS-REQ-020 [boundary]
 // Object key resolved at correct scope.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetObjectKeyScope(t *testing.T) {
 	data := []byte(`{"a":{"b":1},"b":2}`)
 	val, _, _, err := Get(data, "a", "b")
@@ -1019,6 +1069,7 @@ func TestGetObjectKeyScope(t *testing.T) {
 
 // Verifies: SYS-REQ-021 [boundary]
 // Valid in-bounds array index returns correct element.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetArrayIndexInBounds(t *testing.T) {
 	data := []byte(`{"arr":[10,20,30]}`)
 	val, _, _, err := Get(data, "arr", "[1]")
@@ -1032,6 +1083,7 @@ func TestGetArrayIndexInBounds(t *testing.T) {
 
 // Verifies: SYS-REQ-022 [boundary]
 // Malformed array index returns not-found.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetMalformedArrayIndex(t *testing.T) {
 	data := []byte(`{"arr":[1,2,3]}`)
 	_, _, _, err := Get(data, "arr", "[abc]")
@@ -1042,6 +1094,7 @@ func TestGetMalformedArrayIndex(t *testing.T) {
 
 // Verifies: SYS-REQ-023 [boundary]
 // Out-of-bounds array index returns not-found.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetArrayIndexOutOfBounds(t *testing.T) {
 	data := []byte(`{"arr":[1,2,3]}`)
 	_, _, _, err := Get(data, "arr", "[5]")
@@ -1052,6 +1105,7 @@ func TestGetArrayIndexOutOfBounds(t *testing.T) {
 
 // Verifies: SYS-REQ-024 [boundary]
 // Escaped key in payload matches decoded path segment.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetEscapedKey(t *testing.T) {
 	data := []byte(`{"a\nb":42}`)
 	val, _, _, err := Get(data, "a\nb")
@@ -1065,6 +1119,7 @@ func TestGetEscapedKey(t *testing.T) {
 
 // Verifies: SYS-REQ-025 [boundary]
 // String value returned without surrounding quotes and without unescaping.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringValueRaw(t *testing.T) {
 	data := []byte(`{"a":"hello world"}`)
 	val, dt, _, err := Get(data, "a")
@@ -1081,6 +1136,7 @@ func TestGetStringValueRaw(t *testing.T) {
 
 // Verifies: SYS-REQ-026 [malformed]
 // Malformed input outside addressed path allows best-effort result.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetBestEffortMalformed(t *testing.T) {
 	// Malformed after the value we're looking for
 	data := []byte(`{"a":1,"b":INVALID}`)
@@ -1095,6 +1151,7 @@ func TestGetBestEffortMalformed(t *testing.T) {
 
 // Verifies: SYS-REQ-027 [malformed]
 // Unclassifiable token returns value-type error.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnknownValueType(t *testing.T) {
 	data := []byte(`{"a":INVALID}`)
 	_, _, _, err := Get(data, "a")
@@ -1109,6 +1166,7 @@ func TestGetUnknownValueType(t *testing.T) {
 
 // Verifies: SYS-REQ-035 [boundary]
 // Delete with no keys returns empty slice.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteNoPath(t *testing.T) {
 	data := []byte(`{"a":1}`)
 	result := Delete(data)
@@ -1119,6 +1177,7 @@ func TestDeleteNoPath(t *testing.T) {
 
 // Verifies: SYS-REQ-052 [malformed]
 // MCDC SYS-REQ-052: array_callback_returns_error=T, array_callback_error_is_propagated=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachCallbackReceivesElementError(t *testing.T) {
 	// Array where the second element is malformed — callback should receive the
 	// error for the malformed element instead of ArrayEach silently stopping.
@@ -1148,6 +1207,7 @@ func TestArrayEachCallbackReceivesElementError(t *testing.T) {
 
 // Verifies: SYS-REQ-052 [boundary]
 // MCDC SYS-REQ-052: array_callback_returns_error=T, array_callback_error_is_propagated=F => FALSE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachCallbackErrorNotSwallowed(t *testing.T) {
 	// When ArrayEach encounters a Get error on an element, the error must
 	// propagate — it cannot be swallowed. This test witnesses the FALSE row:

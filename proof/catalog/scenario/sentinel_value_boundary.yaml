@@ -1,0 +1,17 @@
+id: sentinel_value_boundary
+catalog_version: 1
+category: scenario
+order: 1010
+status: active
+name: sentinel_value_boundary
+summary: tokenEnd/tokenStart return a length-bounded sentinel that callers must bounds-check before dereferencing.
+description: |
+  This is the root-cause class behind the PR #280 / OSS-Fuzz 4649128545288192
+  Delete panic. tokenEnd (parser.go:49) returns len(data) and tokenStart
+  (parser.go:168) returns the same kind of length-bounded sentinel when no
+  delimiter is found, rather than a negative error. Every caller that turns
+  the return value into a slice index (notably Delete doing
+  `data[endOffset+tokEnd]` in SYS-REQ-044) must check
+  `endOffset+tokEnd < len(data)` before dereferencing. The obligation is the
+  data-constraint side of truncated_at_value_boundary: it pins the caller
+  discipline that converts a legitimate sentinel into a safe error path.

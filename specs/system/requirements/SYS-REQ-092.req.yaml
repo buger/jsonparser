@@ -27,9 +27,9 @@ traces:
         - obligation_property_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:38.004764Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:c225bbc135f8b37ed381616150fd5c7053fac23e2d242c8684457fd52c40a019
+    reviewed_at: "2026-07-26T13:25:52.355894Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:e8d7c6be5f2abbc428175e15ce4dfb508e793f8816deed59ea7cb0c006057cef
 verification:
     assurance_level: E
     formalization_status: valid
@@ -41,9 +41,9 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-21T00:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-21T00:00:00Z"
-obligation_class: encoding_safety
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:40Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-21T00:00:00Z"
@@ -51,3 +51,9 @@ lifecycle:
           to: review
           reason: Added encoding-safety obligation for GetString.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: encoding_safety

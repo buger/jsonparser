@@ -11,6 +11,7 @@ import (
 // =============================================================================
 
 // Verifies: SYS-REQ-006 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_ArrayEach_LoopExitsOnEmptyArray(t *testing.T) {
 	_, err := ArrayEach([]byte(`[]`), func(value []byte, dataType ValueType, offset int, err error) {
 		t.Fatal("callback should not be called for empty array")
@@ -21,6 +22,7 @@ func TestRemoval1_ArrayEach_LoopExitsOnEmptyArray(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-006 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_ArrayEach_LoopExitsOnSingleElement(t *testing.T) {
 	count := 0
 	_, err := ArrayEach([]byte(`[1]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -35,6 +37,7 @@ func TestRemoval1_ArrayEach_LoopExitsOnSingleElement(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_Unescape_LoopExitsOnSingleEscape(t *testing.T) {
 	out, err := Unescape([]byte(`hello\nworld`), make([]byte, 64))
 	if err != nil {
@@ -46,6 +49,7 @@ func TestRemoval1_Unescape_LoopExitsOnSingleEscape(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_Unescape_LoopExitsOnTrailingEscape(t *testing.T) {
 	out, err := Unescape([]byte(`\n`), make([]byte, 64))
 	if err != nil {
@@ -57,6 +61,7 @@ func TestRemoval1_Unescape_LoopExitsOnTrailingEscape(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-007 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_ObjectEach_LoopExitsOnEmptyObject(t *testing.T) {
 	err := ObjectEach([]byte(`{}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
 		t.Fatal("callback should not be called for empty object")
@@ -68,6 +73,7 @@ func TestRemoval1_ObjectEach_LoopExitsOnEmptyObject(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-007 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_ObjectEach_LoopExitsOnSingleEntry(t *testing.T) {
 	count := 0
 	err := ObjectEach([]byte(`{"a":1}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -88,6 +94,7 @@ func TestRemoval1_ObjectEach_LoopExitsOnSingleEntry(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-044 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_TokenEnd_EmptyInput(t *testing.T) {
 	result := tokenEnd([]byte{})
 	if result != 0 {
@@ -96,6 +103,7 @@ func TestRemoval2_TokenEnd_EmptyInput(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-044 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_TokenEnd_NoDelimiter(t *testing.T) {
 	// Input with no delimiter characters at all
 	result := tokenEnd([]byte("12345"))
@@ -105,6 +113,7 @@ func TestRemoval2_TokenEnd_NoDelimiter(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-044 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_TokenEnd_NeverReturnsNegative(t *testing.T) {
 	// This is the critical assertion: tokenEnd NEVER returns -1.
 	// If it did, the removed guard would be needed.
@@ -127,6 +136,7 @@ func TestRemoval2_TokenEnd_NeverReturnsNegative(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_GetType_NumberAtEndOfInput(t *testing.T) {
 	// This is the key edge case: a number at the very end of the input
 	// with no trailing delimiter. tokenEnd returns len(data[endOffset:]) = 0,
@@ -149,6 +159,7 @@ func TestRemoval2_GetType_NumberAtEndOfInput(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_GetType_BooleanAtEndOfInput(t *testing.T) {
 	val, dt, _, err := Get([]byte("true"))
 	if err != nil {
@@ -163,6 +174,7 @@ func TestRemoval2_GetType_BooleanAtEndOfInput(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_GetType_NullAtEndOfInput(t *testing.T) {
 	val, dt, _, err := Get([]byte("null"))
 	if err != nil {
@@ -179,6 +191,7 @@ func TestRemoval2_GetType_NullAtEndOfInput(t *testing.T) {
 // Critical: tokenEnd returns len(data) vs stringEnd/blockEnd returning -1.
 // The inconsistency means getType silently accepts truncated tokens.
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval2_Inconsistency_TruncatedNumber(t *testing.T) {
 	// Consider: `{"a": 12` — the number "12" has no terminator.
 	// tokenEnd("12") returns 2, so getType will return "12" as a Number.
@@ -199,6 +212,7 @@ func TestRemoval2_Inconsistency_TruncatedNumber(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval3_DecodeSingleUnicodeEscape_MaxValue(t *testing.T) {
 	// \uFFFF is the maximum possible value from a single \uXXXX escape.
 	// 4 hex digits: max = 0xFFFF = 65535 = basicMultilingualPlaneOffset
@@ -215,6 +229,7 @@ func TestRemoval3_DecodeSingleUnicodeEscape_MaxValue(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval3_DecodeSingleUnicodeEscape_MinValue(t *testing.T) {
 	r, ok := decodeSingleUnicodeEscape([]byte(`\u0000`))
 	if !ok {
@@ -226,6 +241,7 @@ func TestRemoval3_DecodeSingleUnicodeEscape_MinValue(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval3_DecodeUnicodeEscape_BMP_NonSurrogate(t *testing.T) {
 	// \u0041 = 'A', well within BMP and not a surrogate
 	r, n := decodeUnicodeEscape([]byte(`\u0041`))
@@ -238,6 +254,7 @@ func TestRemoval3_DecodeUnicodeEscape_BMP_NonSurrogate(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval3_DecodeUnicodeEscape_HighSurrogateAlone(t *testing.T) {
 	// \uD800 is a high surrogate — should require a low surrogate pair
 	r, n := decodeUnicodeEscape([]byte(`\uD800`))
@@ -247,6 +264,7 @@ func TestRemoval3_DecodeUnicodeEscape_HighSurrogateAlone(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval3_DecodeUnicodeEscape_ValidSurrogatePair(t *testing.T) {
 	// \uD83D\uDE00 = U+1F600 (grinning face emoji)
 	r, n := decodeUnicodeEscape([]byte(`\uD83D\uDE00`))
@@ -259,6 +277,7 @@ func TestRemoval3_DecodeUnicodeEscape_ValidSurrogatePair(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [formal]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval3_MathematicalProof(t *testing.T) {
 	// Mathematical proof: decodeSingleUnicodeEscape computes
 	// h1<<12 + h2<<8 + h3<<4 + h4
@@ -279,6 +298,7 @@ func TestRemoval3_MathematicalProof(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_SkipNestedObject(t *testing.T) {
 	data := []byte(`{"skip":{"nested":"deep"},"want":"found"}`)
 	paths := [][]string{{"want"}}
@@ -304,6 +324,7 @@ func TestRemoval4_EachKey_SkipNestedObject(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_SkipDeeplyNestedObject(t *testing.T) {
 	data := []byte(`{"skip":{"a":{"b":{"c":"deep"}}},"want":"found"}`)
 	paths := [][]string{{"want"}}
@@ -324,6 +345,7 @@ func TestRemoval4_EachKey_SkipDeeplyNestedObject(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_SkipNestedArray(t *testing.T) {
 	data := []byte(`{"skip":[1,2,3],"want":"found"}`)
 	paths := [][]string{{"want"}}
@@ -344,6 +366,7 @@ func TestRemoval4_EachKey_SkipNestedArray(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_SkipMultipleNestedObjects(t *testing.T) {
 	data := []byte(`{"a":{"x":1},"b":{"y":2},"want":"found"}`)
 	paths := [][]string{{"want"}}
@@ -364,6 +387,7 @@ func TestRemoval4_EachKey_SkipMultipleNestedObjects(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_NestedObjectWithString(t *testing.T) {
 	// This tests the case where a string value contains braces
 	data := []byte(`{"skip":"has {braces}","want":"found"}`)
@@ -392,6 +416,7 @@ func TestRemoval4_EachKey_NestedObjectWithString(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval5_SearchKeys_ArrayIndex_Valid(t *testing.T) {
 	data := []byte(`[1, "two", 3]`)
 	// searchKeys with "[1]" should find element at index 1
@@ -402,6 +427,7 @@ func TestRemoval5_SearchKeys_ArrayIndex_Valid(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval5_SearchKeys_ArrayIndex_MalformedNoClose(t *testing.T) {
 	data := []byte(`[1, 2, 3]`)
 	// "[1" has no closing bracket — keyLen < 3 catches this
@@ -412,6 +438,7 @@ func TestRemoval5_SearchKeys_ArrayIndex_MalformedNoClose(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval5_SearchKeys_ArrayIndex_TooShort(t *testing.T) {
 	data := []byte(`[1, 2, 3]`)
 	// "[]" has keyLen=2 which is < 3 — still caught
@@ -422,6 +449,7 @@ func TestRemoval5_SearchKeys_ArrayIndex_TooShort(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval5_SearchKeys_ArrayIndex_NestedObject(t *testing.T) {
 	data := []byte(`[{"a":1},{"a":2}]`)
 	offset := searchKeys(data, "[1]", "a")
@@ -436,6 +464,7 @@ func TestRemoval5_SearchKeys_ArrayIndex_NestedObject(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-006 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval6_ArrayEach_GetReturnsZeroOffset(t *testing.T) {
 	// Get is called with data[offset:]. For Get to return endOffset=0,
 	// internalGet would need to return endOffset=0.
@@ -483,6 +512,7 @@ func TestRemoval6_ArrayEach_GetReturnsZeroOffset(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-006 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval6_ArrayEach_EmptyStringElement(t *testing.T) {
 	// Can Get return ([], String, 0, nil) for an empty string ""?
 	// Get("\"\"") → internalGet → searchKeys skipped → nextToken → offset 0
@@ -507,6 +537,7 @@ func TestRemoval6_ArrayEach_EmptyStringElement(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-006 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval6_ArrayEach_WhitespaceOnlyInput(t *testing.T) {
 	// Can Get return (nil, NotExist, 0, nil)?
 	// Get("   ") → nextToken returns 0 pointing to first space... no.
@@ -528,6 +559,7 @@ func TestRemoval6_ArrayEach_WhitespaceOnlyInput(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval7_NextToken_EmptyInput(t *testing.T) {
 	result := nextToken([]byte{})
 	if result != -1 {
@@ -536,6 +568,7 @@ func TestRemoval7_NextToken_EmptyInput(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval7_NextToken_WhitespaceOnly(t *testing.T) {
 	result := nextToken([]byte("   \t\n"))
 	if result != -1 {
@@ -544,6 +577,7 @@ func TestRemoval7_NextToken_WhitespaceOnly(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval7_FindKeyStart_NextTokenGuaranteesNonEmpty(t *testing.T) {
 	// If nextToken returns >= 0, then data has at least one non-whitespace byte,
 	// which means len(data) >= 1, which means ln > 0.
@@ -569,6 +603,7 @@ func TestRemoval7_FindKeyStart_NextTokenGuaranteesNonEmpty(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-007 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval_ObjectEach_MalformedTrailingComma(t *testing.T) {
 	// Object ends with comma but no more entries: `{"a":1,}`
 	// After parsing "a":1, the loop finds comma, skips it, calls nextToken.
@@ -583,6 +618,7 @@ func TestRemoval_ObjectEach_MalformedTrailingComma(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-007 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval_ObjectEach_MalformedNoClosingBrace(t *testing.T) {
 	// `{"a":1` — no closing brace. After parsing "a":1,
 	// nextToken on remaining data. Get consumes "1", offset moves past it.
@@ -601,6 +637,7 @@ func TestRemoval_ObjectEach_MalformedNoClosingBrace(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-006 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestStress_ArrayEach_NestedEmpty(t *testing.T) {
 	_, err := ArrayEach([]byte(`[[],[]]`), func(value []byte, dataType ValueType, offset int, err error) {
 		// nested arrays
@@ -611,6 +648,7 @@ func TestStress_ArrayEach_NestedEmpty(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestStress_EachKey_LargeNestedSkip(t *testing.T) {
 	// Build a large nested object that must be skipped
 	inner := `{"a":{"b":{"c":{"d":"deep"}}}}`
@@ -633,6 +671,7 @@ func TestStress_EachKey_LargeNestedSkip(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-010 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestStress_Delete_TokenEndBoundary(t *testing.T) {
 	// Test Delete where tokenEnd reaches the sentinel (returns len(data))
 	// This exercises the new `endOffset+tokEnd >= len(data)` guard
@@ -647,6 +686,7 @@ func TestStress_Delete_TokenEndBoundary(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-001 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestStress_Get_BareTruncatedValue(t *testing.T) {
 	// A bare value with no container and no terminator — tokenEnd returns len(data)
 	val, dt, _, err := Get([]byte("12345"))
@@ -667,6 +707,7 @@ func TestStress_Get_BareTruncatedValue(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_TracePath(t *testing.T) {
 	// {"skip":{"n":1},"want":"ok"}
 	// When EachKey processes "skip" and match==-1:
@@ -716,6 +757,7 @@ func TestRemoval4_EachKey_TracePath(t *testing.T) {
 
 // Test with value types that aren't objects — numbers, arrays, strings, bools
 // Verifies: SYS-REQ-008 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval4_EachKey_SkipVariousValueTypes(t *testing.T) {
 	tests := []struct {
 		name string
@@ -761,6 +803,7 @@ func TestRemoval4_EachKey_SkipVariousValueTypes(t *testing.T) {
 // =============================================================================
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_Unescape_InvalidEscape(t *testing.T) {
 	_, err := Unescape([]byte(`\z`), make([]byte, 64))
 	if err == nil {
@@ -769,6 +812,7 @@ func TestRemoval1_Unescape_InvalidEscape(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_Unescape_ConsecutiveEscapes(t *testing.T) {
 	out, err := Unescape([]byte(`\n\t\r`), make([]byte, 64))
 	if err != nil {
@@ -780,6 +824,7 @@ func TestRemoval1_Unescape_ConsecutiveEscapes(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-014 [boundary]
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestRemoval1_Unescape_EscapedQuote(t *testing.T) {
 	out, err := Unescape([]byte(`hello\"world`), make([]byte, 64))
 	if err != nil {

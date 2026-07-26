@@ -29,26 +29,32 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:16:40.365826Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:5426885801a5d658f40be7e9cf1e898f34a7ca0439f4f5cfd6c0e14c201f02fa
+    reviewed_at: "2026-07-26T13:25:51.4859Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ba4f21d85d67a0d7e1b391e971cf31a8737d0f4b4453b4940f617c82f07ab074
 verification:
     assurance_level: B
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        role: system_owner
-        reviewed_at: "2026-04-18T10:12:51Z"
-        comment: 'Dogfooding: Get lookup behavior reviewed and complete'
-        fingerprint: sha256:8e8fb94e991e484f07ac601edc36b2d2d4c7aa31e680c8e0d1645f42e7ad1080
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T12:44:03Z"
+        comment: 'Re-approved under L3 strict posture; content re-reviewed against current formalization'
+        fingerprint: sha256:3b9c4e723d3ddf77cf056a42830d54a640257bb92cce0e5ab46bd98ba6a8a72a
         ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-05-03T10:13:31Z"
-obligation_class: malformed_input
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T12:44:03Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T00:00:00Z"
@@ -56,3 +62,14 @@ lifecycle:
           to: review
           reason: Added explicit tolerated malformed-input behavior for Get.
           changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

@@ -28,9 +28,9 @@ traces:
         - set_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:16:39.515581Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:8c42a039872084c6608988859743c3cc4f856e3761c10c0ee8a5514d5377b866
+    reviewed_at: "2026-07-26T13:25:51.168894Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:78b70cd065f8507a7e57a6f699e0a0aedc89c2177a000970fb0484625a3aa5c0
 verification:
     assurance_level: E
     formalization_status: valid
@@ -43,8 +43,14 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:15:31Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-05-03T10:10:39Z"
-obligation_class: nominal
+    last_modified_at: "2026-07-26T14:54:13Z"
+obligation_checklist:
+    - idempotency
+obligation_hazards:
+    - class: idempotency
+      worst_case: Set on the same (input, path, value) tuple yields a different document on a second call (e.g. idempotency regression where repeated Set inserts the path twice), corrupting cache or diff layers.
+      severity: medium
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-13T17:16:45Z"
@@ -52,3 +58,9 @@ lifecycle:
           to: review
           reason: ""
           changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=2; known_issue:KI-1=none | tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

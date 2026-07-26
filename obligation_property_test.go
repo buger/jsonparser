@@ -16,6 +16,7 @@ import (
 
 // Verifies: SYS-REQ-086
 // MCDC SYS-REQ-086: get_called_twice_with_same_input=T, get_returns_identical_results=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetDeterminism(t *testing.T) {
 	cases := []struct {
 		name string
@@ -55,6 +56,7 @@ func TestGetDeterminism(t *testing.T) {
 
 // Verifies: SYS-REQ-090
 // MCDC SYS-REQ-090: getstring_called_twice_with_same_input=T, getstring_returns_identical_results=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringDeterminism(t *testing.T) {
 	cases := []struct {
 		name string
@@ -83,6 +85,7 @@ func TestGetStringDeterminism(t *testing.T) {
 
 // Verifies: SYS-REQ-094
 // MCDC SYS-REQ-094: typed_getter_called_twice_with_same_input=T, typed_getter_returns_identical_results=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTypedGetterDeterminism(t *testing.T) {
 	data := []byte(`{"i":42,"f":3.14,"b":true}`)
 
@@ -110,6 +113,7 @@ func TestTypedGetterDeterminism(t *testing.T) {
 
 // Verifies: SYS-REQ-097
 // MCDC SYS-REQ-097: traversal_called_twice_with_same_input=T, traversal_returns_identical_results=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTraversalDeterminism(t *testing.T) {
 	t.Run("ArrayEach", func(t *testing.T) {
 		data := []byte(`{"arr":[1,2,3]}`)
@@ -180,6 +184,7 @@ func TestTraversalDeterminism(t *testing.T) {
 
 // Verifies: SYS-REQ-103
 // MCDC SYS-REQ-103: getunsafestring_called_twice_with_same_input=T, getunsafestring_returns_identical_results=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeStringDeterminism(t *testing.T) {
 	data := []byte(`{"s":"hello\\world"}`)
 	v1, e1 := GetUnsafeString(data, "s")
@@ -194,6 +199,7 @@ func TestGetUnsafeStringDeterminism(t *testing.T) {
 
 // Verifies: SYS-REQ-106
 // MCDC SYS-REQ-106: parse_helper_called_twice_with_same_input=T, parse_helper_returns_identical_results=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseHelperDeterminism(t *testing.T) {
 	// ParseBoolean
 	b1, be1 := ParseBoolean([]byte("true"))
@@ -230,6 +236,7 @@ func TestParseHelperDeterminism(t *testing.T) {
 
 // Verifies: SYS-REQ-087
 // MCDC SYS-REQ-087: get_called_on_valid_input=T, get_does_not_mutate_input=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetIdempotencyInputNotMutated(t *testing.T) {
 	original := `{"name":"alice","age":30,"nested":{"key":"value"}}`
 	data := []byte(original)
@@ -249,6 +256,7 @@ func TestGetIdempotencyInputNotMutated(t *testing.T) {
 
 // Verifies: SYS-REQ-100
 // MCDC SYS-REQ-100: set_applied_twice_with_same_args=T, set_second_call_produces_same_result=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetIdempotency(t *testing.T) {
 	data := []byte(`{"name":"alice","age":30}`)
 	setValue := []byte(`"bob"`)
@@ -277,6 +285,7 @@ func TestSetIdempotency(t *testing.T) {
 
 // Verifies: SYS-REQ-088
 // MCDC SYS-REQ-088: get_input_is_nil=T, get_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetNilSafety(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -296,6 +305,7 @@ func TestGetNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-091
 // MCDC SYS-REQ-091: getstring_input_is_nil=T, getstring_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringNilSafety(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -311,6 +321,7 @@ func TestGetStringNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-095
 // MCDC SYS-REQ-095: typed_getter_input_is_nil=T, typed_getter_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTypedGetterNilSafety(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -336,6 +347,7 @@ func TestTypedGetterNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-098
 // MCDC SYS-REQ-098: traversal_input_is_nil=T, traversal_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTraversalNilSafety(t *testing.T) {
 	t.Run("ArrayEach_nil", func(t *testing.T) {
 		defer func() {
@@ -395,6 +407,7 @@ func TestTraversalNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-101
 // MCDC SYS-REQ-101: mutation_input_is_nil=T, mutation_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMutationNilSafety(t *testing.T) {
 	t.Run("Set_nil", func(t *testing.T) {
 		defer func() {
@@ -423,6 +436,7 @@ func TestMutationNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-104
 // MCDC SYS-REQ-104: getunsafestring_input_is_nil=T, getunsafestring_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeStringNilSafety(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -438,6 +452,7 @@ func TestGetUnsafeStringNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-107
 // MCDC SYS-REQ-107: parse_helper_input_is_nil=T, parse_helper_returns_safe_result_for_nil=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseHelperNilSafety(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -475,6 +490,7 @@ func TestParseHelperNilSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-092
 // MCDC SYS-REQ-092: getstring_input_has_escaped_unicode=T, getstring_decodes_and_preserves_semantics=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringEncodingSafety(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -506,6 +522,7 @@ func TestGetStringEncodingSafety(t *testing.T) {
 
 // Verifies: SYS-REQ-108
 // MCDC SYS-REQ-108: parsestring_input_has_standard_escapes=T, parsestring_roundtrip_preserves_semantics=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseStringEncodingSafetyRoundtrip(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -555,6 +572,7 @@ func TestParseStringEncodingSafetyRoundtrip(t *testing.T) {
 
 // Verifies: SYS-REQ-089
 // MCDC SYS-REQ-089: get_input_is_deeply_nested=T, get_handles_deep_nesting_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetDeepNesting(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -587,6 +605,7 @@ func TestGetDeepNesting(t *testing.T) {
 
 // Verifies: SYS-REQ-093
 // MCDC SYS-REQ-093: getstring_input_has_unicode_edge_cases=T, getstring_handles_unicode_edges_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetStringUnicodeEdgeCases(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -647,6 +666,7 @@ func TestGetStringUnicodeEdgeCases(t *testing.T) {
 
 // Verifies: SYS-REQ-096
 // MCDC SYS-REQ-096: getint_input_has_large_number_edge_case=T, getint_handles_large_numbers_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetIntLargeNumberEdgeCases(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -713,6 +733,7 @@ func TestGetIntLargeNumberEdgeCases(t *testing.T) {
 
 // Verifies: SYS-REQ-099
 // MCDC SYS-REQ-099: traversal_input_is_deeply_nested=T, traversal_handles_deep_nesting_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTraversalDeepNesting(t *testing.T) {
 	t.Run("ArrayEach_deep", func(t *testing.T) {
 		defer func() {
@@ -757,6 +778,7 @@ func TestTraversalDeepNesting(t *testing.T) {
 
 // Verifies: SYS-REQ-102
 // MCDC SYS-REQ-102: mutation_input_has_unicode_keys=T, mutation_handles_unicode_keys_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestMutationUnicodeKeys(t *testing.T) {
 	t.Run("Set_unicode_key", func(t *testing.T) {
 		defer func() {
@@ -801,6 +823,7 @@ func TestMutationUnicodeKeys(t *testing.T) {
 
 // Verifies: SYS-REQ-105
 // MCDC SYS-REQ-105: getunsafestring_input_has_unicode_edge_cases=T, getunsafestring_handles_unicode_edges_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetUnsafeStringUnicodeEdgeCases(t *testing.T) {
 	cases := []struct {
 		name string
@@ -830,6 +853,7 @@ func TestGetUnsafeStringUnicodeEdgeCases(t *testing.T) {
 
 // Verifies: SYS-REQ-109
 // MCDC SYS-REQ-109: parseint_input_has_edge_case_number=T, parseint_handles_edge_numbers_safely=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseIntEdgeCaseNumbers(t *testing.T) {
 	cases := []struct {
 		name    string

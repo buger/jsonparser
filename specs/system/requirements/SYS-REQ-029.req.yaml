@@ -27,9 +27,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:27.932137Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:5a1411091599832bc267af29b6352cd8eb21257507b690cc596d57da1239f317
+    reviewed_at: "2026-07-26T13:25:51.522891Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:10dcfedda67ca1847d9802d862f1c13b3b08295cced2d3b8bd1c789371b7262f
 verification:
     assurance_level: E
     formalization_status: valid
@@ -41,9 +41,15 @@ verification:
 history:
     created_by: agent:codex
     created_at: "2026-04-14T15:45:00Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: malformed_input
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:17Z"
+obligation_checklist:
+    - malformed_input
+obligation_hazards:
+    - class: malformed_input
+      worst_case: ArrayEach on adversarial input like [1,{ drives nextToken past EOF; an unguarded i+1 increment in the iteration loop panics with index-out-of-range on network-reachable input.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -51,3 +57,9 @@ lifecycle:
           to: review
           reason: Added explicit malformed-input behavior for ArrayEach.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

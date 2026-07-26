@@ -29,26 +29,51 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:26.369095Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:3281d45f056dd08e916f18288c1a66a4b13afc80a732185420324b1d60588eae
+    reviewed_at: "2026-07-26T13:25:51.398913Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:dfdf4b296527e62289fcc8cf590e4fb59991cd4d237e7fbedf3c71f58a2759e3
 verification:
     assurance_level: B
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        role: system_owner
-        reviewed_at: "2026-04-18T10:12:51Z"
-        comment: 'Dogfooding: Get lookup behavior reviewed and complete'
-        fingerprint: sha256:3d658f1b8e2cdefa3aae556c4dfe1fb1e2f1ec000456e065149b6b263c2308f9
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T15:21:06Z"
+        comment: 'Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)'
+        fingerprint: sha256:9aa95f8b49fb740ac3cc646737ad836c3796a96170e6bd58f9dbcd12e9b8bc2c
         ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+        motivation_history:
+            - kind: unchanged
+              rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T14:36:40Z"
+              superseded_by: human:buger
+            - kind: unchanged
+              rationale: 'L3 strict sweep: obligation decomposition + verification-state alignment completed; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T15:21:06Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-04-18T10:12:51Z"
-obligation_class: empty_input
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T15:21:07Z"
+obligation_checklist:
+    - empty_input
+    - nil_safety
+obligation_hazards:
+    - class: empty_input
+      worst_case: Get on a zero-length input with a path returns a stale value slice instead of KeyPathNotFoundError, mis-classifying empty input as a found path and leaking stale bytes.
+      severity: low
+    - class: nil_safety
+      worst_case: Get on nil data panics in nextToken at data[0] instead of returning NotExist with KeyPathNotFoundError, crashing the caller on a nil trust-boundary input.
+      severity: high
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T00:00:00Z"
@@ -56,3 +81,24 @@ lifecycle:
           to: review
           reason: Split out empty-input lookup behavior from the umbrella Get requirement.
           changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:27Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T14:36:40Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T12:44:03Z comment="Re-approved under L3 strict posture; content re-reviewed against current formalization")'
+          changed_by: human:buger
+        - date: "2026-07-26T15:21:06Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T14:36:40Z comment="Re-approved after obligation/verification-state alignment under L3 strict posture")'
+          changed_by: human:buger
+obligation_class: empty_input

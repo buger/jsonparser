@@ -28,9 +28,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:28.570048Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:0919990501e68632bbd67c2d16520580605c69e03b617c83c631b9d4f0ff83b1
+    reviewed_at: "2026-07-26T13:25:51.571912Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b3935319c0477856c1c9d46d8cb9b9266eacc34ed0672e14831a52eb7d0f0f1a
 verification:
     assurance_level: E
     formalization_status: valid
@@ -44,7 +44,7 @@ history:
     created_at: "2026-04-14T15:45:00Z"
     last_modified_by: agent:codex
     last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: nominal
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -52,3 +52,9 @@ lifecycle:
           to: review
           reason: Added explicit successful-deletion behavior for Delete.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

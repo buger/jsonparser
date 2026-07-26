@@ -28,26 +28,47 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:25.96917Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:ea81003dac2788e41f3731066a5a7d1d57893c1f18f62e2940b3869eceae1d25
+    reviewed_at: "2026-07-26T13:25:51.373842Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:1127dc35a4277176a80d07f8813e52a1dd6d3d83b0c9adbd9516a1b360b1b79d
 verification:
     assurance_level: B
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        role: system_owner
-        reviewed_at: "2026-04-18T10:12:51Z"
-        comment: 'Dogfooding: Get lookup behavior reviewed and complete'
-        fingerprint: sha256:1b4a26025095c5d8f53df35c16151a8d36ac70ab8f95d96be005771cf8646bd2
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T15:21:06Z"
+        comment: 'Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)'
+        fingerprint: sha256:67ebf60515d4c5fe740eebad77921ebdd9ad5f75f0fc02a478ae63dc02182abb
         ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+        motivation_history:
+            - kind: unchanged
+              rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T14:36:40Z"
+              superseded_by: human:buger
+            - kind: unchanged
+              rationale: 'L3 strict sweep: obligation decomposition + verification-state alignment completed; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T15:21:06Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-04-18T10:12:51Z"
-obligation_class: malformed_input
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T15:21:07Z"
+obligation_checklist:
+    - malformed_input
+obligation_hazards:
+    - class: malformed_input
+      worst_case: 'Get on adversarial input like {"a": (no value token) drives nextToken to return -1; an unguarded data[i] dereference in the value classification step panics with index-out-of-range on network-reachable input.'
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T00:00:00Z"
@@ -55,3 +76,24 @@ lifecycle:
           to: review
           reason: Split out incomplete-input behavior from the umbrella Get requirement.
           changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:27Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T14:36:40Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T12:44:03Z comment="Re-approved under L3 strict posture; content re-reviewed against current formalization")'
+          changed_by: human:buger
+        - date: "2026-07-26T15:21:06Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T14:36:40Z comment="Re-approved after obligation/verification-state alignment under L3 strict posture")'
+          changed_by: human:buger
+obligation_class: malformed_input

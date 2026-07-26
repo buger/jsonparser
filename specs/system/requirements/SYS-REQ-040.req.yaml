@@ -29,9 +29,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:29.728996Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:a83d2dcc89315a1b8d9f36bb8652d0984e091f054979d7534a0be7f6f2e4c06d
+    reviewed_at: "2026-07-26T13:25:51.657892Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:3452299929f04834610f0ed8a1542ad82f8747f648b08a6e03443748d4530f1f
 verification:
     assurance_level: E
     formalization_status: valid
@@ -45,7 +45,7 @@ history:
     created_at: "2026-04-14T15:45:00Z"
     last_modified_by: agent:codex
     last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: malformed_input
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -53,3 +53,9 @@ lifecycle:
           to: review
           reason: Added explicit malformed-token behavior for ParseInt.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

@@ -26,9 +26,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:30.050376Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:25f1d1cebd3d9820a414a480d505e390c2132074113b5d3d0387aa92d84bfcb2
+    reviewed_at: "2026-07-26T13:25:51.682933Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:7480e9f1fa061cf964d3437dadd0e0adb7812057a8f448a844a591f570361c97
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +40,15 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: truncated_mid_structure
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:18Z"
+obligation_checklist:
+    - truncated_mid_structure
+obligation_hazards:
+    - class: truncated_mid_structure
+      worst_case: Get on {"a":[1,2 (unclosed array) drives the recursion in findKeyStart past EOF; an unchecked data[i] dereference in the value-offset read panics with index-out-of-range.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -50,3 +56,9 @@ lifecycle:
           to: review
           reason: Added explicit truncated-mid-structure behavior for Get.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_mid_structure

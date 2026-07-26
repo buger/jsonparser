@@ -27,9 +27,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:35.643785Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:421d94bbba69b8f59333f647362ea893cf7ac5905711d6b2e1caab3c31933efc
+    reviewed_at: "2026-07-26T13:25:52.124883Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:f3fa20ee9e828571856a127b3c1fe25e6ae1aba9759d6808be1a1d576bca9292
 verification:
     assurance_level: E
     formalization_status: valid
@@ -41,9 +41,19 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: boundary
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:51Z"
+obligation_checklist:
+    - boundary
+    - edge_case
+obligation_hazards:
+    - class: boundary
+      worst_case: GetInt on 99999999999999999999 silently wraps via strconv to a negative int64 (ignoring ErrRange), producing a wrong-sign value at the caller.
+      severity: high
+    - class: edge_case
+      worst_case: GetInt on a boundary value like -9223372036854775808 (INT64_MIN) negates it during parse and returns 0 or a wrong positive value; or on a canonical-form +0/-0 token returns wrong sign, corrupting accumulator invariants.
+      severity: medium
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -51,3 +61,9 @@ lifecycle:
           to: review
           reason: Added boundary overflow error propagation for GetInt.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:32Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: boundary

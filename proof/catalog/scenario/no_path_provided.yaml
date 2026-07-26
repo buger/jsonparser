@@ -1,0 +1,15 @@
+id: no_path_provided
+catalog_version: 1
+category: scenario
+order: 1001
+status: active
+name: no_path_provided
+summary: A mutating or accessor entry point is invoked with zero key path arguments.
+description: |
+  Covers the degenerate case where Set or Delete is called with no key
+  arguments at all (variadic `keys ...string` empty). jsonparser treats
+  Set-without-path as a contract violation returning KeyPathNotFoundError
+  (SYS-REQ-070), while Delete-without-path is defined to return the original
+  document unchanged. The two entry points diverge by design and each
+  behavior must be pinned independently, otherwise an empty varargs slice
+  could dereference an uninitialized offset produced by internalGet.

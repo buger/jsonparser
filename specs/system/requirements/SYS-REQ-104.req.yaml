@@ -26,9 +26,9 @@ traces:
         - obligation_property_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:39.47434Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:709f182112b42570511605a0022675208f2034a3a026060b607bb2e0fbd5fa5e
+    reviewed_at: "2026-07-26T13:25:52.510966Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:375d5b1ca112f6ccb7bd67a0f0a94849f08c67f7a0f1b7658cd648fa35e529ea
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +40,9 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-21T00:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-21T00:00:00Z"
-obligation_class: nil_safety
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:51Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-21T00:00:00Z"
@@ -50,3 +50,9 @@ lifecycle:
           to: review
           reason: Added nil-safety obligation for GetUnsafeString.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:34Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nil_safety

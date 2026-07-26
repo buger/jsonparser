@@ -26,9 +26,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:36.461205Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:fb0bb7adaa6428d7be271575f914a7b2295b4ceb9e64d4596672a6f7243dbf12
+    reviewed_at: "2026-07-26T13:25:52.187899Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b916f48f54b3507d4c134f470430afb09479ba46f0988328e31418dfcc7db955
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +40,19 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: empty_input
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:23Z"
+obligation_checklist:
+    - empty_input
+    - nil_safety
+obligation_hazards:
+    - class: empty_input
+      worst_case: GetUnsafeString on an empty []byte returns a non-empty string from a stale buffer instead of the not-found result, leaking stale memory to the caller.
+      severity: low
+    - class: nil_safety
+      worst_case: GetUnsafeString on nil data panics in nextToken at data[0] instead of returning the not-found result, crashing the caller on a nil trust-boundary input.
+      severity: high
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -50,3 +60,9 @@ lifecycle:
           to: review
           reason: Added empty-input error requirement for GetUnsafeString.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:32Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

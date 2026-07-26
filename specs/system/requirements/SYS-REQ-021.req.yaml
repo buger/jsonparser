@@ -30,26 +30,32 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:26.769383Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:7146496cf9e521105332938ce43b9f6242d9a488f1d0d7f92b692970126115d6
+    reviewed_at: "2026-07-26T13:25:51.422886Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:1b9a39adbd5e939087988ea9d3e9738a2914726ca2f05930bb7228ef19ec4b18
 verification:
     assurance_level: B
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        role: system_owner
-        reviewed_at: "2026-04-18T10:12:51Z"
-        comment: 'Dogfooding: Get lookup behavior reviewed and complete'
-        fingerprint: sha256:e803149a7207fb79f74a7bcdc0184781922fa81ed5e6c6a9f98c4055d4c409a8
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T12:44:03Z"
+        comment: 'Re-approved under L3 strict posture; content re-reviewed against current formalization'
+        fingerprint: sha256:8128ecc56fe2a063f42ed0fded2aad91cd0cba31fcaa81bab56774ae7811bd1e
         ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-04-18T10:12:51Z"
-obligation_class: nominal
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T12:44:03Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T00:00:00Z"
@@ -57,3 +63,14 @@ lifecycle:
           to: review
           reason: Added explicit valid array-index lookup behavior for Get.
           changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:27Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

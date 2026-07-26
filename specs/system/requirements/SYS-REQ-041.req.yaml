@@ -27,9 +27,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:29.88753Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:e666133fe66dc12f4a47d4a6862dca1de1fa44a7fb5ad3fed31439e89a4961f4
+    reviewed_at: "2026-07-26T13:25:51.670868Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ecf0b277ea3616a957f69c0b2dd5852ca1609733bfd7704c72f0e38ab82d5e99
 verification:
     assurance_level: E
     formalization_status: valid
@@ -41,9 +41,15 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: truncated_at_value_boundary
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:18Z"
+obligation_checklist:
+    - truncated_at_value_boundary
+obligation_hazards:
+    - class: truncated_at_value_boundary
+      worst_case: Get on {"a":1 (no closing brace) drives tokenEnd to return len(data); an unguarded data[end+1] dereference or array-index use of the sentinel panics with index-out-of-range.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -51,3 +57,9 @@ lifecycle:
           to: review
           reason: Added explicit truncated-at-value-boundary behavior for Get to prevent PR
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary

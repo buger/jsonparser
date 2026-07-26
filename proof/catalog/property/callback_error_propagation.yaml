@@ -1,0 +1,17 @@
+id: callback_error_propagation
+catalog_version: 1
+category: property
+order: 8001
+status: active
+name: callback_error_propagation
+summary: ArrayEach/ObjectEach/EachKey must propagate errors from user callbacks and from per-element Get, aborting iteration immediately.
+description: |
+  Pins the iteration contract for the three callback-driven walkers. When a
+  user callback returns an error, or when the in-loop Get returns an error
+  for a truncated element (SYS-REQ-052), the walker must surface that error
+  to its caller rather than swallow it and continue to the next element.
+  Silently continuing would (a) deliver partial results as if complete and
+  (b) re-enter the byte slice with offsets that the inner Get already
+  declared invalid, compounding any sentinel_value_boundary hazard. The
+  property is the iteration analog of error_propagation and is required for
+  the truncated_mid_element scenario to be observable by ArrayEach callers.

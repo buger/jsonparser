@@ -6,11 +6,13 @@ import (
 )
 
 // Verifies: SYS-REQ-009 [example]
+// STK-REQ-005:AC-1:acceptance
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=F, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=F => TRUE
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=T, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=F => FALSE
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=T, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=T => TRUE
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=T, set_returns_not_found_error=F, set_returns_updated_document=T, set_target_exists=F => TRUE
 // MCDC SYS-REQ-009: set_creates_missing_path=F, set_path_is_provided=T, set_returns_not_found_error=T, set_returns_updated_document=F, set_target_exists=F => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSet(t *testing.T) {
 	runSetTests(t, "Set()", setTests,
 		func(test SetTest) (value interface{}, dataType ValueType, err error) {
@@ -26,6 +28,7 @@ func TestSet(t *testing.T) {
 
 // Verifies: SYS-REQ-009 [boundary]
 // MCDC SYS-REQ-009: set_creates_missing_path=T, set_path_is_provided=T, set_returns_not_found_error=F, set_returns_updated_document=F, set_target_exists=F => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetCreatesMissingEntryInExistingArray(t *testing.T) {
 	value, err := Set(
 		[]byte(`{"top":[{"middle":[{"present":true}]}]}`),
@@ -44,6 +47,7 @@ func TestSetCreatesMissingEntryInExistingArray(t *testing.T) {
 
 // Verifies: SYS-REQ-009 [fuzz]
 // MCDC SYS-REQ-009: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestFuzzSetHarnessCoverage(t *testing.T) {
 	if got := FuzzSet([]byte(`{"test":"input"}`)); got != 1 {
 		t.Fatalf("expected FuzzSet success path to return 1, got %d", got)

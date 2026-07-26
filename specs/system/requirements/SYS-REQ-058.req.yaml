@@ -27,9 +27,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:32.45807Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:83fde4279f84702e52f9aa0a93a7bebef31a1d8be83a89afd956a5411910eb1c
+    reviewed_at: "2026-07-26T13:25:51.89291Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ed9600010ce16123c7c5d51375af68cb4dfd75a9c2bca7dd0c4b71165d37feac
 verification:
     assurance_level: E
     formalization_status: valid
@@ -43,7 +43,7 @@ history:
     created_at: "2026-04-14T18:00:00Z"
     last_modified_by: agent:claude
     last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: boundary
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -51,3 +51,9 @@ lifecycle:
           to: review
           reason: Added explicit int64-boundary value correctness requirement for ParseInt.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: boundary

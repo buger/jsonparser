@@ -20,9 +20,9 @@ variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:16:37.751828Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:e1999702de59be1f37115b38bdac75148238431731dbb73710d5298a77c6cb7a
+    reviewed_at: "2026-07-26T13:25:50.784411Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:a24a2169d8cd4e19d2b5b88f524d8ee5fac0bd43df32929dde4ec0b06516a034
 verification:
     assurance_level: E
     formalization_status: none
@@ -35,14 +35,88 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:10:33Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-05-03T10:15:08Z"
+    last_modified_at: "2026-07-26T12:53:52Z"
+obligation_checklist:
+    - boundary
+    - determinism
+    - edge_case
+    - empty_input
+    - malformed_input
+    - nil_safety
+    - nominal
+    - partial_literal
+    - type_mismatch
+obligation_suppressions:
+    - id: denial_of_service_resistant
+      reason: Decomposed at SYS-REQ-040 (ParseInt malformed-token error), SYS-REQ-037 (ParseFloat malformed numeric token), SYS-REQ-036 (ParseBoolean invalid token); typed scalar helpers run a single-token byte scan bounded by the addressed value slice, with no recursion or backtracking.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:23Z"
+      framework_refs:
+        - CWE CWE-400,CWE-1333
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V11.1.4
+    - id: encoding_aware
+      reason: Numeric and boolean JSON tokens are ASCII per RFC 8259; SYS-REQ-040 / SYS-REQ-037 / SYS-REQ-036 reject non-ASCII bytes inside numeric/boolean tokens via MalformedValueError; encoding concerns terminate at the per-token scanners in parser.go.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:23Z"
+      framework_refs:
+        - CWE CWE-176,CWE-180,CWE-838
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: length_prefix_validated
+      reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:07:03Z"
+      framework_refs:
+        - CWE CWE-130,CWE-805,CWE-119
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 21.18
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: malformed_recovers_or_errors_loudly
+      reason: Decomposed at SYS-REQ-040 (ParseInt MalformedValueError), SYS-REQ-037 (ParseFloat MalformedValueError), SYS-REQ-036 (ParseBoolean MalformedValueError); typed helpers fail-loud rather than returning partial conversion results.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:23Z"
+      framework_refs:
+        - CWE CWE-20,CWE-755
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10,SI-11
+        - OWASP-ASVS-v4 V5.1.3,V5.5.3
+obligation_hazards:
+    - class: boundary
+      worst_case: GetInt on int64.MaxInt64+1 silently wraps via parseInt overflow flag; if the overflow check regresses, GetInt returns a negative int64 instead of OverflowIntegerError.
+      severity: medium
+    - class: determinism
+      worst_case: ParseFloat on the same numeric token must return the same float64 across calls; a regression in parseFloat rounding direction (architecture-dependent FPU) produces non-deterministic results.
+      severity: medium
+    - class: edge_case
+      worst_case: GetBoolean on a payload with value null returns NullValueError instead of (false,nil); callers treating the zero-value as absent silently misread null fields as boolean false.
+      severity: medium
+    - class: empty_input
+      worst_case: GetInt on a zero-length []byte flows through Get empty-input path; the data[offset] dereference in getType panics with index-out-of-range on the empty slice.
+      severity: high
+    - class: malformed_input
+      worst_case: GetInt on a token like 12x34 drives parseInt to ok=false; if the malformed check regresses, GetInt silently returns 12 (the partial parse) instead of MalformedValueError.
+      severity: high
+    - class: nil_safety
+      worst_case: GetBoolean(nil, ...) flows through Get nil-slice path; getType(nil,0) data[offset] dereference panics with nil-slice index-out-of-range.
+      severity: high
+    - class: partial_literal
+      worst_case: GetBoolean on a truncated tru or fals token fails bytes.Equal against the literal; if the partial-literal recovery regresses the caller path panics on the empty value slice.
+      severity: high
+    - class: type_mismatch
+      worst_case: GetInt on a JSON String value returns the documented not-a-number error; if the type check regresses, GetInt feeds raw quoted bytes to ParseInt which silently returns 0 instead of erroring.
+      severity: medium
 stakeholder:
     persona: Go developers reading known scalar fields from dynamic JSON payloads
     story: As a Go developer who knows the expected scalar type of a JSON field, I want typed helper accessors so that I can avoid manual byte parsing and get explicit errors on invalid access.
     acceptance_criteria:
         - id: AC-1
           text: A caller can request an integer-valued field through a typed helper and receive the expected int64 result or an error when integer access is invalid.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-003
             - SYS-REQ-075
@@ -51,67 +125,18 @@ stakeholder:
             - SYS-REQ-078
         - id: AC-2
           text: A caller can request a floating-point field through a typed helper and receive the expected float64 result or an error when float access is invalid.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-004
         - id: AC-3
           text: A caller can request a boolean field through a typed helper and receive the expected bool result or an error when boolean access is invalid.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-005
             - SYS-REQ-079
             - SYS-REQ-094
             - SYS-REQ-095
             - SYS-REQ-096
-    obligation_checklist:
-        - boundary
-        - determinism
-        - edge_case
-        - empty_input
-        - malformed_input
-        - nil_safety
-        - nominal
-        - partial_literal
-        - type_mismatch
-    obligation_suppressions:
-        - id: denial_of_service_resistant
-          reason: Decomposed at SYS-REQ-040 (ParseInt malformed-token error), SYS-REQ-037 (ParseFloat malformed numeric token), SYS-REQ-036 (ParseBoolean invalid token); typed scalar helpers run a single-token byte scan bounded by the addressed value slice, with no recursion or backtracking.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:14:23Z"
-          framework_refs:
-            - CWE CWE-400,CWE-1333
-            - MISRA-C Rule 17.2
-            - NIST-800-53 SC-5
-            - OWASP-ASVS-v4 V11.1.4
-        - id: encoding_aware
-          reason: Numeric and boolean JSON tokens are ASCII per RFC 8259; SYS-REQ-040 / SYS-REQ-037 / SYS-REQ-036 reject non-ASCII bytes inside numeric/boolean tokens via MalformedValueError; encoding concerns terminate at the per-token scanners in parser.go.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:14:23Z"
-          framework_refs:
-            - CWE CWE-176,CWE-180,CWE-838
-            - MISRA-C Dir 4.14
-            - NIST-800-53 SI-10
-            - OWASP-ASVS-v4 V5.1.4
-        - id: length_prefix_validated
-          reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:07:03Z"
-          framework_refs:
-            - CWE CWE-130,CWE-805,CWE-119
-            - IEC-62304 §5.3.1
-            - MISRA-C Rule 21.18
-            - NIST-800-53 SI-10
-            - OWASP-ASVS-v4 V5.1.4
-        - id: malformed_recovers_or_errors_loudly
-          reason: Decomposed at SYS-REQ-040 (ParseInt MalformedValueError), SYS-REQ-037 (ParseFloat MalformedValueError), SYS-REQ-036 (ParseBoolean MalformedValueError); typed helpers fail-loud rather than returning partial conversion results.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:14:23Z"
-          framework_refs:
-            - CWE CWE-20,CWE-755
-            - IEC-62304 §5.3.1
-            - MISRA-C Dir 4.14
-            - NIST-800-53 SI-10,SI-11
-            - OWASP-ASVS-v4 V5.1.3,V5.5.3
 lifecycle:
     change_history:
         - date: "2026-04-13T17:14:56Z"

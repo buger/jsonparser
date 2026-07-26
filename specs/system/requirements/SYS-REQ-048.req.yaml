@@ -29,9 +29,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:30.857178Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:663674077a44da8a35ebe519781cf8174ec9906316c68ab5e6b92761d2f11a47
+    reviewed_at: "2026-07-26T13:25:51.755834Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:2a07d9d2f3ea14ee9abbdc94adfdb893c25fc6e491e665d4085edcaed9a993af
 verification:
     assurance_level: E
     formalization_status: valid
@@ -43,9 +43,15 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: truncated_at_value_boundary
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:19Z"
+obligation_checklist:
+    - truncated_at_value_boundary
+obligation_hazards:
+    - class: truncated_at_value_boundary
+      worst_case: Delete on {"a":1 (the PR-truncation witness) drives internalGet to return stale offsets; the cleanup path slices data[:start] + data[end:] with end > len(data) and panics with slice-out-of-range.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -53,3 +59,9 @@ lifecycle:
           to: review
           reason: 'Added explicit Delete truncated-at-value-boundary requirement -- the exact PR #280 bug class.'
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary

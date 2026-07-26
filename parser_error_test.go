@@ -14,6 +14,7 @@ var testPaths = [][]string{
 }
 
 // Test helper for SYS-REQ-008.
+// reqproof:proptest:skip test-helper constructing an iterator closure; test-data builder with no pure contract to verify
 func testIter(data []byte) (err error) {
 	EachKey(data, func(idx int, value []byte, vt ValueType, iterErr error) {
 		if iterErr != nil {
@@ -27,6 +28,7 @@ func testIter(data []byte) (err error) {
 // MCDC SYS-REQ-001: N/A
 // Verifies: SYS-REQ-008 [malformed]
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=T, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestPanickingErrors(t *testing.T) {
 	if err := testIter([]byte(`{"test":`)); err == nil {
 		t.Error("Expected error...")
@@ -47,6 +49,7 @@ func TestPanickingErrors(t *testing.T) {
 
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=F => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEachKeyNoRequests(t *testing.T) {
 	called := false
 	EachKey([]byte(`{"a":1}`), func(idx int, value []byte, vt ValueType, err error) {
@@ -60,6 +63,7 @@ func TestEachKeyNoRequests(t *testing.T) {
 // check having a very deep key depth
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestKeyDepth(t *testing.T) {
 	var sb strings.Builder
 	var keys []string
@@ -80,6 +84,7 @@ func TestKeyDepth(t *testing.T) {
 // check having a bunch of keys in a call to EachKey
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestKeyCount(t *testing.T) {
 	var sb strings.Builder
 	var keys [][]string
@@ -103,6 +108,7 @@ func TestKeyCount(t *testing.T) {
 // try pulling lots of keys out of a big array
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestKeyDepthArray(t *testing.T) {
 	var sb strings.Builder
 	var keys []string
@@ -123,6 +129,7 @@ func TestKeyDepthArray(t *testing.T) {
 // check having a bunch of keys
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestKeyCountArray(t *testing.T) {
 	var sb strings.Builder
 	var keys [][]string
@@ -146,6 +153,7 @@ func TestKeyCountArray(t *testing.T) {
 // check having a bunch of keys in a super deep array
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEachKeyArray(t *testing.T) {
 	var sb strings.Builder
 	var keys [][]string
@@ -170,6 +178,7 @@ func TestEachKeyArray(t *testing.T) {
 
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestLargeArray(t *testing.T) {
 	var sb strings.Builder
 	//build data
@@ -191,6 +200,7 @@ func TestLargeArray(t *testing.T) {
 
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayOutOfBounds(t *testing.T) {
 	var sb strings.Builder
 	//build data

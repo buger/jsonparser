@@ -984,3 +984,6 @@ variables:
   type: bool
   direction: output
   description: True when ParseInt returns correct int64 or well-defined error for edge-case numbers.
+independence:
+    declared: true
+    reason: "jsonparser requirements govern a single pure-function parser (Get and its typed/walking/mutation helpers) over untrusted byte input; each guarantee constrains a distinct output variable representing one observational outcome of the same parse (e.g. returns_existing_path_lookup_result, returns_missing_path_result_for_well_formed_lookup, returns_parse_error_for_incomplete_lookup). The output vocabulary is intentionally disjoint per behavioral outcome across 118 output variables, so the connected-component decomposition over shared output variables places each requirement in a singleton component and cross-requirement consistency contradictions are not solver-checkable via shared outputs. The input preconditions are mutually exclusive (well-formed/existing-path vs missing-path vs incomplete/truncated vs empty vs malformed), so the distinct outputs cannot simultaneously hold for one parse and do not actually conflict."

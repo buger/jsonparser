@@ -28,9 +28,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:30.37309Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:765468345ff20751045696281c37f034c9e3376fbe672fee4a2dfd6cbb8489c8
+    reviewed_at: "2026-07-26T13:25:51.706881Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:4daa8ac7f43d65357e89b97df2635a010fc5eee4edd2522738ace8e3a2f602a8
 verification:
     assurance_level: E
     formalization_status: valid
@@ -42,9 +42,15 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: sentinel_value_boundary
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:18Z"
+obligation_checklist:
+    - sentinel_value_boundary
+obligation_hazards:
+    - class: sentinel_value_boundary
+      worst_case: A caller of tokenEnd uses the returned len(data) sentinel as data[end] rather than treating it as EOF (e.g. value classification peeks data[tokenEnd(...)] for the next delimiter), panicking with index-out-of-range.
+      severity: high
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -52,3 +58,9 @@ lifecycle:
           to: review
           reason: Added explicit sentinel-value boundary requirement for tokenEnd callers.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: sentinel_value_boundary

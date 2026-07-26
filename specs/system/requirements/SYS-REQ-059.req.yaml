@@ -28,9 +28,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:32.674641Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:7df829d268b2de87779a41518410c31f57b8f05e3c3ce216b3ff7c08a66fa865
+    reviewed_at: "2026-07-26T13:25:51.905902Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:52db75aaa6aaba6d6453acea1b7ab232174b8885b423f58c4453e14155ac5fa5
 verification:
     assurance_level: E
     formalization_status: valid
@@ -44,7 +44,7 @@ history:
     created_at: "2026-04-14T18:00:00Z"
     last_modified_by: agent:claude
     last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: boundary
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -52,3 +52,9 @@ lifecycle:
           to: review
           reason: Added explicit int64-boundary+1 overflow requirement for ParseInt.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: boundary

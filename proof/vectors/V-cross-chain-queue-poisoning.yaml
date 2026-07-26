@@ -1,0 +1,53 @@
+id: V-cross-chain-queue-poisoning
+title: Cross-chain channel isolation and settlement-failure progress
+description: |
+    Enumerate inbound bridge queues and terminal settlement legs with their source-chain, remote-sender, destination-application, nonce, recipient, token, and paired-custody keys. Inject wrong-sender and malformed packets, a reverting destination, and a frozen or restricted final recipient before valid traffic; follow dequeue, authentication, rollback, retry, skip, quarantine, cancel, refund, and unwind behavior to prove one unprocessable head or terminal transfer failure cannot freeze unrelated messages or strand either value leg. Measure producer arrival rate, destination service rate, and retention under sustained backlog; pruning must never discard work that lacks a durable processed checkpoint.
+priority: P0
+status: closed-null
+threat_model:
+    - U
+    - T
+related_roles:
+    - bridge-audit
+    - attack-composition-audit
+    - security
+axes:
+    - cross-chain
+    - channel-isolation
+    - queue
+    - head-of-line
+    - terminal-settlement
+    - destination-failure
+    - rollback
+    - retry
+    - unwind
+    - sequencing
+    - backlog
+    - retention
+    - throughput
+related_obligation_classes:
+    - bridge_settlement_liveness_reviewed
+    - back_pressure_bounded
+stacks:
+    - move
+    - solidity
+    - solana
+    - anchor
+    - go
+    - cosmos-sdk
+program_kinds:
+    - bridge
+    - orderbook
+template_id: builtin:cross-chain-queue-poisoning
+close_note: 'Hunted. jsonparser is a pure Go JSON parsing library with NO cross-chain bridge / settlement / custody / queue / back-pressure surface. The builtin:cross-chain-queue-poisoning template enumerates surfaces (source-chain, remote-sender, destination-application, nonce, recipient, token, custody, dequeue/rollback/retry/quarantine/refund/unwind) none of which exist in this codebase. Null board: 0 applicable attack surface; no NEW Med+ possible. Vector was over-eagerly materialized by the obligation-completeness sweep.'
+research:
+    campaign: Domain-applicability review of the codebase against the builtin:cross-chain-queue-poisoning template surface (no fuzz campaign applicable — the targeted surfaces do not exist in this project).
+    evidence:
+        - jsonparser is a pure Go JSON parsing library; the parser package exposes Get/GetString/GetInt/GetFloat/GetBoolean/GetUnsafeString/ArrayEach/ObjectEach/EachKey/Set/Delete/Parse* over []byte JSON documents.
+        - No source-chain, remote-sender, destination-application, nonce, recipient, token, custody, dequeue, authentication, rollback, retry, skip, quarantine, cancel, refund, or unwind surface exists in the codebase.
+    finding: 'The builtin:cross-chain-queue-poisoning template was over-eagerly materialized by the obligation-completeness sweep; none of its enumerated cross-chain / channel-isolation / settlement / back-pressure surfaces exist in this project. Null board: zero applicable attack surface, so no NEW Med+ product defect is possible. Recommend deprioritizing this template id for pure-parser Go projects.'
+campaign_log:
+    - at: "2026-07-26T14:57:27Z"
+      status: closed-null
+      note: 'Hunted. jsonparser is a pure Go JSON parsing library with NO cross-chain bridge / settlement / custody / queue / back-pressure surface. The builtin:cross-chain-queue-poisoning template enumerates surfaces (source-chain, remote-sender, destination-application, nonce, recipient, token, custody, dequeue/rollback/retry/quarantine/refund/unwind) none of which exist in this codebase. Null board: 0 applicable attack surface; no NEW Med+ possible. Vector was over-eagerly materialized by the obligation-completeness sweep.'
+      actor: agent

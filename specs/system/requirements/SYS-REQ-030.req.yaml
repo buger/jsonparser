@@ -28,9 +28,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:28.092754Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:5a3a7d3de6469ee3c6645e5ffecba61e8f09f685f451437f3c130cdbc5d43202
+    reviewed_at: "2026-07-26T13:25:51.534807Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:24eda55f7b711f6d192565d03dd48ab164b5a8c9ae995cc281123dfe279013df
 verification:
     assurance_level: E
     formalization_status: valid
@@ -44,7 +44,7 @@ history:
     created_at: "2026-04-14T15:45:00Z"
     last_modified_by: agent:codex
     last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: empty_input
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -52,3 +52,9 @@ lifecycle:
           to: review
           reason: Added explicit empty-object behavior for ObjectEach.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

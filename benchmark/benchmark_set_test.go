@@ -8,6 +8,7 @@ import (
 
 // Verifies: STK-REQ-005
 // MCDC STK-REQ-005: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkSetLarge(b *testing.B) {
 	b.ReportAllocs()
 

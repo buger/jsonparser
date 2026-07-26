@@ -1,0 +1,16 @@
+id: truncated_at_value_boundary
+catalog_version: 1
+category: scenario
+order: 1003
+status: active
+name: truncated_at_value_boundary
+summary: Input ends exactly at a value boundary where tokenEnd returns the len(data) sentinel.
+description: |
+  This is the OSS-Fuzz 4649128545288192 / PR #280 regression class. When the
+  input ends with no closing structural delimiter after a value (e.g.
+  `{"a":1`), tokenEnd in parser.go:49 returns len(data) as a sentinel meaning
+  "no delimiter found". Any caller that uses this sentinel as an array index
+  without re-checking against len(data) will read or write one byte past the
+  buffer. Get, GetUnsafeString, ArrayEach and Delete all hit this path and
+  each must return a parse error or not-found rather than dereference the
+  sentinel (SYS-REQ-041, SYS-REQ-048, SYS-REQ-082, SYS-REQ-083).

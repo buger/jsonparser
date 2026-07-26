@@ -11,6 +11,7 @@ import (
 // MCDC STK-REQ-001: N/A
 // Verifies: STK-REQ-005 [malformed]
 // MCDC STK-REQ-005: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestInternalSearchHelperEdges(t *testing.T) {
 	if got := findTokenStart(nil, ','); got != 0 {
 		t.Fatalf("findTokenStart(nil, ',') = %d, want 0", got)
@@ -95,6 +96,7 @@ func TestInternalSearchHelperEdges(t *testing.T) {
 // MCDC SYS-REQ-004: N/A
 // Verifies: SYS-REQ-005 [boundary]
 // MCDC SYS-REQ-005: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestTypedGetterEdgeErrors(t *testing.T) {
 	if _, err := GetInt([]byte(`{"a":1}`), "missing"); !errors.Is(err, KeyPathNotFoundError) {
 		t.Fatalf("GetInt missing path error = %v, want %v", err, KeyPathNotFoundError)
@@ -109,6 +111,7 @@ func TestTypedGetterEdgeErrors(t *testing.T) {
 
 // Verifies: SYS-REQ-008 [boundary]
 // MCDC SYS-REQ-008: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestEachKeySupplementalCoverage(t *testing.T) {
 	t.Run("supports more than stack sized path sets", func(t *testing.T) {
 		var doc strings.Builder
@@ -238,6 +241,7 @@ func TestEachKeySupplementalCoverage(t *testing.T) {
 
 // Verifies: SYS-REQ-006 [malformed]
 // MCDC SYS-REQ-006: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestArrayEachSupplementalErrors(t *testing.T) {
 	noop := func([]byte, ValueType, int, error) {}
 
@@ -269,6 +273,7 @@ func TestArrayEachSupplementalErrors(t *testing.T) {
 
 // Verifies: SYS-REQ-007 [malformed]
 // MCDC SYS-REQ-007: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestObjectEachSupplementalErrors(t *testing.T) {
 	noop := func([]byte, []byte, ValueType, int) error { return nil }
 
@@ -311,6 +316,7 @@ func TestObjectEachSupplementalErrors(t *testing.T) {
 
 // Verifies: SYS-REQ-035 [boundary]
 // MCDC SYS-REQ-035: delete_path_is_provided=T, delete_input_is_unusable_for_requested_path=T, delete_returns_original_input_on_unusable_input=T, delete_completes_without_panic=T => TRUE
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDeleteSupplementalEdgeCases(t *testing.T) {
 	cases := []struct {
 		name string
@@ -336,6 +342,7 @@ func TestDeleteSupplementalEdgeCases(t *testing.T) {
 
 // Verifies: SYS-REQ-009 [boundary]
 // MCDC SYS-REQ-009: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestSetSupplementalArrayInsertionCoverage(t *testing.T) {
 	t.Run("append into existing top level array path", func(t *testing.T) {
 		// When setting an index beyond the current array length for a
@@ -364,6 +371,7 @@ func TestSetSupplementalArrayInsertionCoverage(t *testing.T) {
 
 // Verifies: SYS-REQ-014 [malformed]
 // MCDC SYS-REQ-014: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestParseStringAndEscapeSupplementalCoverage(t *testing.T) {
 	t.Run("decodeSingleUnicodeEscape rejects bad hex in each leading position", func(t *testing.T) {
 		inputs := []string{`\ux234`, `\u1x34`, `\u12x4`}
@@ -383,6 +391,7 @@ func TestParseStringAndEscapeSupplementalCoverage(t *testing.T) {
 
 // Verifies: SYS-REQ-014 [fuzz]
 // MCDC SYS-REQ-014: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestFuzzParseStringHarnessCoverage(t *testing.T) {
 	if got := FuzzParseString([]byte(`abc`)); got != 1 {
 		t.Fatalf("FuzzParseString success path = %d, want 1", got)
@@ -397,6 +406,7 @@ func TestFuzzParseStringHarnessCoverage(t *testing.T) {
 
 // Verifies: STK-REQ-001 [malformed]
 // MCDC STK-REQ-001: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestGetTypeMalformedCompositeTokens(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -432,6 +442,7 @@ func TestGetTypeMalformedCompositeTokens(t *testing.T) {
 // MCDC SYS-REQ-012: N/A
 // Verifies: SYS-REQ-015 [fuzz]
 // MCDC SYS-REQ-015: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestAdditionalFuzzHarnessCoverage(t *testing.T) {
 	if got := FuzzParseInt([]byte(`12`)); got != 1 {
 		t.Fatalf("FuzzParseInt success path = %d, want 1", got)
@@ -492,6 +503,7 @@ func TestAdditionalFuzzHarnessCoverage(t *testing.T) {
 // Drive nextToken(remainedValue) > -1 to TRUE so all three terms in the
 // conjunction are evaluated. This requires deleting the last field in an
 // object where a trailing comma precedes the closing brace.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_DeleteTrailingCommaRemoval(t *testing.T) {
 	// Delete the last key "b" from {"a":1,"b":2}.
 	// After removing "b":2, remainedValue starts with "}", nextToken > -1,
@@ -517,6 +529,7 @@ func TestCodeMCDC_DeleteTrailingCommaRemoval(t *testing.T) {
 // A key like "abc" has keyLen=3, starts with 'a' != '[', so the second
 // term is TRUE and short-circuits. A key like "[ab" has keyLen=3, starts
 // with '[', but does not end with ']', so the third term is TRUE.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_SearchKeysArrayKeyValidation(t *testing.T) {
 	// Key "abc" has keyLen=3, keys[level][0]='a' != '[' => TRUE (second term)
 	_, _, _, err := Get([]byte(`[1,2,3]`), "abc")
@@ -545,6 +558,7 @@ func TestCodeMCDC_SearchKeysArrayKeyValidation(t *testing.T) {
 // Code MC/DC gap: parser.go:287 searchKeys keyLevel == level-1
 // Drive keyLevel == level-1 to TRUE. This happens during normal nested key
 // lookup where the first key matches and we descend into a nested object.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_SearchKeysKeyLevelMatch(t *testing.T) {
 	// Two-level path: first key matches at level 1 (keyLevel becomes 1),
 	// then at level 2, keyLevel == level-1 == 1 is TRUE for the second key.
@@ -563,6 +577,7 @@ func TestCodeMCDC_SearchKeysKeyLevelMatch(t *testing.T) {
 // Drive data[i] == '{' to FALSE after an unmatched key. This happens when
 // the value after an unmatched key is NOT an object (e.g., a number, string,
 // array, or boolean).
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_EachKeyNonObjectUnmatchedValue(t *testing.T) {
 	// The key "skip" has a number value (not '{'), so data[i] == '{' is FALSE.
 	var found bool
@@ -592,6 +607,7 @@ func TestCodeMCDC_EachKeyNonObjectUnmatchedValue(t *testing.T) {
 // Drive end == -1 to FALSE. tokenEnd returns -1 only when the data is
 // empty. For a non-empty numeric/boolean/null value with a proper delimiter,
 // end > 0. This is exercised by normal Get on a properly terminated value.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_GetTypeTokenEndNotNegative(t *testing.T) {
 	// A normal number with a comma delimiter makes tokenEnd return a positive value.
 	val, dt, _, err := Get([]byte(`{"a":42,"b":1}`), "a")
@@ -622,6 +638,7 @@ func TestCodeMCDC_GetTypeTokenEndNotNegative(t *testing.T) {
 // Code MC/DC gap: parser.go:1073 ArrayEach o == 0 (FALSE branch)
 // and parser.go:1077 ArrayEach t != NotExist (TRUE branch)
 // Normal ArrayEach iteration has o > 0 and t != NotExist.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_ArrayEachNormalIteration(t *testing.T) {
 	var values []string
 	_, err := ArrayEach([]byte(`[1,2,3]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -641,6 +658,7 @@ func TestCodeMCDC_ArrayEachNormalIteration(t *testing.T) {
 // Verifies: SYS-REQ-006 [boundary]
 // Code MC/DC gap: parser.go:1081 ArrayEach e != nil (FALSE branch)
 // Normal iteration where Get returns no error has e == nil.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_ArrayEachNoError(t *testing.T) {
 	var gotErr bool
 	_, err := ArrayEach([]byte(`["a","b"]`), func(value []byte, dataType ValueType, offset int, err error) {
@@ -659,6 +677,7 @@ func TestCodeMCDC_ArrayEachNoError(t *testing.T) {
 // Verifies: SYS-REQ-001 [boundary]
 // Code MC/DC gap: parser.go:61 findKeyStart ln > 0 with data[i] == '['
 // Drive the branch where data starts with '[' (array root).
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_FindKeyStartArrayRoot(t *testing.T) {
 	// When data starts with '[', findKeyStart enters the array branch.
 	// This drives data[i] == '[' to TRUE.
@@ -674,6 +693,7 @@ func TestCodeMCDC_FindKeyStartArrayRoot(t *testing.T) {
 // Drive data[endOffset+tokEnd] == ']' to FALSE in the array-element
 // deletion branch. This happens when deleting the first element of an array
 // where the next delimiter is a comma, not ']'.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_DeleteArrayFirstElement(t *testing.T) {
 	// Delete [0] from [1,2,3] -- the delimiter after "1" is ',' not ']'
 	got := string(Delete([]byte(`[1,2,3]`), "[0]"))
@@ -691,6 +711,7 @@ func TestCodeMCDC_DeleteArrayFirstElement(t *testing.T) {
 // Verifies: SYS-REQ-014 [boundary]
 // Code MC/DC gap: escape.go:149 Unescape for len(in) > 0
 // Drive the loop body. A string with an escape sequence enters the loop.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_UnescapeLoopEntry(t *testing.T) {
 	// A string with a backslash-n escape forces the Unescape loop
 	result, err := Unescape([]byte(`hello\nworld`), make([]byte, 32))
@@ -714,6 +735,7 @@ func TestCodeMCDC_UnescapeLoopEntry(t *testing.T) {
 // Verifies: SYS-REQ-007 [boundary]
 // Code MC/DC gap: parser.go:1138 ObjectEach offset < len(data)
 // Normal ObjectEach iteration has offset < len(data) TRUE.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_ObjectEachLoopEntry(t *testing.T) {
 	var keys []string
 	err := ObjectEach([]byte(`{"a":1,"b":2}`), func(key []byte, value []byte, dataType ValueType, offset int) error {
@@ -733,6 +755,7 @@ func TestCodeMCDC_ObjectEachLoopEntry(t *testing.T) {
 // Drive the case where data[endOffset+tokEnd] == ' ' and
 // len(data) > endOffset+tokEnd+1 but data[endOffset+tokEnd+1] != ','
 // (the third condition is FALSE).
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_DeleteSpaceBeforeComma(t *testing.T) {
 	// Delete "a" from {"a":1 ,"b":2} where there's a space before the comma.
 	got := string(Delete([]byte(`{"a":1 ,"b":2}`), "a"))
@@ -751,6 +774,7 @@ func TestCodeMCDC_DeleteSpaceBeforeComma(t *testing.T) {
 // Verifies: SYS-REQ-008 [boundary]
 // Code MC/DC gap: parser.go:497 EachKey i < ln
 // Normal EachKey iteration has i < ln TRUE.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_EachKeyLoopBound(t *testing.T) {
 	var count int
 	EachKey([]byte(`{"a":1,"b":2}`), func(idx int, value []byte, vt ValueType, err error) {
@@ -773,6 +797,7 @@ func TestCodeMCDC_EachKeyLoopBound(t *testing.T) {
 //   (F,_,_) => F : malformed whitespace-only remainder
 //   (T,F,_) => F : delete middle key (remainder starts with quote)
 //   (T,T,F) => F : delete single key (prevTok is '{')
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_DeleteConjunctionFullMCDC(t *testing.T) {
 	t.Run("TTT: trailing comma malformed JSON", func(t *testing.T) {
 		// {"a":1,"b":2,} — after deleting "b", the comma after "2" advances
@@ -814,6 +839,7 @@ func TestCodeMCDC_DeleteConjunctionFullMCDC(t *testing.T) {
 // Code MC/DC gap: parser.go:289 searchKeys keyLevel == level-1
 // Drive keyLevel != level-1 (FALSE branch).
 // Use duplicate keys so keyLevel advances past the expected level.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_SearchKeysKeyLevelMismatch(t *testing.T) {
 	// In {"a":1,"a":{"b":2}}, searching for ["a","b"]:
 	// First "a" at level 1 matches keys[0], keyLevel becomes 1.
@@ -833,6 +859,7 @@ func TestCodeMCDC_SearchKeysKeyLevelMismatch(t *testing.T) {
 // Code MC/DC gap: parser.go:327 searchKeys keys[level][0] != '['
 // Drive keys[level][0] != '[' to TRUE independently.
 // Use a key with keyLen >= 3 that does NOT start with '['.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_SearchKeysArrayKeyNotBracket(t *testing.T) {
 	// Key "abc" has keyLen=3 (>= 3 so first term is FALSE),
 	// and keys[level][0]='a' != '[' (second term is TRUE).
@@ -870,6 +897,7 @@ func TestCodeMCDC_SearchKeysArrayKeyNotBracket(t *testing.T) {
 // Need (T,T) => T and (F,?) => F:
 //   (T,T): delete last element from [1,2] — delimiter is ']' and preceding comma exists.
 //   (F):   delete from malformed [1} — delimiter is '}' not ']'.
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestCodeMCDC_DeleteArrayElifMCDC(t *testing.T) {
 	t.Run("TT: delete last array element", func(t *testing.T) {
 		// Delete [1] from [1,2]: delimiter after "2" is ']', comma before "2" exists.

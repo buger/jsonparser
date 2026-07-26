@@ -22,9 +22,9 @@ variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:16:38.120269Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:f0a864e9d7950d7c8b9e09bc3370b52afde61abf00424665ad6fe8ac64882cfc
+    reviewed_at: "2026-07-26T13:25:50.813386Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:af46796446d7582c6a186af8c41c1101f6ff4baaf45d880ce5ea22a2afab7926
 verification:
     assurance_level: E
     formalization_status: none
@@ -37,14 +37,105 @@ history:
     created_by: human:cli
     created_at: "2026-04-13T17:15:31Z"
     last_modified_by: human:cli
-    last_modified_at: "2026-05-03T10:15:09Z"
+    last_modified_at: "2026-07-26T12:54:17Z"
+obligation_checklist:
+    - edge_case
+    - empty_input
+    - error_propagation
+    - idempotency
+    - malformed_input
+    - missing_path
+    - nested_mutation
+    - nil_safety
+    - no_path_provided
+    - nominal
+    - sentinel_value_boundary
+    - truncated_at_value_boundary
+    - truncated_mid_structure
+obligation_suppressions:
+    - id: denial_of_service_resistant
+      reason: Decomposed at SYS-REQ-035 (Delete malformed/truncated input → unchanged payload, no panic), SYS-REQ-051 (Set on truncated input → error rather than corrupt output), SYS-REQ-056 (Delete mid-structure truncated → unchanged); mutation helpers reuse the bounded iterative tokenizer and never panic on adversarial input.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:38Z"
+      framework_refs:
+        - CWE CWE-400,CWE-1333
+        - MISRA-C Rule 17.2
+        - NIST-800-53 SC-5
+        - OWASP-ASVS-v4 V11.1.4
+    - id: encoding_aware
+      reason: Set / Delete operate at the byte-level on the caller's []byte payload; they preserve the exact byte encoding of unchanged regions (no transcoding) and Set's caller supplies the replacement byte sequence whose encoding is the caller's responsibility.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:38Z"
+      framework_refs:
+        - CWE CWE-176,CWE-180,CWE-838
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: length_prefix_validated
+      reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:07:04Z"
+      framework_refs:
+        - CWE CWE-130,CWE-805,CWE-119
+        - IEC-62304 §5.3.1
+        - MISRA-C Rule 21.18
+        - NIST-800-53 SI-10
+        - OWASP-ASVS-v4 V5.1.4
+    - id: malformed_recovers_or_errors_loudly
+      reason: Decomposed at SYS-REQ-035 (Delete on malformed input → original payload unchanged, no panic — documented best-effort recovery), SYS-REQ-051 (Set on truncated input → explicit error rather than corrupt output); the recovery-vs-error policy is documented per-operation.
+      suppressed_by: leonidbugaev
+      suppressed_at: "2026-05-03T10:14:38Z"
+      framework_refs:
+        - CWE CWE-20,CWE-755
+        - IEC-62304 §5.3.1
+        - MISRA-C Dir 4.14
+        - NIST-800-53 SI-10,SI-11
+        - OWASP-ASVS-v4 V5.1.3,V5.5.3
+obligation_hazards:
+    - class: edge_case
+      worst_case: Set on a payload where the target path parent is an empty object must insert with comma=false; a regression inserts a leading comma, producing invalid JSON output downstream.
+      severity: medium
+    - class: empty_input
+      worst_case: Set on a zero-length []byte drives internalGet to nextToken=-1; if the empty-input guard regresses the follow-on data[firstToken] dereference panics on the empty slice.
+      severity: high
+    - class: error_propagation
+      worst_case: Set internalGet returns an error on malformed input; if the error check regresses Set continues with stale startOffset/endOffset=-1 and slices data[:-1] or panics on the negative offset.
+      severity: high
+    - class: idempotency
+      worst_case: Delete applied twice to the same path must produce the same output as Delete once; a regression in the trailing-comma cleanup leaves a stray comma on the second call, corrupting the mutated payload.
+      severity: medium
+    - class: malformed_input
+      worst_case: Delete on adversarial JSON like {"a":,} drives findKeyStart/tokenEnd to stale offsets; if guards regress the data[endOffset+tokEnd] dereference panics (OSS-Fuzz 4649128545288192 class).
+      severity: high
+    - class: missing_path
+      worst_case: Delete for a non-existent key must return the original payload unchanged; a regression in findKeyStart KeyPathNotFoundError handling leaves Delete mutating an arbitrary sibling position.
+      severity: medium
+    - class: nested_mutation
+      worst_case: Set on a deeply nested path (a.b.c.d) drives createInsertComponent to emit nested object scaffolding; a regression in calcAllocateSpace under-allocates the buffer and WriteToBuffer writes past the end.
+      severity: medium
+    - class: nil_safety
+      worst_case: Delete(nil,...) drives internalGet to searchKeys nil-slice loop; the follow-on tokenEnd/findTokenStart/data[prevTok] dereference panics on the nil slice.
+      severity: high
+    - class: no_path_provided
+      worst_case: Set/Delete with zero keys must return early; if the early-return guard regresses the next data[keys[lk-1][0]] dereference panics on the empty keys slice with index-out-of-range.
+      severity: high
+    - class: sentinel_value_boundary
+      worst_case: When internalGet/searchKeys return -1 sentinel for not-found, Delete tokenEnd/findTokenStart arithmetic dereferences data[endOffset+tokEnd] without bounds re-check (the OSS-Fuzz 4649128545288192 panic class).
+      severity: high
+    - class: truncated_at_value_boundary
+      worst_case: 'Delete on payload like {"a": with no value drives internalGet to error; if the error guard regresses Delete continues with stale offsets and the data[endOffset+tokEnd] dereference panics on the truncated slice.'
+      severity: high
+    - class: truncated_mid_structure
+      worst_case: Delete on payload like {"a":[1,2 with no closing bracket drives blockEnd to -1; if the guard regresses the unguarded data[endOffset+tokEnd] dereference panics past the buffer end.
+      severity: high
+verification_state: passing
 stakeholder:
     persona: Go developers mutating dynamic JSON payloads in-place
     story: As a Go developer mutating JSON byte payloads, I want experimental helpers that update or delete addressed values with deterministic edge-case behavior so that I can transform payloads without writing my own low-level mutator.
     acceptance_criteria:
         - id: AC-1
           text: A caller can update an existing addressed JSON value or create a supported missing addressed value through Set and receive the expected mutated payload, or a defined error when the requested mutation path is unusable.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-009
             - SYS-REQ-051
@@ -53,12 +144,13 @@ stakeholder:
             - SYS-REQ-070
         - id: AC-2
           text: A caller can delete an addressed JSON value through Delete and receive either the expected mutated payload, the unchanged original payload for a missing addressed target in otherwise usable input, or the unchanged original payload for malformed, truncated, or otherwise unusable input, without process crash or panic.
-          testable: true
+          verification_method: test
           derived_reqs:
             - SYS-REQ-010
             - SYS-REQ-033
             - SYS-REQ-034
             - SYS-REQ-035
+            - SYS-REQ-044
             - SYS-REQ-048
             - SYS-REQ-049
             - SYS-REQ-050
@@ -66,59 +158,6 @@ stakeholder:
             - SYS-REQ-100
             - SYS-REQ-101
             - SYS-REQ-102
-    obligation_checklist:
-        - edge_case
-        - empty_input
-        - error_propagation
-        - idempotency
-        - malformed_input
-        - missing_path
-        - nested_mutation
-        - nil_safety
-        - no_path_provided
-        - nominal
-        - sentinel_value_boundary
-        - truncated_at_value_boundary
-        - truncated_mid_structure
-    obligation_suppressions:
-        - id: denial_of_service_resistant
-          reason: Decomposed at SYS-REQ-035 (Delete malformed/truncated input → unchanged payload, no panic), SYS-REQ-051 (Set on truncated input → error rather than corrupt output), SYS-REQ-056 (Delete mid-structure truncated → unchanged); mutation helpers reuse the bounded iterative tokenizer and never panic on adversarial input.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:14:38Z"
-          framework_refs:
-            - CWE CWE-400,CWE-1333
-            - MISRA-C Rule 17.2
-            - NIST-800-53 SC-5
-            - OWASP-ASVS-v4 V11.1.4
-        - id: encoding_aware
-          reason: Set / Delete operate at the byte-level on the caller's []byte payload; they preserve the exact byte encoding of unchanged regions (no transcoding) and Set's caller supplies the replacement byte sequence whose encoding is the caller's responsibility.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:14:38Z"
-          framework_refs:
-            - CWE CWE-176,CWE-180,CWE-838
-            - MISRA-C Dir 4.14
-            - NIST-800-53 SI-10
-            - OWASP-ASVS-v4 V5.1.4
-        - id: length_prefix_validated
-          reason: JSON is a self-delimiting structural format with no length-prefix fields; jsonparser's tokenizer advances by structural state machine, not by trusting a declared byte count.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:07:04Z"
-          framework_refs:
-            - CWE CWE-130,CWE-805,CWE-119
-            - IEC-62304 §5.3.1
-            - MISRA-C Rule 21.18
-            - NIST-800-53 SI-10
-            - OWASP-ASVS-v4 V5.1.4
-        - id: malformed_recovers_or_errors_loudly
-          reason: Decomposed at SYS-REQ-035 (Delete on malformed input → original payload unchanged, no panic — documented best-effort recovery), SYS-REQ-051 (Set on truncated input → explicit error rather than corrupt output); the recovery-vs-error policy is documented per-operation.
-          suppressed_by: leonidbugaev
-          suppressed_at: "2026-05-03T10:14:38Z"
-          framework_refs:
-            - CWE CWE-20,CWE-755
-            - IEC-62304 §5.3.1
-            - MISRA-C Dir 4.14
-            - NIST-800-53 SI-10,SI-11
-            - OWASP-ASVS-v4 V5.1.3,V5.5.3
 lifecycle:
     change_history:
         - date: "2026-04-13T17:16:45Z"
@@ -131,3 +170,8 @@ lifecycle:
           to: review
           reason: Strengthened mutation acceptance criteria to distinguish missing-target and unusable-input Delete behavior.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive

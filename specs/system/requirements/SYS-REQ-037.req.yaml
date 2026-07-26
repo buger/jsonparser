@@ -28,9 +28,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:29.254464Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:753e4235486cc2ab5b48706bb76e0c5a72ab7617452b8ad00688d0b9083611e8
+    reviewed_at: "2026-07-26T13:25:51.620925Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:c459ed21e9de228ac073149be2648d495b975381bbdeaff5b19c3afe777d10fe
 verification:
     assurance_level: E
     formalization_status: valid
@@ -44,7 +44,7 @@ history:
     created_at: "2026-04-14T15:45:00Z"
     last_modified_by: agent:codex
     last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: malformed_input
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -52,3 +52,9 @@ lifecycle:
           to: review
           reason: Added explicit malformed-token behavior for ParseFloat.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

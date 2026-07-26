@@ -38,6 +38,7 @@ var nativeFuzzSeeds = []string{
 	"",
 }
 
+// reqproof:proptest:skip fuzz-harness infrastructure; mutates testing.F seed corpus via f.Add, performs I/O on the test framework
 func addSeeds(f *testing.F) {
 	for _, s := range nativeFuzzSeeds {
 		f.Add([]byte(s))
@@ -53,6 +54,7 @@ var fuzzCrashDir = func() string {
 	return d
 }()
 
+// reqproof:proptest:skip fuzz-harness infrastructure; computes a crash-dedup hash from a panic stack trace, depends on runtime stack layout
 func crashSignature(panicMsg string, stack []byte) string {
 	var key strings.Builder
 	key.WriteString(panicMsg)
@@ -69,6 +71,7 @@ func crashSignature(panicMsg string, stack []byte) string {
 	return hex.EncodeToString(sum[:])[:12]
 }
 
+// reqproof:proptest:skip fuzz-harness infrastructure; writes crash artifacts to the filesystem, performs I/O
 func recordCrash(target string, panicVal interface{}, stack, input []byte) {
 	panicMsg := fmt.Sprintf("%v", panicVal)
 	sig := crashSignature(panicMsg, stack)
@@ -89,6 +92,7 @@ func recordCrash(target string, panicVal interface{}, stack, input []byte) {
 	})
 }
 
+// reqproof:proptest:skip fuzz-harness infrastructure; recovers panics and records them, orchestrates side effects rather than computing a value
 func runWithCapture(target string, data []byte, fn func([]byte)) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -98,6 +102,8 @@ func runWithCapture(target string, data []byte, fn func([]byte)) {
 	fn(data)
 }
 
+// Verifies: SYS-REQ-035
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzDeleteNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -105,6 +111,8 @@ func FuzzDeleteNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-014
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzParseStringNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -112,6 +120,8 @@ func FuzzParseStringNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-008
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzEachKeyNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -119,6 +129,8 @@ func FuzzEachKeyNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-009
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzSetNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -126,6 +138,8 @@ func FuzzSetNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-007
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzObjectEachNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -133,6 +147,8 @@ func FuzzObjectEachNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-013
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzParseFloatNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -140,6 +156,8 @@ func FuzzParseFloatNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-015
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzParseIntNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -147,6 +165,8 @@ func FuzzParseIntNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-012
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzParseBoolNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -154,6 +174,8 @@ func FuzzParseBoolNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-001
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzTokenStartNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -161,6 +183,8 @@ func FuzzTokenStartNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-002
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzGetStringNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -168,6 +192,8 @@ func FuzzGetStringNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-004
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzGetFloatNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -175,6 +201,8 @@ func FuzzGetFloatNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-003
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzGetIntNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -182,6 +210,8 @@ func FuzzGetIntNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-005
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzGetBooleanNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -189,6 +219,8 @@ func FuzzGetBooleanNative(f *testing.F) {
 	})
 }
 
+// Verifies: SYS-REQ-011
+// reqproof:proptest:skip native go-fuzz wrapper around fuzz.go harness; test infrastructure that drives libFuzzer, not a pure function with comparable output
 func FuzzGetUnsafeStringNative(f *testing.F) {
 	addSeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {

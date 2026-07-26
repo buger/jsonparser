@@ -26,9 +26,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:35.971358Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:84b2e28cb74f70fe39eaceced24d3685622d96ebfc331b8f86a70c7f4555831b
+    reviewed_at: "2026-07-26T13:25:52.15095Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:4364a89c7309a285a648c839618078e42e8425ca7f3bfe162879a6d504fbfcba
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +40,19 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: empty_input
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:22Z"
+obligation_checklist:
+    - empty_input
+    - nil_safety
+obligation_hazards:
+    - class: empty_input
+      worst_case: GetInt on an empty []byte returns 0 (silent success) instead of KeyPathNotFoundError, masking missing data as a valid zero and corrupting accumulator invariants.
+      severity: low
+    - class: nil_safety
+      worst_case: GetInt on nil data panics in nextToken at data[0] instead of returning the not-found result, crashing the caller on a nil trust-boundary input.
+      severity: high
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -50,3 +60,9 @@ lifecycle:
           to: review
           reason: Added empty-input error requirement for GetInt.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:32Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

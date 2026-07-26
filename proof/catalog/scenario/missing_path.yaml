@@ -1,0 +1,16 @@
+id: missing_path
+catalog_version: 1
+category: scenario
+order: 1000
+status: active
+name: missing_path
+summary: Get/Set/Delete invoked with a key path that does not resolve against well-formed JSON input.
+description: |
+  Covers jsonparser's not-found contract: when Get is called with a key path
+  that does not exist in an otherwise well-formed JSON document, the parser
+  must return the defined not-found triplet (nil value, offset -1,
+  KeyPathNotFoundError) rather than panic or return partial bytes. The same
+  condition drives Set's create-missing-path branch (set_creates_missing_path)
+  and Delete's no-op-on-missing behavior. A violation would surface as an
+  out-of-bounds write in Set or as silent data corruption in Delete, since
+  both rely on internalGet's offsets only being valid when the path exists.

@@ -28,9 +28,9 @@ traces:
         - parser_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:29.095714Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:ee4286310bdd10d7538a12bc1e488e8e1727a9b9de0c6f6fbdad212be830c3b4
+    reviewed_at: "2026-07-26T13:25:51.608839Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b09a065ebccdbf8f18dc044d390dcf6c707ad5dc568fac05880aab234804eaee
 verification:
     assurance_level: E
     formalization_status: valid
@@ -42,9 +42,15 @@ verification:
 history:
     created_by: agent:codex
     created_at: "2026-04-14T15:45:00Z"
-    last_modified_by: agent:codex
-    last_modified_at: "2026-04-14T15:45:00Z"
-obligation_class: malformed_input
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:17Z"
+obligation_checklist:
+    - malformed_input
+obligation_hazards:
+    - class: malformed_input
+      worst_case: ParseBoolean on adversarial input like truN over-reads past the literal check and returns true, misclassifying malformed input as a valid boolean and corrupting downstream control flow.
+      severity: high
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T15:45:00Z"
@@ -52,3 +58,9 @@ lifecycle:
           to: review
           reason: Added explicit invalid-token behavior for ParseBoolean.
           changed_by: agent:codex
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

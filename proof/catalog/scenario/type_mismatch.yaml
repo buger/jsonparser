@@ -1,0 +1,16 @@
+id: type_mismatch
+catalog_version: 1
+category: scenario
+order: 1009
+status: active
+name: type_mismatch
+summary: A typed accessor (GetInt/GetString/GetBoolean/GetFloat) addresses a value of the wrong JSON type.
+description: |
+  Covers the explicit type-check guard inside each typed accessor: GetInt
+  rejects any addressed value whose getType classification is not Number
+  (SYS-REQ-077), GetString rejects non-String (SYS-REQ-073), GetBoolean
+  rejects non-Boolean, and so on. This is behaviorally distinct from
+  malformed_input because the bytes are valid JSON; they simply do not
+  match the requested coercion. A missing guard would cause the conversion
+  helper (e.g. parseInt, parseBoolean) to interpret arbitrary object or
+  array bytes as a scalar and return a misleading typed value.

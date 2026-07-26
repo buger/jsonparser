@@ -28,9 +28,9 @@ traces:
         - obligation_property_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:39.233429Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:79ced44babf8149442cf7ae26cba97f5a8dbfcfd020371ebe06d27b19b8bd0f9
+    reviewed_at: "2026-07-26T13:25:52.485942Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:8711cb49b5f40559e56b261c465bbe8691d8faf884d1f61da66ca7a4a43dc796
 verification:
     assurance_level: E
     formalization_status: valid
@@ -42,9 +42,9 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-21T00:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-21T00:00:00Z"
-obligation_class: edge_case
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:50Z"
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-21T00:00:00Z"
@@ -52,3 +52,9 @@ lifecycle:
           to: review
           reason: Added Unicode key edge case obligation for Set/Delete.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:34Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: edge_case

@@ -7,6 +7,7 @@ import (
 
 // Verifies: SYS-REQ-014 [boundary]
 // MCDC SYS-REQ-014: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestH2I(t *testing.T) {
 	hexChars := []byte{'0', '9', 'A', 'F', 'a', 'f', 'x', '\000'}
 	hexValues := []int{0, 9, 10, 15, 10, 15, -1, -1}
@@ -68,6 +69,7 @@ var multiUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
 
 // Verifies: SYS-REQ-014 [malformed]
 // MCDC SYS-REQ-014: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDecodeSingleUnicodeEscape(t *testing.T) {
 	for _, test := range singleUnicodeEscapeTests {
 		r, ok := decodeSingleUnicodeEscape([]byte(test.in))
@@ -85,6 +87,7 @@ func TestDecodeSingleUnicodeEscape(t *testing.T) {
 
 // Verifies: SYS-REQ-014 [malformed]
 // MCDC SYS-REQ-014: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestDecodeUnicodeEscape(t *testing.T) {
 	for _, test := range multiUnicodeEscapeTests {
 		r, len := decodeUnicodeEscape([]byte(test.in))
@@ -139,6 +142,7 @@ var unescapeTests = []unescapeTest{
 // isSameMemory checks if two slices contain the same memory pointer (meaning one is a
 // subslice of the other, with possibly differing lengths/capacities).
 // Test helper for SYS-REQ-014.
+// reqproof:proptest:skip test-helper comparing unsafe pointer identity; depends on runtime memory layout, not a pure function
 func isSameMemory(a, b []byte) bool {
 	if cap(a) == 0 || cap(b) == 0 {
 		return cap(a) == cap(b)
@@ -155,6 +159,7 @@ func isSameMemory(a, b []byte) bool {
 
 // Verifies: SYS-REQ-014 [malformed]
 // MCDC SYS-REQ-014: N/A
+// reqproof:proptest:skip test-case harness function; is itself a unit/integration test, not a pure function amenable to property-based testing
 func TestUnescape(t *testing.T) {
 	for _, test := range unescapeTests {
 		type bufferTestCase struct {

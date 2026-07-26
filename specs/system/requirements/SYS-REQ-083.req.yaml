@@ -27,9 +27,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-05-03T10:18:36.789124Z"
-    reviewed_by: human:leonidbugaev
-    reviewed_fingerprint: sha256:095683c9985f659f8ab158730348931ebda0944028b7620072dc94ff3f2e1573
+    reviewed_at: "2026-07-26T13:25:52.212982Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:9b0c5cf012eafe838a3b1f683cf34b2223791dec527cdc9d4a09410eb9e9d220
 verification:
     assurance_level: E
     formalization_status: valid
@@ -41,9 +41,15 @@ verification:
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
-obligation_class: truncated_at_value_boundary
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:23Z"
+obligation_checklist:
+    - truncated_at_value_boundary
+obligation_hazards:
+    - class: truncated_at_value_boundary
+      worst_case: ArrayEach on [1, (truncated array at value boundary) advances i to EOF and the next loop body dereferences data[i] to peek the next delimiter, panicking with index-out-of-range.
+      severity: critical
+verification_state: passing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -51,3 +57,9 @@ lifecycle:
           to: review
           reason: Added truncated-at-value-boundary error requirement for ArrayEach.
           changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary
