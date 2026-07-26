@@ -1,5 +1,10 @@
 project:
     name: jsonparser
+    # High-assurance posture: the library is a pure function over untrusted,
+    # adversarial byte input (fuzz targets, OSS-Fuzz). L3 is the strict
+    # non-trivial level that obligates formalization, coverage, and hazard
+    # review rather than informal inspection alone.
+    assurance_target: L3
     specs:
         - path: specs/stakeholder
           prefix: STK-REQ
@@ -53,6 +58,8 @@ project:
             report_path: .proof/test-results/go-test.json
         slow_tests:
             enabled: true
+            threshold_seconds: 60
+            max_allowed: 5
         code_mcdc:
             severity: warn
             engine: go
@@ -80,6 +87,12 @@ project:
                 A: 3
                 B: 2
                 C: 1
+        # Worst-case-first hazard coverage gate (hazard-sweep role precondition).
+        # `all` is stricter than proof's built-in default `security`: every
+        # in-scope obligation class must carry an enumerated worst_case, so a
+        # missing worst-case surfaces as a finding instead of a silent gap.
+        hazard_consequence:
+            require_worst_case_scope: all
     approval:
         required_for:
             assurance_levels:
@@ -89,6 +102,20 @@ project:
             - system_owner
             - lead_engineer
         comment_required: true
+        # Agent-driven review posture (mirrors reqforge self-dogfood): an AI
+        # agent driving this repo may run `proof approve` at any assurance
+        # level so the spec/hazard review loops can close autonomously. Set
+        # `all: false` and enumerate levels to re-human-gate.
+        agent_autonomous_for:
+            all: true
+    audit:
+        # CI runs `proof audit --fail-level warn --scope full`; pinning the
+        # same posture in config makes local runs match CI exactly.
+        fail_level: warn
+        scope: full
+        invocation_log:
+            enabled: true
+            path: .proof/invocations.jsonl
     documentation:
         sources:
             - path: .
