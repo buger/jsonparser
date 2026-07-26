@@ -406,7 +406,8 @@ func searchKeys(data []byte, keys ...string) int {
 			}
 		case '[':
 			// If we want to get array element by index
-			if keyLevel == level && keys[level][0] == '[' {
+			// guard: empty key component — not an array index, fall through to skip.
+			if keyLevel == level && len(keys[level]) > 0 && keys[level][0] == '[' {
 				keyLen := len(keys[level])
 				// Note: keys[level][0] == '[' is guaranteed by the outer if-guard,
 				// so the former middle term `keys[level][0] != '['` was always false
@@ -611,7 +612,8 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			}
 
 			for pi, p := range paths {
-				if len(p) < level+1 || pathFlags[pi] || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+				// guard: empty key component — skip this path (not an array index).
+				if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
 				if len(p[level]) >= 2 {
@@ -716,7 +718,8 @@ var (
 
 // SYS-REQ-009
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
-	isIndex := string(keys[0][0]) == "["
+	// guard: empty key component — not an array index.
+	isIndex := len(keys[0]) > 0 && string(keys[0][0]) == "["
 	offset := 0
 	lk := calcAllocateSpace(keys, setValue, comma, object)
 	buffer := make([]byte, lk, lk)
@@ -737,7 +740,8 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	}
 
 	for i := 1; i < len(keys); i++ {
-		if string(keys[i][0]) == "[" {
+		// guard: empty key component — treat as object key, not array index.
+		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
 			offset += WriteToBuffer(buffer[offset:], "[")
 		} else {
 			offset += WriteToBuffer(buffer[offset:], "{\"")
@@ -747,7 +751,8 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	}
 	offset += WriteToBuffer(buffer[offset:], string(setValue))
 	for i := len(keys) - 1; i > 0; i-- {
-		if string(keys[i][0]) == "[" {
+		// guard: empty key component — treat as object key, not array index.
+		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
 			offset += WriteToBuffer(buffer[offset:], "]")
 		} else {
 			offset += WriteToBuffer(buffer[offset:], "}")
@@ -764,7 +769,8 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 
 // SYS-REQ-009
 func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
-	isIndex := string(keys[0][0]) == "["
+	// guard: empty key component — not an array index.
+	isIndex := len(keys[0]) > 0 && string(keys[0][0]) == "["
 	lk := 0
 	if comma {
 		// ,
@@ -786,7 +792,8 @@ func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
 
 	lk += len(setValue)
 	for i := 1; i < len(keys); i++ {
-		if string(keys[i][0]) == "[" {
+		// guard: empty key component — treat as object key, not array index.
+		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
 			// []
 			lk += 2
 		} else {
@@ -1451,65 +1458,4 @@ func ParseInt(b []byte) (int64, error) {
 	} else {
 		return v, nil
 	}
-}
-
-// --- reqproof verification helpers ---
-//
-// The functions below are callable but only used by reqproof
-// verification. They abstract control-flow shapes inside Delete's
-// cleanup block (which itself doesn't translate yet because of slice
-// expressions and early returns) and exercise the variadic translator
-// path. Keeping them in the production file (rather than a separate
-// _proof.go) means lemma directives sit next to the production code
-// they characterize.
-
-// deleteCleanupBuggyDereferenceObligation encodes the implicit
-// obligation of the pre-fix Delete block (parser.go pre-a6c5ed3,
-// lines 813-820): the data[prevTok] dereference happens whenever
-// remainedTok > -1, so safety requires prevTok >= 0 in that case.
-// On the buggy model the obligation is FALSIFIABLE — Z3 surfaces
-// (prevTok = -1, remainedTok = 0), the OSS-Fuzz witness shape.
-//
-// reqproof:lemma deleteCleanupBuggy_prevTok_nonneg_falsifiable func(prevTok, remainedTok int) bool {
-//   return deleteCleanupBuggyDereferenceObligation(prevTok, remainedTok)
-// }
-func deleteCleanupBuggyDereferenceObligation(prevTok, remainedTok int) bool {
-	if remainedTok >= 0 {
-		return prevTok >= 0
-	}
-	return true
-}
-
-// deleteCleanupFixedDereferenceObligation encodes the post-fix block
-// (parser.go HEAD a6c5ed3, lines 815-822). The new prevTok > -1
-// guard fronts every dereference, so the obligation holds.
-//
-// reqproof:lemma deleteCleanupFixed_prevTok_nonneg func(prevTok, remainedTok int) bool {
-//   return !(prevTok >= 0 && remainedTok >= 0) || prevTok >= 0
-// }
-func deleteCleanupFixedDereferenceObligation(prevTok, remainedTok int) bool {
-	return !(prevTok >= 0 && remainedTok >= 0) || prevTok >= 0
-}
-
-// deleteCleanupBuggyFalsifyingWitness documents the falsifying input
-// that the COUNTEREXAMPLE verdict surfaces: prevTok = -1, remainedTok = 0.
-// Plain Go function (no lemma) — the machine-checked counterexample
-// already proves it; this helper exists for documentation only.
-func deleteCleanupBuggyFalsifyingWitness() bool {
-	return !deleteCleanupBuggyDereferenceObligation(-1, 0)
-}
-
-// keysCount exercises the translator's variadic ...string parameter
-// (Item #2). No production caller exists; the helper lives here so
-// the variadic-passthrough lemma stays near the JSON-key handling
-// code it's a stand-in for.
-//
-// reqproof:lemma keysCount_matches_len func(keys []string) bool {
-//   return keysCount(keys...) == len(keys)
-// }
-// reqproof:lemma keysCount_nonneg func(keys []string) bool {
-//   return keysCount(keys...) >= 0
-// }
-func keysCount(keys ...string) int {
-	return len(keys)
 }

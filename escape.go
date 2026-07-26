@@ -112,14 +112,6 @@ func isUTF16EncodedRune(r rune) bool {
 	return 0xD800 <= r && r <= 0xDFFF
 }
 
-// isUTF16EncodedRuneNot is a thin alias hosting an additional lemma.
-// reqproof:lemma isUTF16EncodedRune_high_excluded func(r rune) bool {
-//   return !(r > 0xDFFF) || !isUTF16EncodedRuneNot(r)
-// }
-func isUTF16EncodedRuneNot(r rune) bool {
-	return isUTF16EncodedRune(r)
-}
-
 func decodeUnicodeEscape(in []byte) (rune, int) {
 	if r, ok := decodeSingleUnicodeEscape(in); !ok {
 		// Invalid Unicode escape
