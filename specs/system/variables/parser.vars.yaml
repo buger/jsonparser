@@ -589,18 +589,18 @@ variables:
       type: bool
       direction: input
       description: True when ParseString encounters a UTF-16 high surrogate escape not followed by a valid low surrogate escape.
-    - name: returns_error_for_missing_low_surrogate
+    - name: substitutes_replacement_for_missing_low_surrogate
       type: bool
       direction: output
-      description: True when ParseString returns MalformedValueError for a high surrogate without a following low surrogate.
+      description: True when ParseString substitutes U+FFFD for a lone high surrogate, matching encoding/json behavior.
     - name: raw_string_has_invalid_low_surrogate
       type: bool
       direction: input
       description: True when ParseString encounters a UTF-16 high surrogate followed by a unicode escape whose value is below the low surrogate range.
-    - name: returns_error_for_invalid_low_surrogate
+    - name: substitutes_replacement_for_invalid_low_surrogate
       type: bool
       direction: output
-      description: True when ParseString returns MalformedValueError for a high surrogate followed by an invalid low surrogate.
+      description: True when ParseString substitutes U+FFFD for a high surrogate followed by an invalid low surrogate, matching encoding/json behavior.
     - name: raw_string_has_backslash_at_end
       type: bool
       direction: input

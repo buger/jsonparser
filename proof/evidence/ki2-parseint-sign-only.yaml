@@ -12,12 +12,12 @@ artifact: parser_test.go
 command: go test -v -run TestParseInt_SignOnlyTripwire_KI2 -count=1 ./...
 status: pass
 observed_result: known_issue_reproduced
-executed_at: "2026-07-27T11:44:02Z"
+executed_at: "2026-07-27T13:53:39Z"
 input_set:
     - parser_test.go
     - bytes.go
 freshness_hashes:
-    bytes.go: sha256:efbf93ed094d6e82c1f8d0f7af6067a00d96c200d82bfb6832010bdb2a8b22f6
+    bytes.go: sha256:36c10600fc6ac06ecee41de9825d4b685760544631a38f447505e60e46daf168
     parser_test.go: sha256:4eaaa41b9c4b22a61d678384b40d04b9f71d78efa61633a661c29e737b2f9bc1
 known_issues:
     - KI-2

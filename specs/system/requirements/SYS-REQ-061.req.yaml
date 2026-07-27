@@ -4,8 +4,8 @@ status: approved
 priority: shall
 category: functional
 req_type: guarantee
-fretish: the parser shall always satisfy !raw_string_has_missing_low_surrogate | returns_error_for_missing_low_surrogate
-description: When ParseString encounters a UTF-16 high surrogate escape (e.g., '\uD800') that is not followed by a valid low surrogate escape, the parser shall return MalformedValueError rather than producing corrupted output.
+fretish: the parser shall always satisfy !raw_string_has_missing_low_surrogate | substitutes_replacement_for_missing_low_surrogate
+description: When ParseString encounters a UTF-16 high surrogate escape (e.g., '\uD800') that is not followed by a valid low surrogate escape, the parser shall substitute U+FFFD (replacement character) for the lone surrogate and continue parsing, matching encoding/json behavior, rather than producing corrupted output or synthesizing a bogus code point.
 formalization_strategy: fretish
 informal_verification:
     method: ""
@@ -20,7 +20,7 @@ tags:
     - surrogate
 variables:
     - raw_string_has_missing_low_surrogate
-    - returns_error_for_missing_low_surrogate
+    - substitutes_replacement_for_missing_low_surrogate
 traces:
     satisfies:
         - STK-REQ-007
@@ -28,9 +28,9 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-07-26T13:25:51.933947Z"
+    reviewed_at: "2026-07-27T13:44:15.984053Z"
     reviewed_by: human:buger
-    reviewed_fingerprint: sha256:beb4bc751132607387f0840da6d777200e041549281cdcd76a5ab707c1b5e3ac
+    reviewed_fingerprint: sha256:e211f5ec298d76314638131c12188240e4b2049fb0cab1327c7bd98c2f1d50c9
 verification:
     assurance_level: E
     formalization_status: valid
@@ -40,9 +40,9 @@ verification:
         role: lead_engineer
         roles:
             - lead_engineer
-        reviewed_at: "2026-07-27T11:43:30Z"
-        comment: 'Surrogate-bug hardening: motivation linked to DEFECT-260727-SNGT'
-        fingerprint: sha256:fbdcb3699baba00f0b6712cdff3e503914efd89fed06f4bf2a191cfe29040b57
+        reviewed_at: "2026-07-27T12:22:13Z"
+        comment: 'Aligned FRETish with U+FFFD substitution behavior (DEFECT-260727-SNGT fix)'
+        fingerprint: sha256:6dc09e55080f6467eb72a3d343c6b6c7e6c0aedc52947013be44669f96278004
         ai_generated: false
         motivation:
             kind: defect
@@ -51,7 +51,7 @@ history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
     last_modified_by: human:buger
-    last_modified_at: "2026-07-27T11:43:30Z"
+    last_modified_at: "2026-07-27T12:22:13Z"
 verification_state: passing
 lifecycle:
     change_history:
@@ -65,4 +65,9 @@ lifecycle:
           to: verification=passing
           reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
           changed_by: agent:auto-derive
+        - date: "2026-07-27T12:22:13Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-27T11:43:30Z comment="Surrogate-bug hardening: motivation linked to DEFECT-260727-SNGT")'
+          changed_by: human:buger
 obligation_class: truncated_escape_sequence

@@ -43,6 +43,10 @@ var parseIntTests = []ParseIntTest{
 		out: -9223372036854775808,
 	},
 	{
+		in:  "-9223372036854775807", // = -math.MaxInt64 — slow path (19 digits), neg=T
+		out: -9223372036854775807,
+	},
+	{
 		in:         "-92233720368547758081",
 		out:        0,
 		isErr:      true,
