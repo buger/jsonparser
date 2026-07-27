@@ -1,0 +1,205 @@
+rules:
+  - id: go.concurrency.goroutine-spawn
+    message: Goroutine spawn requires lifecycle, cancellation, and shutdown ownership evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: concurrency.spawn
+        provider: opengrep
+        tags: [concurrent]
+        obligations: [concurrent]
+        confidence: medium
+    pattern: go $CALL(...)
+
+  - id: go.concurrency.goroutine-without-lifecycle
+    message: Goroutine spawn lacks an obvious local lifecycle or cancellation cue.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.goroutine_without_lifecycle
+        provider: opengrep
+        tags: [concurrent]
+        confidence: medium
+    patterns:
+      - pattern: go $CALL(...)
+      - pattern-not-regex: "(?i)(ctx|context|done|close|waitgroup|cancel)"
+
+  - id: go.concurrency.channel-send
+    message: Channel communication requires blocking, cancellation, and ownership evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: concurrency.channel_communication
+        provider: opengrep
+        tags: [concurrent]
+        obligations: [concurrent]
+        confidence: medium
+    pattern: $CH <- $VAL
+
+  - id: go.concurrency.unguarded-channel-send
+    message: Channel send without select guard on context; may block forever if receiver goroutine exits.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: concurrency.unguarded_channel_send
+        provider: opengrep
+        tags: [concurrent]
+        obligations: [cancellation_observed]
+        confidence: medium
+    patterns:
+      - pattern-inside: |
+          func $FUNC(..., $CTX context.Context, ...) {
+            ...
+          }
+      - pattern: $CH <- $VAL
+      - pattern-not-inside: |
+          select {
+          case ...:
+            ...
+          }
+
+  - id: go.concurrency.blocking-io-without-context
+    message: Blocking receive/read/accept call lacks an obvious context argument at the call site.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.blocking_io_without_context
+        provider: opengrep
+        tags: [concurrent]
+        confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern: $OBJ.ReadEvent(...)
+          - pattern: $OBJ.ReadMessage(...)
+          - pattern: $OBJ.Recv(...)
+          - pattern: $OBJ.Receive(...)
+          - pattern: $OBJ.Accept(...)
+      - pattern-not-regex: "(?i)(ctx|context)"
+
+  - id: go.concurrency.event-loop-blocking-call
+    message: Event or message loop body contains an obvious blocking call.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.event_loop_blocking_call
+        provider: opengrep
+        tags: [concurrent]
+        confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              for $MSG := range $EVENTS { ... }
+          - pattern-inside: |
+              for $EVENT := range $EVENTS { ... }
+          - pattern-inside: |
+              for $NOTIFICATION := range $EVENTS { ... }
+      - pattern-either:
+          - pattern: $OBJ.ReadEvent(...)
+          - pattern: $OBJ.ReadMessage(...)
+          - pattern: $OBJ.Recv(...)
+          - pattern: $OBJ.Receive(...)
+          - pattern: $OBJ.Accept(...)
+          - pattern: http.Get(...)
+          - pattern: http.Post(...)
+          - pattern: time.Sleep(...)
+
+  - id: go.concurrency.map-field-write-in-goroutine
+    message: Map field is mutated inside a goroutine; require concurrency ownership or synchronization evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.shared_map_without_sync
+        provider: opengrep
+        tags: [concurrent]
+        obligations: [concurrent]
+        confidence: medium
+    patterns:
+      - pattern-inside: |
+          go func(...) { ... }()
+      - pattern-either:
+          - pattern: $OBJ.$FIELD[$KEY] = $VAL
+          - pattern: $OBJ.$FIELD[$KEY] += $VAL
+          - pattern: $OBJ.$FIELD[$KEY] -= $VAL
+          - pattern: $OBJ.$FIELD[$KEY]++
+          - pattern: $OBJ.$FIELD[$KEY]--
+          - pattern: delete($OBJ.$FIELD, $KEY)
+
+  - id: go.pkgvar.mutated-without-sync
+    severity: WARNING
+    languages: [go]
+    message: |
+      Package-level mutable variable is assigned from a method body. Without
+      explicit synchronisation (sync.Mutex, atomic, or channel ownership) the
+      read/write pair is a data race when the method may be invoked from
+      multiple goroutines. Move the state behind a Mutex, use sync/atomic, or
+      scope it to a struct field with a documented owner.
+    metadata:
+      proof:
+        signal_id: concurrency.pkgvar_mutated_without_sync
+        provider: opengrep
+        tags: [concurrent, process_local]
+        obligations: [concurrent]
+        confidence: medium
+        notes: |
+          Restricted via metavariable-regex to package-singleton suffixes
+          (Singleton/Instance/Connector/Registry/Global) to keep false
+          positives at zero. Excludes assignments guarded by a Mutex Lock,
+          sync.Once.Do bodies, and atomic.Store* writes. Local variables that
+          happen to carry one of those suffixes would still match.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func ($RECV $T) $M(...) error {
+                ...
+                $PKGVAR = $V
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) $M(...) {
+                ...
+                $PKGVAR = $V
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) $M(...) ($A, $B) {
+                ...
+                $PKGVAR = $V
+                ...
+              }
+      - metavariable-regex:
+          metavariable: $PKGVAR
+          regex: '^[a-z][A-Za-z0-9]*(Singleton|Instance|Connector|Registry|Global)$'
+      - pattern-not-inside: |
+          func ($RECV $T) $M(...) {
+            ...
+            $MU.Lock()
+            ...
+          }
+      - pattern-not-inside: |
+          func ($RECV $T) $M(...) error {
+            ...
+            $MU.Lock()
+            ...
+          }
+      - pattern-not-inside: |
+          $ONCE.Do(func() {
+            ...
+          })
+      - pattern-not: atomic.StorePointer(...)
+      - pattern-not: atomic.StoreInt32(...)
+      - pattern-not: atomic.StoreInt64(...)
+      - pattern-not: atomic.StoreUint32(...)
+      - pattern-not: atomic.StoreUint64(...)
+      - pattern-not-regex: "(?i)(mutex|rwmutex|sync\\.map|\\.Lock\\(|\\.Unlock\\()"

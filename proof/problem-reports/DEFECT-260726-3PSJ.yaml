@@ -1,0 +1,108 @@
+schema_version: 1
+id: DEFECT-260726-3PSJ
+title: Delete left dangling trailing comma on array/object element followed by whitespace+comma
+introduced_in: inception
+source:
+    type: test_failure
+    reference: 'hazard-sweep: FuzzPathMutation crashers ed0b39400500dd8f / 798e17d6cde9ba4b / 7095d73632e4979e / 19be37bd98e5d687'
+classification:
+    defect_class: missing_validation
+    surface: data_integrity
+    severity: high
+    security_relevant: false
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-010
+        - SYS-REQ-034
+        - SYS-REQ-035
+    added_obligations:
+        - requirement: SYS-REQ-010
+          obligation_class: malformed_input
+    regression_tests:
+        - set_spec_test.go:TestDeleteMalformedJSONRegression_SYS_REQ_010
+description: |
+    `Delete` (parser.go:864) produced malformed JSON output (rejected by
+    `encoding/json.Unmarshal`) whenever the deleted element was followed by
+    one or more JSON whitespace bytes (space, tab, LF, CR) and then a comma
+    or the container close bracket. The dangling-byte sequences were:
+
+      * `Delete("[0,0 ]", "[1]")`     -> `[0, ]`     (trailing comma before `]`)
+      * `Delete("[0,0 ,0]", "[1]")`   -> `[0, ,0]`   (dangling comma between spaces)
+      * `Delete("[0,0\n,0]", "[1]")`  -> `[0,\n,0]`  (newline variant)
+      * `Delete("[0,0  ,0]", "[1]")`  -> `[0,  ,0]`  (multi-space variant)
+
+    Root cause was two-fold:
+
+      1. The array-branch cleanup (parser.go:932-938, `data[idx] == ']'` case)
+         only advanced `keyOffset` to `tokStart`; it did not handle the
+         whitespace-before-`]` shape, so the cleanup block ran with the wrong
+         `endOffset` and left the comma.
+
+      2. The array-branch whitespace-then-comma case was missing entirely.
+         The object-branch (parser.go:907-916) had `data[idx] == ' ' &&
+         data[nextIdx] == ','`, but (a) it only matched a SINGLE 0x20 space,
+         missing `\t`, `\n`, `\r`, and multi-byte whitespace runs, and (b) the
+         symmetric case was absent from the array branch.
+
+      3. The final cleanup (parser.go:948) only checked `remainedValue[i]
+         == '}'` (object close), so deleting the LAST array element left the
+         comma dangling before `]`.
+
+    Hazard class: silent malformed-JSON output on caller-controlled input
+    shape (whitespace placement is arbitrary in JSON). Found by FuzzPathMutation
+    during the final hazard sweep.
+
+reproducer:
+    - 'Delete([]byte("[0,0 ]"), "[1]") -> "[0, ]" (invalid JSON); fixed -> "[0 ]"'
+    - 'Delete([]byte("[0,0 ,0]"), "[1]") -> "[0, ,0]" (invalid); fixed -> "[0,0]"'
+    - 'Delete([]byte("[0,0\n,0]"), "[1]") -> "[0,\n,0]" (invalid); fixed -> "[0,0]"'
+
+fix_scope: |
+    Fixed in this change (parser.go):
+      * Added helper `isJSONWhitespace(b)` classifying the four JSON
+        whitespace bytes per RFC 8259 §2.
+      * Object-branch cleanup (parser.go ~912): replaced the single-' '
+        check with a whitespace run scan, so any of \t/\n/\r/space (in any
+        run length) before the trailing comma is consumed.
+      * Array-branch cleanup (parser.go ~934): added the symmetric
+        whitespace-then-comma case so `Delete("[0,0 ,0]", "[1]")` removes
+        the comma with the element.
+      * Final cleanup (parser.go ~958): extended the close-bracket check
+        from `}`-only to `}` or `]`, so deleting the last array element
+        removes the leading comma (symmetric with the object case).
+    Regression seeds in testdata/fuzz/FuzzPathMutation/ lock all four
+    discovered shapes.
+
+disposition:
+    status: covered_by_requirement
+    owner: human:buger
+    requirements:
+        - SYS-REQ-010
+    evidence:
+        verified_by:
+            - set_spec_test.go:TestDeleteMalformedJSONRegression_SYS_REQ_010
+    reviewer: human:buger
+    reviewed_at: "2026-07-26T20:30:00Z"
+    resolution_note: |
+        Fixed in this change. parser.go Delete now consumes any JSON
+        whitespace run before a trailing comma in both the object and
+        array branches (was: single-space only, object-only), and the
+        final cleanup removes the leading comma both for `}` and `]`
+        close brackets (was: `}`-only). The `isJSONWhitespace` helper
+        centralizes the RFC 8259 §2 whitespace byte set. Four FuzzPathMutation
+        regression seeds lock the discovered shapes; FuzzPathMutation
+        re-run for 60s (28.7M executions) and FuzzJSONStructureAware for
+        30s (7.5M executions) both crash-free post-fix.
+related_requirements:
+    - SYS-REQ-010
+    - SYS-REQ-033
+    - SYS-REQ-034
+    - SYS-REQ-035
+history:
+    - at: "2026-07-26T20:24:24Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T20:30:00Z"
+      by: human:buger
+      action: enriched
+      reason: Added full root-cause, fix-scope, and disposition during final hazard sweep (fixed in change).

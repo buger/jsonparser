@@ -2,7 +2,9 @@ package jsonparser
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
+	"unicode/utf8"
 )
 
 // Verifies: SYS-REQ-014 [boundary]
@@ -50,20 +52,23 @@ var singleUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
 }, commonUnicodeEscapeTests...)
 
 var multiUnicodeEscapeTests = append([]escapedUnicodeRuneTest{
-	{in: `\uD83D`, isErr: true},
-	{in: `\uDE03`, isErr: true},
+	// Lone surrogates: malformed per RFC 8259/WHATWG. Match encoding/json by
+	// substituting U+FFFD (utf8.RuneError) and consuming only the 6 bytes of
+	// the lone-surrogate escape. See DEFECT-260727-SNGT.
+	{in: `\uD83D`, out: utf8.RuneError, len: 6}, // lone high surrogate
+	{in: `\uDE03`, out: utf8.RuneError, len: 6}, // lone low surrogate
 	{in: `\uFFFF`, out: '\uFFFF', len: 6},
 	{in: `\uFF11`, out: '１', len: 6},
 
 	{in: `\uD83D\uDE03`, out: '\U0001F603', len: 12},
 	{in: `\uD800\uDC00`, out: '\U00010000', len: 12},
 
-	{in: `\uD800\`, isErr: true},
-	{in: `\uD800\u`, isErr: true},
-	{in: `\uD800\uD`, isErr: true},
-	{in: `\uD800\uDC`, isErr: true},
-	{in: `\uD800\uDC0`, isErr: true},
-	{in: `\uD800\uDBFF`, isErr: true}, // invalid low surrogate
+	{in: `\uD800\`, out: utf8.RuneError, len: 6},      // high surrogate not followed by "\u" → lone high
+	{in: `\uD800\u`, isErr: true},                     // second escape truncated → malformed
+	{in: `\uD800\uD`, isErr: true},                    // second escape truncated → malformed
+	{in: `\uD800\uDC`, isErr: true},                   // second escape truncated → malformed
+	{in: `\uD800\uDC0`, isErr: true},                  // second escape truncated → malformed
+	{in: `\uD800\uDBFF`, out: utf8.RuneError, len: 6}, // second escape is high surrogate, not low → lone high
 }, commonUnicodeEscapeTests...)
 
 // Verifies: SYS-REQ-014 [malformed]
@@ -124,16 +129,25 @@ var unescapeTests = []unescapeTest{
 	{in: `\u0000 \u0000 \u0000 \u0000 \u0000`, out: "\u0000 \u0000 \u0000 \u0000 \u0000", canAlloc: true},
 	{in: ` \u0000 \u0000 \u0000 \u0000 \u0000 `, out: " \u0000 \u0000 \u0000 \u0000 \u0000 ", canAlloc: true},
 
-	{in: `\uD800`, isErr: true},
+	// Lone surrogates: malformed per RFC 8259/WHATWG. Match encoding/json by
+	// substituting U+FFFD and preserving the following literal bytes. See
+	// DEFECT-260727-SNGT.
+	{in: `\uD800`, out: "\uFFFD", canAlloc: true},
+	{in: `abcde\uD800`, out: "abcde\uFFFD", canAlloc: true},
+	{in: `ab\uD800de`, out: "ab\uFFFDde", canAlloc: true},
+	{in: `\uD800abcde`, out: "\uFFFDabcde", canAlloc: true},
+	{in: `\uDB29A7FA`, out: "\uFFFDA7FA", canAlloc: true},   // high surrogate followed by non-escape bytes
+	{in: `\uD800\u0041`, out: "\uFFFDA", canAlloc: true},    // high surrogate followed by BMP escape
+	{in: `\uDC00`, out: "\uFFFD", canAlloc: true},           // lone low surrogate
+	{in: `\uD800\uDC00`, out: "\U00010000", canAlloc: true}, // valid pair still works
+
+	// Truncated / malformed escape sequences (non-surrogate) still error.
 	{in: `abcde\`, isErr: true},
 	{in: `abcde\x`, isErr: true},
 	{in: `abcde\u`, isErr: true},
 	{in: `abcde\u1`, isErr: true},
 	{in: `abcde\u12`, isErr: true},
 	{in: `abcde\u123`, isErr: true},
-	{in: `abcde\uD800`, isErr: true},
-	{in: `ab\uD800de`, isErr: true},
-	{in: `\uD800abcde`, isErr: true},
 }
 
 // isSameMemory checks if two slices contain the same memory pointer (meaning one is a
@@ -196,6 +210,128 @@ func TestUnescape(t *testing.T) {
 				t.Errorf("Unescape(`%s`, bufsize=%d) returned isAlloc mismatch: expected %t, obtained %t", test.in, cap(buf), buftest.isTooSmall, isAlloc)
 				break
 			}
+		}
+	}
+}
+
+// =============================================================================
+// Lone-Unicode-surrogate regression tests (DEFECT-260727-SNGT).
+//
+// Root cause: decodeUnicodeEscape (escape.go:115) read a high surrogate and
+// then called decodeSingleUnicodeEscape(in[6:]) to fetch the low surrogate
+// WITHOUT verifying in[6:8] == "\u". decodeSingleUnicodeEscape assumes the
+// "\u" prefix and reads hex at fixed offsets, so literal bytes following a
+// lone high surrogate (e.g. the "A7FA" after "\uDB29") were misread as a low
+// surrogate and a bogus non-BMP code point was synthesized. The fix matches
+// encoding/json: a lone surrogate (high or low) is malformed → substitute
+// U+FFFD and consume only the 6 bytes of the lone-surrogate escape.
+// =============================================================================
+
+const replacementChar = "\uFFFD"
+
+// Verifies: SYS-REQ-014 [boundary] — lone high surrogate → U+FFFD, no
+// following bytes consumed.
+func TestUnescapeLoneHighSurrogate(t *testing.T) {
+	out, err := Unescape([]byte(`\uDB29`), nil)
+	if err != nil {
+		t.Fatalf("Unescape(`\\uDB29`) returned error %v; expected U+FFFD substitution", err)
+	}
+	if got := string(out); got != replacementChar {
+		t.Errorf("Unescape(`\\uDB29`) = %q; expected %q (U+FFFD)", got, replacementChar)
+	}
+}
+
+// Verifies: SYS-REQ-014 [boundary] — the bug: high surrogate followed by
+// non-escape bytes was synthesizing U+DC271; must be U+FFFD + literal "A7FA".
+func TestUnescapeLoneHighSurrogateFollowedByNonEscape(t *testing.T) {
+	out, err := Unescape([]byte(`\uDB29A7FA`), nil)
+	if err != nil {
+		t.Fatalf("Unescape(`\\uDB29A7FA`) returned error %v; expected U+FFFD + literal A7FA", err)
+	}
+	if want, got := replacementChar+"A7FA", string(out); got != want {
+		t.Errorf("Unescape(`\\uDB29A7FA`) = %q; expected %q", got, want)
+	}
+}
+
+// Verifies: SYS-REQ-014 [boundary] — lone low surrogate → U+FFFD.
+func TestUnescapeLoneLowSurrogate(t *testing.T) {
+	out, err := Unescape([]byte(`\uDC00`), nil)
+	if err != nil {
+		t.Fatalf("Unescape(`\\uDC00`) returned error %v; expected U+FFFD substitution", err)
+	}
+	if got := string(out); got != replacementChar {
+		t.Errorf("Unescape(`\\uDC00`) = %q; expected %q (U+FFFD)", got, replacementChar)
+	}
+}
+
+// Verifies: SYS-REQ-014 [boundary] — high surrogate followed by a "\u" escape
+// that is NOT a low surrogate (here a BMP codepoint U+0041 'A') → U+FFFD + 'A'.
+func TestUnescapeHighSurrogateThenNonSurrogate(t *testing.T) {
+	out, err := Unescape([]byte(`\uD800\u0041`), nil)
+	if err != nil {
+		t.Fatalf("Unescape(`\\uD800\\u0041`) returned error %v; expected U+FFFD + A", err)
+	}
+	if want, got := replacementChar+"A", string(out); got != want {
+		t.Errorf("Unescape(`\\uD800\\u0041`) = %q; expected %q", got, want)
+	}
+}
+
+// Verifies: SYS-REQ-014 [happy-path] — a valid UTF-16 surrogate pair must
+// still combine into the supplementary-plane code point (regression guard).
+func TestUnescapeValidSurrogatePairStillWorks(t *testing.T) {
+	out, err := Unescape([]byte(`\uD800\uDC00`), nil)
+	if err != nil {
+		t.Fatalf("Unescape(`\\uD800\\uDC00`) returned error %v; expected U+10000", err)
+	}
+	if want, got := "\U00010000", string(out); got != want {
+		t.Errorf("Unescape(`\\uD800\\uDC00`) = %q; expected %q", got, want)
+	}
+}
+
+// Verifies: SYS-REQ-014 [differential] — for a corpus of lone-surrogate
+// inputs, ParseString must byte-match encoding/json.Unmarshal (the oracle
+// exercised by the FuzzJSONStructureAware checkParseStringGate finder).
+func TestParseStringLoneSurrogateMatchesEncodingJSON(t *testing.T) {
+	corpus := []string{
+		`\uDB29`,
+		`\uDB29A7FA`,
+		`\uDB29A7FA71 a`,
+		`\uD800`,
+		`\uD83D`,
+		`\uDBFF`,
+		`\uDC00`,
+		`\uDFFF`,
+		`\uDE03`,
+		`\uD800\u0041`,
+		`\uD800\uD800`,
+		`\uD800\uDBFF`,
+		`\uD800\uE000`,
+		`\uD800\uFFFF`,
+		`\uDB29\uDC00`,
+		`\uD83D\uDE03 more`,
+		`\uD800\uDC00`,
+		`\u0000\uD800\u0000`,
+	}
+	for _, esc := range corpus {
+		// Reference oracle: encoding/json unescapes the quoted string.
+		var want string
+		jsonInput := `"` + esc + `"`
+		if err := json.Unmarshal([]byte(jsonInput), &want); err != nil {
+			// encoding/json rejects malformed escapes (e.g. truncated "\u"). The
+			// corpus above is chosen to all be accepted; if one is rejected we
+			// want to know rather than silently skip.
+			t.Errorf("encoding/json rejected corpus input %q: %v", jsonInput, err)
+			continue
+		}
+
+		got, err := ParseString([]byte(esc))
+		if err != nil {
+			t.Errorf("ParseString(%q) returned error %v; encoding/json accepted it as %q", esc, err, want)
+			continue
+		}
+		if got != want {
+			t.Errorf("ParseString(%q) divergence:\n  got  = %q (% x)\n  want = %q (% x)",
+				esc, got, []byte(got), want, []byte(want))
 		}
 	}
 }

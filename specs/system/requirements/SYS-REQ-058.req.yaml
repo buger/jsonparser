@@ -43,7 +43,7 @@ history:
     created_at: "2026-04-14T18:00:00Z"
     last_modified_by: agent:claude
     last_modified_at: "2026-04-14T18:00:00Z"
-verification_state: passing
+verification_state: failing
 lifecycle:
     change_history:
         - date: "2026-04-14T18:00:00Z"
@@ -56,4 +56,9 @@ lifecycle:
           to: verification=passing
           reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
           changed_by: agent:auto-derive
+        - date: "2026-07-26T19:24:11Z"
+          from: verification=passing
+          to: verification=failing
+          reason: auto-derived [passing→failing] signals=2; known_issue:KI-2=failing | tests_pass:test_status=passing
+          changed_by: human:buger
 obligation_class: boundary

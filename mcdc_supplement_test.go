@@ -279,7 +279,7 @@ func TestObjectEachSupplementalErrors(t *testing.T) {
 	}{
 		{name: "whitespace only", data: `   `, wantErr: MalformedObjectError},
 		{name: "unterminated object", data: `{`, wantErr: MalformedJsonError},
-		{name: "invalid escaped key", data: `{"\uD800":1}`, wantErr: MalformedStringEscapeError},
+		{name: "invalid escaped key", data: `{"\uD800\u":1}`, wantErr: MalformedStringEscapeError},
 		{name: "missing value after key", data: `{"a"`, wantErr: MalformedJsonError},
 		{name: "malformed value token", data: `{"a":u}`, wantErr: UnknownValueTypeError},
 		{name: "missing closing brace after value", data: `{"a":1 `, wantErr: MalformedArrayError},
@@ -338,16 +338,17 @@ func TestDeleteSupplementalEdgeCases(t *testing.T) {
 // MCDC SYS-REQ-009: N/A
 func TestSetSupplementalArrayInsertionCoverage(t *testing.T) {
 	t.Run("append into existing top level array path", func(t *testing.T) {
-		// When setting an index beyond the current array length for a
-		// primitive (non-object) array, the code overwrites rather than
-		// appends because createInsertComponent with object=true wraps
-		// the value. This is the actual parser behavior.
+		// SYS-REQ-110: setting an index beyond the current array length
+		// must append at the end, preserving existing elements. The
+		// previous behavior (overwrite with [value]) was a silent data
+		// loss bug for scalar arrays — fixed by correcting the
+		// `data[subObjOff] == '{'` guard to `!= ']'` in parser.go:Set.
 		got, err := Set([]byte(`{"top":[1]}`), []byte(`2`), "top", "[1]")
 		if err != nil {
 			t.Fatalf("Set array append returned error: %v", err)
 		}
-		if string(got) != `{"top":[2]}` {
-			t.Fatalf("Set array append result = %s, want %s", string(got), `{"top":[2]}`)
+		if string(got) != `{"top":[1,2]}` {
+			t.Fatalf("Set array append result = %s, want %s (SYS-REQ-110: append-at-end preserves existing scalar elements)", string(got), `{"top":[1,2]}`)
 		}
 	})
 
@@ -390,7 +391,10 @@ func TestFuzzParseStringHarnessCoverage(t *testing.T) {
 	if got := FuzzParseString([]byte(``)); got != 0 {
 		t.Fatalf("FuzzParseString empty string path = %d, want 0", got)
 	}
-	if got := FuzzParseString([]byte(`\uD800`)); got != 0 {
+	// Per DEFECT-260727-SNGT a lone high surrogate now substitutes U+FFFD (no
+	// error), so \uD800 is no longer malformed. Use a truncated low-surrogate
+	// escape (\uD800\u) to exercise the genuine malformed-escape path.
+	if got := FuzzParseString([]byte(`\uD800\u`)); got != 0 {
 		t.Fatalf("FuzzParseString malformed escape path = %d, want 0", got)
 	}
 }

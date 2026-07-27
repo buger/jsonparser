@@ -88,6 +88,12 @@ disposition:
             - empty_key_path_test.go:TestDeleteEmptyKeyPathComponent
         related_known_issues:
             - KI-1
+            # KI-3 also affects SYS-REQ-009 (different failure mode:
+            # cross-type Set corruption, filed 2026-07-26 as
+            # DEFECT-260726-MFPA). Listed here for the cross-issue
+            # alignment check; QS2V's own closure is for the empty-key
+            # panic only, which KI-1 tracks.
+            - KI-3
     reviewer: human:buger
     reviewed_at: "2026-07-26T15:10:00Z"
     resolution_note: |

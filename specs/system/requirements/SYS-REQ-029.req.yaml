@@ -1,11 +1,11 @@
 id: SYS-REQ-029
 version: 1
-status: review
+status: approved
 priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy addressed_array_is_well_formed | malformed_array_input_returns_error
-description: When ArrayEach receives malformed or otherwise unusable addressed array input, the parser shall return an error.
+description: When ArrayEach receives malformed or otherwise unusable addressed array input, the parser shall return an error. When the addressed root value is not an array (object, number, string, boolean, null) and no key path is provided, the parser shall return MalformedArrayError WITHOUT invoking the callback — the previous implementation emitted one spurious callback with a misparsed token before erroring (DEFECT-260727-ARR1).
 formalization_strategy: fretish
 informal_verification:
     method: ""
@@ -35,20 +35,42 @@ verification:
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        reviewed_at: "2026-04-23T00:00:00Z"
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T06:53:20Z"
+        comment: 'Re-approved after ArrayEach non-array-root fix (DEFECT-260727-ARR1): non_array_root_no_callback obligation added; nominal_evidence_exemption recorded (FRETish models only failure outcome).'
+        fingerprint: sha256:cfff5e9e689f40472654082c5afbdb39fe35d4d77082a2b33dff5612fbb57b6c
         ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-ARR1
+        motivation_history:
+            - kind: defect
+              ref: DEFECT-260727-ARR1
+              rationale: ArrayEach on a non-array root emitted one spurious callback before erroring (DEFECT-260727-ARR1). The non_array_root_no_callback obligation is added to lock the partition. Fixed in parser.go:ArrayEach root-type guard.
+              superseded_at: "2026-07-27T06:53:20Z"
+              superseded_by: human:buger
 history:
     created_by: agent:codex
     created_at: "2026-04-14T15:45:00Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-07-26T14:54:17Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T06:53:20Z"
 obligation_checklist:
     - malformed_input
+    - non_array_root_no_callback
 obligation_hazards:
     - class: malformed_input
       worst_case: ArrayEach on adversarial input like [1,{ drives nextToken past EOF; an unguarded i+1 increment in the iteration loop panics with index-out-of-range on network-reachable input.
       severity: critical
+    - class: non_array_root_no_callback
+      worst_case: ArrayEach on a non-array root value (object, number, bool, null) without a key path invoked the callback ONCE with the first content token misinterpreted as an array element (e.g. an object key parsed as a string element), then returned MalformedArrayError. A caller performing side effects in the callback observed a spurious invocation on input that is not an array at all. Fixed in DEFECT-260727-ARR1; regression test TestArrayEachNonArrayRootNoCallback_SYS029 locks all non-array root type partitions.
+      severity: medium
+nominal_evidence_exemptions:
+    - obligation_class: non_array_root_no_callback
+      reason: 'SYS-REQ-029 models ONLY a failure/rejection outcome (malformed_array_input_returns_error); there is no valid-input success outcome to witness nominally. The non_array_root_no_callback obligation is a negative contract: the callback must NOT fire on non-array input. The adversarial witness TestArrayEachNonArrayRootNoCallback_SYS029 (annotated SYS-REQ-029:non_array_root_no_callback:negative) is the canonical evidence shape — a nominal witness would require a valid-input happy-path that does not exist in this requirement''s scope.'
+      reviewer: human:buger
 verification_state: passing
 lifecycle:
     change_history:

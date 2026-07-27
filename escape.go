@@ -123,12 +123,31 @@ func decodeUnicodeEscape(in []byte) (rune, int) {
 		// tautological and has been removed — the real discriminator is whether r
 		// falls in the UTF-16 surrogate range.
 		return r, 6
-	} else if r2, ok := decodeSingleUnicodeEscape(in[6:]); !ok { // Note: previous decodeSingleUnicodeEscape success guarantees at least 6 bytes remain
-		// UTF16 "high surrogate" without manditory valid following Unicode escape for the "low surrogate"
+	} else if r >= lowSurrogateOffset {
+		// Lone low surrogate (0xDC00-0xDFFF) with no preceding high surrogate.
+		// Per RFC 8259/WHATWG a lone surrogate in a JSON string is malformed;
+		// match encoding/json by substituting U+FFFD and consuming only the 6
+		// bytes of this escape.
+		return utf8.RuneError, 6
+	} else if len(in) < 8 || in[6] != '\\' || in[7] != 'u' {
+		// Lone high surrogate (0xD800-0xDBFF): the high-surrogate escape is not
+		// followed by a "\u" low-surrogate escape. decodeSingleUnicodeEscape
+		// assumes the \u prefix and reads hex at fixed offsets, so without this
+		// guard it would misread whatever bytes follow (e.g. the literal "A7FA"
+		// after "\uDB29") as a low surrogate and synthesize a bogus code point
+		// (DEFECT-260727-SNGT). Substitute U+FFFD and consume only the 6 bytes
+		// of the high surrogate, matching encoding/json.
+		return utf8.RuneError, 6
+	} else if r2, ok := decodeSingleUnicodeEscape(in[6:]); !ok {
+		// A "\u" follows the high surrogate but the low-surrogate escape is
+		// itself malformed (truncated / bad hex) — the whole escape is broken.
 		return utf8.RuneError, -1
-	} else if r2 < lowSurrogateOffset {
-		// Invalid UTF16 "low surrogate"
-		return utf8.RuneError, -1
+	} else if r2 < lowSurrogateOffset || r2 > basicMultilingualPlaneReservedOffset {
+		// The following "\uXXXX" is not a valid low surrogate (0xDC00-0xDFFF):
+		// e.g. a BMP codepoint or another high surrogate. Treat the first escape
+		// as a lone high surrogate → U+FFFD, consuming 6 bytes; the following
+		// escape is reprocessed by the caller.
+		return utf8.RuneError, 6
 	} else {
 		// Valid UTF16 surrogate pair
 		return combineUTF16Surrogates(r, r2), 12

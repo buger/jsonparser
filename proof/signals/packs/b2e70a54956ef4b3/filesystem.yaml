@@ -1,0 +1,179 @@
+rules:
+  - id: go.fs.process-local-api
+    message: Process-local filesystem API use requires path-boundary, lifetime, and error-handling evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: filesystem.dependency
+        provider: opengrep
+        tags: [fs_io, process_local]
+        confidence: medium
+    pattern-either:
+      - pattern: os.ReadFile(...)
+      - pattern: os.WriteFile(...)
+      - pattern: os.Open(...)
+      - pattern: os.OpenFile(...)
+      - pattern: os.Create(...)
+      - pattern: os.CreateTemp(...)
+      - pattern: os.Mkdir(...)
+      - pattern: os.MkdirAll(...)
+      - pattern: os.Remove(...)
+      - pattern: os.RemoveAll(...)
+      - pattern: os.Rename(...)
+      - pattern: ioutil.ReadFile(...)
+      - pattern: ioutil.WriteFile(...)
+      - pattern: ioutil.TempFile(...)
+      - pattern: ioutil.TempDir(...)
+
+  - id: go.fs.path-check-then-use
+    message: Filesystem path is checked and then reused; require handle-based TOCTOU-safe behavior.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: fs.path_check_then_use
+        provider: opengrep
+        tags: [filesystem, toctou_safe]
+        obligations: [filesystem_operations_use_handle]
+        confidence: high
+    pattern-either:
+      - pattern: |
+          os.Stat($P)
+          ...
+          os.Open($P)
+      - pattern: |
+          os.Lstat($P)
+          ...
+          os.Open($P)
+      - pattern: |
+          os.Stat($P)
+          ...
+          os.MkdirAll($P, ...)
+      - pattern: |
+          os.Lstat($P)
+          ...
+          os.MkdirAll($P, ...)
+      - pattern: |
+          os.Stat($P)
+          ...
+          os.RemoveAll($P)
+      - pattern: |
+          os.Lstat($P)
+          ...
+          os.RemoveAll($P)
+
+  - id: go.fs.removeall-path
+    message: Recursive delete on a path may require containment and traversal review when the path is externally influenced.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: fs.recursive_delete_path
+        provider: opengrep
+        tags: [filesystem]
+        confidence: low
+    pattern: os.RemoveAll($P)
+
+  - id: go.fs.archive-member-path
+    message: Archive member name is used in filesystem path construction; require archive path confinement.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: fs.archive_member_path
+        provider: opengrep
+        tags: [filesystem, archive_extraction]
+        obligations: [path_traversal_prevented, path_identity_canonicalized]
+        confidence: high
+    pattern-either:
+      - pattern: $DEST.Join(newRemotePath(...))
+      - pattern: $DEST.Join(newLocalPath(...))
+
+  - id: go.fs.http-servefile-path
+    message: HTTP request path is served from the filesystem; require path containment and canonicalization evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: fs.http_servefile_path
+        provider: opengrep
+        tags: [filesystem]
+        obligations: [path_traversal_prevented, path_identity_canonicalized]
+        confidence: high
+    pattern-either:
+      - pattern: http.ServeFile($W, $R, $P)
+      - pattern: http.FileServer(...)
+
+  - id: go.deferred-close-on-possibly-nil
+    severity: ERROR
+    languages: [go]
+    message: |
+      A creator that returns (handle, error) is called; the error is only
+      logged (no return / continue / fatal); execution then falls through to
+      a "defer $X.Close()". When the creator fails the handle is nil and the
+      deferred Close panics with a nil-pointer dereference, masking the
+      original failure with a confusing stack trace. Return on the error arm
+      or guard the defer behind "if outfile != nil".
+    metadata:
+      proof:
+        signal_id: filesystem.deferred_close_on_possibly_nil
+        provider: opengrep
+        tags: [error_handling, panic_safety, filesystem]
+        obligations: [panic_free_input_handling, errors_propagated]
+        confidence: high
+        notes: |
+          Anchored on the enclosing function body so the assignment, the
+          log-only error arm, and the defer can be matched even when the
+          assignment is nested inside an if/else. The two pattern-not clauses
+          exclude error arms that return after logging.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func ($R $T) $M(...) error {
+                ...
+                $X, $E = os.Create(...)
+                if $E != nil {
+                  $LOG.Error(...)
+                }
+                ...
+                defer $X.Close()
+                ...
+              }
+          - pattern: |
+              func ($R $T) $M(...) error {
+                ...
+                $X, $E = os.OpenFile(...)
+                if $E != nil {
+                  $LOG.Error(...)
+                }
+                ...
+                defer $X.Close()
+                ...
+              }
+          - pattern: |
+              func ($R $T) $M(...) error {
+                ...
+                $X, $E = os.Open(...)
+                if $E != nil {
+                  $LOG.Error(...)
+                }
+                ...
+                defer $X.Close()
+                ...
+              }
+      - pattern-not: |
+          if $E != nil {
+            $LOG.Error(...)
+            return $RET
+          }
+      - pattern-not: |
+          if $E != nil {
+            $LOG.Error(...)
+            return
+          }

@@ -1,11 +1,11 @@
 id: SYS-REQ-062
 version: 1
-status: review
+status: approved
 priority: shall
 category: functional
 req_type: guarantee
-fretish: the parser shall always satisfy !raw_string_has_invalid_low_surrogate | returns_error_for_invalid_low_surrogate
-description: When ParseString encounters a UTF-16 high surrogate escape followed by a second unicode escape whose value is below the low surrogate range (e.g., '\uD800\u0041'), the parser shall return MalformedValueError.
+fretish: the parser shall always satisfy !raw_string_has_invalid_low_surrogate | substitutes_replacement_for_invalid_low_surrogate
+description: When ParseString encounters a UTF-16 high surrogate escape followed by a second unicode escape whose value is below the low surrogate range (e.g., '\uD800\u0041'), the parser shall substitute U+FFFD (replacement character) for the malformed surrogate sequence and continue parsing, matching encoding/json behavior, rather than producing corrupted output or returning an error.
 formalization_strategy: fretish
 informal_verification:
     method: ""
@@ -20,7 +20,7 @@ tags:
     - surrogate
 variables:
     - raw_string_has_invalid_low_surrogate
-    - returns_error_for_invalid_low_surrogate
+    - substitutes_replacement_for_invalid_low_surrogate
 traces:
     satisfies:
         - STK-REQ-007
@@ -28,22 +28,30 @@ traces:
         - deep_spec_test.go
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-07-26T13:25:51.946034Z"
+    reviewed_at: "2026-07-27T13:58:06.817511Z"
     reviewed_by: human:buger
-    reviewed_fingerprint: sha256:a0abd7ca6fc8e7a5b461adf04d1e7eb376d3ff0e0ede1326bb44cafbdde1ec38
+    reviewed_fingerprint: sha256:6c2d1403507335e3453978bd937fceb330d54405e17b44d6db3f11bb63adce55
 verification:
     assurance_level: E
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        reviewed_at: "2026-04-23T00:00:00Z"
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T11:43:30Z"
+        comment: 'Surrogate-bug hardening: motivation linked to DEFECT-260727-SNGT'
+        fingerprint: sha256:e62fa3e5d21e924726b12e7655e6554834834a7e44bff623ec6d4271618c7522
         ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-SNGT
 history:
     created_by: agent:claude
     created_at: "2026-04-14T18:00:00Z"
-    last_modified_by: agent:claude
-    last_modified_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T11:43:30Z"
 verification_state: passing
 lifecycle:
     change_history:

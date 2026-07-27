@@ -1,0 +1,116 @@
+id: SYS-REQ-111
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !path_component_is_empty_string | (returns_not_found_for_empty_key_component & completes_without_panic_on_empty_key_component)
+description: When any key path component is the empty string, the parser shall treat the path as unresolvable and return KeyPathNotFoundError (Get family / Delete) or a defined error (Set), and shall never panic. An empty-string component is neither a valid object key nor the [ array-index marker.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Empty-string key components previously reached unguarded keys[i][0] / p[level][0] dereferences and panicked (OSS-Fuzz 4649128545288192 / hazard-sweep class, DEFECT-260726-QS2V, KI-1). The contract that an empty-string component is an invalid path returning KeyPathNotFoundError must be explicit so no future code reintroduces a panic site.
+tags:
+    - path
+    - empty_key
+    - missing_path
+    - nil_safety
+variables:
+    - path_component_is_empty_string
+    - returns_not_found_for_empty_key_component
+    - completes_without_panic_on_empty_key_component
+references:
+    - type: known_issue
+      id: KI-1
+    - type: defect
+      id: DEFECT-260726-QS2V
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - empty_key_path_test.go
+        - parser_test.go
+        - fuzz_native_test.go
+    documented_by_extra:
+        - README.md
+        - docs/proof-gap-root-cause.md
+    reviewed_at: "2026-07-26T18:07:41.129839Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b9018b0e63a7ef2906454bb3a9ea7f9a714daf542762652d5be19ea102ad8f66
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-26T17:48:48Z"
+        comment: 'Added hazard gradings for no_path_provided + nil_safety obligation classes.'
+        fingerprint: sha256:175fdf248a05770dcc77334662ef8faf1b3c39e5f97f3830a78c0bafc52bea94
+        ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260726-QS2V
+history:
+    created_by: human:cli
+    created_at: "2026-07-26T17:13:04Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T18:11:33Z"
+obligation_checklist:
+    - missing_path
+    - nil_safety
+    - no_path_provided
+obligation_delegations:
+    - class: nil_safety
+      delegated_to: SYS-REQ-016
+      reason: SYS-REQ-111 is a leaf contract partition; the nil_safety implementation lives in parser.go:Get / searchKeys which SYS-REQ-016 carries implemented_by traces for. Delegating preserves SYS-REQ-111's obligation ownership without weakening.
+      delegated_by: human:buger
+      delegated_at: "2026-07-26T18:11:33Z"
+obligation_hazards:
+    - class: missing_path
+      worst_case: 'An empty-string key component reaches an unguarded keys[i][0] / p[level][0] dereference and panics with runtime error: index out of range [0] with length 0 (the OSS-Fuzz 4649128545288192 / hazard-sweep class, DEFECT-260726-QS2V, KI-1), crashing the goroutine on caller-controlled input.'
+      severity: high
+    - class: nil_safety
+      worst_case: An empty-string key component flowing into searchKeys/EachKey/createInsertComponent on nil-or-zero-length internal slices triggers an unguarded index dereference, crashing the goroutine (the OSS-Fuzz 4649128545288192 panic class).
+      severity: high
+    - class: no_path_provided
+      worst_case: An empty-string key component is structurally a no-effective-path case; if the early guard regresses the keys[i][0] dereference panics with index-out-of-range on the empty component slice.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-07-26T17:20:51Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T17:39:24Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:23:12Z comment="Adding SYS-REQ-110 (Set append-at-end for array index >= len) and SYS-REQ-111 (empty-string key component -> KeyPathNotFoundError, no panic) to close the under-specification gaps behind PR #286 and DEFECT-260726-QS2V/KI-1. Boundary integer domains (array_index, path_component_length) and the path_segment_kind mutex declared in parser.vars.yaml.")'
+          changed_by: human:leonidbugaev
+        - date: "2026-07-26T17:42:08Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:39:24Z comment="Re-approved after adding complement partition and explicit no-panic invariant variable; contract unchanged (empty key -> not-found, no panic).")'
+          changed_by: human:leonidbugaev
+        - date: "2026-07-26T17:46:41Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:42:08Z comment="variables list now FRETish-consistent; no-panic invariant modeled.")'
+          changed_by: human:leonidbugaev
+        - date: "2026-07-26T17:48:48Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:46:41Z comment="Restored no_path_provided + nil_safety obligation classes per the empty-key contract scope.")'
+          changed_by: human:leonidbugaev
+        - date: "2026-07-26T18:46:11Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive

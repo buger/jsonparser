@@ -1,11 +1,11 @@
 id: SYS-REQ-009
 version: 1
-status: review
+status: approved
 priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy !set_path_is_provided | set_target_exists | set_creates_missing_path | set_returns_updated_document | set_returns_not_found_error
-description: When Set is called with a provided path, the parser shall either replace the existing addressed value, create a supported missing path and return the updated JSON document, or return `KeyPathNotFoundError` when the requested mutation path is not usable for the provided input.
+description: 'When Set is called with a provided path, the parser shall either replace the existing addressed value, create a type-consistent missing path and return the updated JSON document, or return KeyPathNotFoundError when the requested mutation path is not usable for the provided input. ''Type-consistent'' means each path segment''s kind matches its resolved parent container: object-key segments under object parents, array-index [N] segments under array parents. A path component whose kind mismatches its parent (e.g. [N] under an object, or an object-key under an array at a depth where the parent must be inferred) is ''not usable for the provided input'' and shall surface KeyPathNotFoundError. (Cross-type mismatch currently produces malformed JSON output instead — tracked as DEFECT-260726-MFPA / KI-3.)'
 formalization_strategy: fretish
 informal_verification:
     method: ""
@@ -36,20 +36,53 @@ verification:
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        reviewed_at: "2026-04-23T00:00:00Z"
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T06:53:09Z"
+        comment: 'Re-approved after scalar-array data-loss fix (DEFECT-260727-WWWY): parser.go:Set append-guard corrected from data[subObjOff]==''{'' to != '']'' so SYS-REQ-009''s boundary obligation covers all array element types, not just object-first-element arrays.'
+        fingerprint: sha256:b8118f9142c23f5503a1a0d98229ffe5f2a049089e50079db62dd114e8a3bd66
         ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-WWWY
+        motivation_history:
+            - kind: defect
+              ref: DEFECT-260726-MFPA
+              rationale: malformed_input obligation added to SYS-REQ-009 (and graded high; SYS-REQ-110 nested_mutation delegation preserved) to enforce the cross-type Set failure mode henceforth (DEFECT-260726-MFPA); nominal witness in TestSet, negative tripwire in TestSetArrayIndexUnderObjectMalformedJSON_KI3.
+              superseded_at: "2026-07-27T06:53:09Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:15:31Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-07-26T14:54:13Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T06:53:09Z"
 obligation_checklist:
+    - boundary
     - idempotency
+    - malformed_input
+    - nested_mutation
 obligation_hazards:
+    - class: boundary
+      worst_case: 'Set on an array-index path component [N] where N >= len(array) silently overwrites element 0 or another existing element the caller did not address, destroying data and returning a mutated document with no error (PR #286 regression class).'
+      severity: high
     - class: idempotency
       worst_case: Set on the same (input, path, value) tuple yields a different document on a second call (e.g. idempotency regression where repeated Set inserts the path twice), corrupting cache or diff layers.
       severity: medium
+    - class: malformed_input
+      worst_case: Set with an array-index path component [N] whose parent in the addressed JSON is an OBJECT (or vice-versa) emits malformed JSON output and returns it with nil error (DEFECT-260726-MFPA / KI-3); the caller has no signal that the returned bytes are unparseable.
+      severity: high
+    - class: nested_mutation
+      worst_case: Set on a multi-segment path drives createInsertComponent to emit array scaffolding at the wrong depth or offset; a regression overwrites a sibling element or builds malformed JSON, silently corrupting the nested structure (SYS-REQ-110 hazard class).
+      severity: medium
+nominal_evidence_exemptions:
+    - obligation_class: boundary
+      reason: 'SYS-REQ-009 models Set''s general mutation contract; the array-index boundary success path (append-at-end beyond length) is decomposed to SYS-REQ-110, which carries the SYS-REQ-110:boundary:nominal witness. SYS-REQ-009''s own FRETish has no boundary-domain valid-input success outcome to witness nominally.'
+      reviewer: human:buger
+    - obligation_class: nested_mutation
+      reason: 'SYS-REQ-009 models Set''s general mutation contract; the nested array-scaffolding success path is decomposed to SYS-REQ-110, which carries the SYS-REQ-110:nested_mutation:nominal witness. SYS-REQ-009''s own model has no nested-mutation valid-input success outcome to witness nominally.'
+      reviewer: human:buger
 verification_state: passing
 lifecycle:
     change_history:
@@ -63,4 +96,19 @@ lifecycle:
           to: verification=passing
           reason: auto-derived [not_started→passing] signals=2; known_issue:KI-1=none | tests_pass:test_status=passing
           changed_by: agent:auto-derive
+        - date: "2026-07-26T19:51:05Z"
+          from: verification=passing
+          to: verification=failing
+          reason: auto-derived [passing→failing] signals=3; known_issue:KI-1=none | known_issue:KI-3=failing | tests_pass:test_status=passing
+          changed_by: human:buger
+        - date: "2026-07-27T06:10:19Z"
+          from: verification=failing
+          to: verification=passing
+          reason: auto-derived [failing→passing] signals=3; known_issue:KI-1=none | known_issue:KI-3=none | tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-27T06:53:09Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T19:54:38Z comment="Re-approved after attaching malformed_input obligation (DEFECT-260726-MFPA / KI-3 hazard hardening). Tripwire TestSetArrayIndexUnderObjectMalformedJSON_KI3 locks the live failure mode; verification_state auto-derived failing reflects the open KI-3 on the cross-type partition.")'
+          changed_by: human:buger
 obligation_class: nominal

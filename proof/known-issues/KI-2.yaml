@@ -1,0 +1,51 @@
+id: KI-2
+title: ParseInt("-") returns (0, nil) — silent false-success on sign-only input
+description: parseInt (bytes.go:9) strips a leading sign byte and then iterates over the remainder. When the input is exactly the sign byte (`-`), the remainder is empty, the loop runs zero iterations, n stays 0, and the function returns (0, true, false). The public ParseInt therefore reports a successful parse of value 0 for an input that is structurally a malformed JSON number (sign with no digits).
+affected_requirements:
+    - SYS-REQ-015
+    - SYS-REQ-039
+    - SYS-REQ-058
+    - SYS-REQ-064
+commands:
+    - go test -run TestParseInt ./...
+evidence_manifests:
+    - proof/evidence/ki2-parseint-sign-only.yaml
+severity: low
+severity_basis: risk
+risk: correctness
+cve_surface: none
+affected_api: ParseInt, GetInt
+attacker_input: caller-supplied Number ValueType byte slice (already tokenized out of the JSON stream)
+sanitizer: audit:hazard-sweep
+reproducer_command: |-
+    go run -trimpath -e - <<EOF
+    package main
+    import (
+      "fmt"
+      "github.com/buger/jsonparser"
+    )
+    func main() {
+      v, err := jsonparser.ParseInt([]byte("-"))
+      fmt.Printf("v=%d err=%v\n", v, err)
+    }
+    EOF
+introduced_in: inception
+disclosure: public
+minimization_status: minimized
+mitigation: 'No mitigation required for live input: parseInt is only reachable via a JSON Number ValueType already validated by the tokenizer, and the JSON grammar never emits a standalone `-` token. The bug is reachable only via direct caller misuse of the exported ParseInt.'
+remediation: 'One-line guard in parseInt (bytes.go): after stripping the sign byte, return (0, false, false) when len(bytes) == 0 so the caller surfaces MalformedValueError. Add a TestParseInt row covering ParseInt("-").'
+owner: human:buger
+release_disposition: ship_with_known_issue
+status: open
+history:
+    - at: "2026-07-26T19:08:21Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T19:21:57Z"
+      by: human:buger
+      action: edit
+      detail: add-evidence-manifest
+    - at: "2026-07-26T19:33:00Z"
+      by: human:buger
+      action: edit
+      detail: set-disclosure=public

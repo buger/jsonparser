@@ -1,0 +1,166 @@
+# Project-specific code signal rule for the jsonparser proof project.
+#
+# Purpose
+#   Catch every unchecked `[]` dereference on a caller-influenced slice
+#   (keys / data / p) so the next variant of the empty-key panic class
+#   surfaces as a finding instead of as a runtime panic.
+#
+# Origin / motivation
+#   The empty-key hazard sweep flagged 7 unguarded `keys[i][0]` sites but
+#   missed parser.go:1000 (the "8th site", cited as :981 in the prior
+#   revision) because the dereference used the slice-expression form
+#   `keys[depth:][0][0]`. The sweep's mental pattern was
+#   `identifier[index][0]`, which does not match slice subscripts. This
+#   rule treats slice-expression-then-index and direct-index-then-field
+#   as the SAME hazard class.
+#
+# Obligation mapping
+#   boundary  — behavior at the edges of valid input ranges (empty
+#               collections, single-element, exactly-at-limit values).
+#               The boundary class is already owned by the parser
+#               requirement family, so a finding opens a real review
+#               item without minting a new obligation row.
+#
+#   (panic_free_input_handling is the more semantically precise class
+#   for this hazard, but it is not yet in this project's obligation_classes
+#   list and is not owned by any parser requirement. Mapping to boundary
+#   alone keeps the audit honest: each finding surfaces against a class
+#   the project has actually agreed to track. Adding
+#   panic_free_input_handling to obligation_classes + a requirement
+#   checklist is the right follow-up once the empty-key hazard sweep
+#   is formalized — see PROOF_UNDER_MODELED_REQUIREMENTS_PROPOSAL.md.)
+#
+# Local dev / CI install
+#   opengrep is the analyzer backend. It is npm-installable:
+#     npm install -g @opengrep/cli@1.22.0
+#   proof's `tools.opengrep.auto_download: true` (set in proof.yaml) also
+#   fetches the pinned version on first `proof signals collect`.
+#
+# Verification
+#   The rule was validated against parser.go: it fires on the unguarded
+#   `keys[depth:][0][0]` site (line 1000) and on the bare
+#   `keys[i][0]`, `keys[i][j]`, `p[level][0]`, and computed-offset
+#   `data[$F(...)]` / `data[$I + $N]` shapes. It does NOT fire on the
+#   guarded sites at parser.go:410 (`len(keys[level]) > 0 && keys[level][0]`)
+#   or parser.go:835 (`len(keys[lk-1]) > 0 && string(keys[lk-1][0])`),
+#   nor on `for i := range data { ... data[i] ... }` bounded loops.
+
+rules:
+  - id: jsonparser.boundary.unchecked-caller-slice-deref
+    message: >-
+      Unchecked [] dereference on a caller-influenced slice (keys / data / p).
+      The 8th empty-key panic site (parser.go:1000, cited as :981 in the
+      prior revision) used the slice-expression variant
+      `keys[depth:][0][0]` — a form the earlier identifier[index][0]
+      hazard sweep missed because slice subscripts do not match the
+      `identifier[index]` mental pattern. Require an explicit
+      `len(X) > N` / `N < len(X)` guard on the SAME variable in the same
+      control-flow block before any `X[i]`, `X[i:j][k]`, or `X[i][j]`
+      dereference on a caller-controlled slice, or move the access
+      behind a typed error path. (The semantically precise class is
+      panic_free_input_handling; this rule maps to boundary because
+      that is the obligation the parser requirement family already
+      owns — see file header.)
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: jsonparser.unchecked_caller_slice_deref
+        provider: opengrep
+        tags: [panic_safety, boundary, accepts_user_data, binary_safe_io]
+        obligations: [boundary]
+        confidence: medium
+        framework_hints: ["CWE-125", "CWE-129", "CWE-787"]
+    patterns:
+      - pattern-either:
+          # form 3 — slice-expression then index (the MISSED parser.go:1000 form)
+          # Matches `keys[depth:][0][0]`, `data[i:][0]`, `keys[i:j][k]`, etc.
+          - pattern: $X[$I:$J][$K]
+          - pattern: $X[$I:$J][$K][$L]
+          - pattern: $X[:$J][$K]
+          - pattern: $X[:$J][$K][$L]
+          - pattern: $X[$I:][$K]
+          - pattern: $X[$I:][$K][$L]
+          # forms 1, 2 — direct index then field / nested direct index
+          # Matches `keys[i][0]`, `keys[i][j]`, `p[level][0]`.
+          - pattern: $X[$I][$J]
+          - pattern: $X[$I][$J][$K]
+          # form 4 — byte-slice index where the offset is a tokenizer-return
+          # expression or arithmetic-derived offset (the actually dangerous
+          # shape). A bare `data[i]` inside a bounded for-loop is
+          # intentionally NOT matched — only computed offsets that can
+          # outrun the slice are flagged. Matches:
+          #   data[nextToken(...)]
+          #   data[startOffset+1+nextToken(data[startOffset+1:])]
+          #   data[startOffset + 1]
+          - pattern: $X[$F(...)]
+          - pattern: $X[$I + $F(...)]
+          - pattern: $X[$F(...) + $N]
+          - pattern: $X[$I + $N]
+      - metavariable-regex:
+          metavariable: $X
+          regex: "^(keys|data|p|bytes|buf|src|dst|path|paths|segs|segments)$"
+      # ---- Expression-level guards ----
+      # Exclude any dereference whose enclosing expression already
+      # short-circuited on a `len(X) > N` / `len(X) >= N` / `N < len(X)`
+      # / `len(X) == 0` / `len(X) < N` check (on any variable — same-block
+      # guard hygiene is what matters, not name identity).
+      - pattern-not-inside: len($G) > $N && $REST
+      - pattern-not-inside: $PRE && len($G) > $N && $REST
+      - pattern-not-inside: len($G) >= $N && $REST
+      - pattern-not-inside: $PRE && len($G) >= $N && $REST
+      - pattern-not-inside: $N < len($G) && $REST
+      - pattern-not-inside: $PRE && $N < len($G) && $REST
+      - pattern-not-inside: $N <= len($G) && $REST
+      - pattern-not-inside: len($G) == 0 || $REST
+      - pattern-not-inside: $PRE || len($G) == 0 || $REST
+      - pattern-not-inside: len($G) < $N || $REST
+      - pattern-not-inside: $PRE || len($G) < $N || $REST
+      # ---- Block-level guards ----
+      - pattern-not-inside: |
+          if len($G) > $N {
+            ...
+          }
+      - pattern-not-inside: |
+          if len($G) >= $N {
+            ...
+          }
+      - pattern-not-inside: |
+          if $N < len($G) {
+            ...
+          }
+      - pattern-not-inside: |
+          if $N <= len($G) {
+            ...
+          }
+      - pattern-not-inside: |
+          if len($G) == 0 {
+            ...
+            return ...
+            ...
+          }
+      - pattern-not-inside: |
+          if len($G) > $N && $COND {
+            ...
+          }
+      - pattern-not-inside: |
+          if len($G) >= $N && $COND {
+            ...
+          }
+      # ---- Bounded for-loop on the slice ----
+      - pattern-not-inside: |
+          for $I := range data {
+            ...
+          }
+      - pattern-not-inside: |
+          for $I := range $D {
+            ...
+          }
+      - pattern-not-inside: |
+          for $I := 0; $I < len(data); $I++ {
+            ...
+          }
+      - pattern-not-inside: |
+          for $I := 0; $I < len($D); $I++ {
+            ...
+          }

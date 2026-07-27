@@ -1,0 +1,83 @@
+schema_version: 1
+id: DEFECT-260727-WWWY
+title: Set beyond-length array index on scalar array destroys all elements (SYS-REQ-110 violation)
+introduced_in: inception
+source:
+    type: audit_finding
+classification:
+    surface: data_integrity
+    severity: high
+disposition:
+    status: covered_by_requirement
+    covered_by: SYS-REQ-110
+    owner: human:buger
+    requirements:
+        - SYS-REQ-110
+        - SYS-REQ-009
+    known_issues:
+        - KI-4
+    known_issue_relationship: |
+        KI-4 (top-level array beyond-length) is a SEPARATE partition from
+        this defect (nested scalar arrays). This defect fixed the nested-
+        array element_type_partition; KI-4 tracks the remaining top-level
+        gap. They share SYS-REQ-110 but address different code paths.
+    evidence:
+        verified_by:
+            - parser_test.go:TestSetBeyondLengthScalarArrayPreservesElements_SYS110
+    reviewer: human:buger
+    reviewed_at: "2026-07-27T06:50:00Z"
+    resolution_note: |
+        FIXED: parser.go:Set append-guard corrected from `data[subObjOff]=='{'`
+        to `!= ']'` so all non-empty nested arrays append-at-end on beyond-
+        length Set, not just object-first-element arrays. The
+        element_type_partition obligation on SYS-REQ-110 enforces the
+        no-silent-replacement invariant henceforth.
+    reason: |
+        Fixed in parser.go:Set — the array-append guard condition was
+        `data[subObjOff] == '{'` (only matching arrays whose first element
+        is an object); corrected to `data[subObjOff] != ']'` (any non-empty
+        array).
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-110
+    obligation: element_type_partition
+    regression_tests:
+        - parser_test.go:TestSetBeyondLengthScalarArrayPreservesElements_SYS110
+    notes: parser.go:Set append-guard `!= ']'` prevents recurrence for all element types.
+affects:
+    - SYS-REQ-110
+    - SYS-REQ-009
+evidence:
+    reproduction: |
+        Set([]byte(`{"a":[1,2,3]}`), []byte(`99`), "a", "[9]")
+        BUG (pre-fix):  {"a":[99]}          — silent data loss
+        FIX (post-fix): {"a":[1,2,3,99]}    — append at end, SYS-REQ-110 honored
+    failing_partitions:
+        - number arrays (e.g. [1,2,3])
+        - string arrays (e.g. ["x","y"])
+        - bool arrays (e.g. [true,false])
+        - null arrays (e.g. [null,null])
+        - nested scalar arrays (e.g. [[1,2]])
+        - mixed arrays with scalar first element (e.g. [1,{...}])
+    passing_partitions_unchanged:
+        - object-first-element arrays (e.g. [{"x":1}]) — already worked
+        - empty arrays (e.g. []) — already worked
+        - in-range index Set (e.g. [0] on [1,2]) — unaffected
+root_cause:
+    missing_requirement: false
+    missing_test_partition: true
+    missing_mcdc_variable: false
+    notes: |
+        parser.go:Set, subpath-not-found branch: the condition guarding
+        "append to existing array" required `data[subObjOff] == '{'`,
+        limiting the append path to arrays whose first element is an object.
+        All other non-empty arrays fell through to the "replace container"
+        branch (object=true), destroying existing elements.
+history:
+    - at: "2026-07-27T06:31:10Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-27T06:35:00Z"
+      by: human:buger
+      action: dispositioned
+      reason: Fixed and covered by SYS-REQ-110 regression test.

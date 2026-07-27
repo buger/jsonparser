@@ -1,989 +1,1096 @@
 component: parser
 variables:
-- name: json_input_is_well_formed
-  type: bool
-  direction: input
-  description: True when the provided JSON byte slice is well formed for the lookup case under evaluation.
-- name: addressed_path_exists
-  type: bool
-  direction: input
-  description: True when the requested key path resolves to a value in the JSON input under evaluation.
-- name: key_path_is_provided
-  type: bool
-  direction: input
-  description: True when the caller supplies at least one key-path segment for the lookup case under evaluation.
-- name: json_input_is_empty
-  type: bool
-  direction: input
-  description: True when the provided lookup input is empty.
-- name: input_is_incomplete_during_lookup
-  type: bool
-  direction: input
-  description: True when the input is truncated or incomplete before Get can complete the addressed lookup.
-- name: returns_existing_path_lookup_result
-  type: bool
-  direction: output
-  description: True when Get returns the addressed value, value type, end offset, and no error for a well-formed existing path lookup.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_missing_path_result_for_well_formed_lookup
-  type: bool
-  direction: output
-  description: True when Get reports the defined not-found outcome for a well-formed lookup whose addressed path does not exist.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_parse_error_for_incomplete_lookup
-  type: bool
-  direction: output
-  description: True when Get reports a parse-related error for an incomplete or truncated lookup input.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_root_value_without_key_path
-  type: bool
-  direction: output
-  description: True when Get returns the closest complete root JSON value for a well-formed input when no key path is provided.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_missing_path_result_for_empty_input
-  type: bool
-  direction: output
-  description: True when Get reports the defined not-found outcome for an empty input with a provided key path.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: path_segment_is_object_key
-  type: bool
-  direction: input
-  description: True when the current lookup path segment is interpreted as an object-member key rather than as an array index.
-- name: segment_is_evaluated_at_current_scope
-  type: bool
-  direction: input
-  description: True when the current lookup segment is being matched against the current JSON structural scope rather than against a sibling or deeper subtree.
-- name: path_segment_is_array_index
-  type: bool
-  direction: input
-  description: True when the current lookup path segment is interpreted as an array index.
-- name: array_index_segment_is_valid
-  type: bool
-  direction: input
-  description: True when the current array-index path segment has valid index syntax.
-- name: array_index_is_in_bounds
-  type: bool
-  direction: input
-  description: True when the addressed array index is within the bounds of the addressed array.
-  data_constraint:
-    domain: integer
-    condition: index >= 0 && index < array_length
-    parameters:
-    - name: index
+    - name: json_input_is_well_formed
+      type: bool
+      direction: input
+      description: True when the provided JSON byte slice is well formed for the lookup case under evaluation.
+    - name: addressed_path_exists
+      type: bool
+      direction: input
+      description: True when the requested key path resolves to a value in the JSON input under evaluation.
+    - name: key_path_is_provided
+      type: bool
+      direction: input
+      description: True when the caller supplies at least one key-path segment for the lookup case under evaluation.
+    - name: json_input_is_empty
+      type: bool
+      direction: input
+      description: True when the provided lookup input is empty.
+    - name: input_is_incomplete_during_lookup
+      type: bool
+      direction: input
+      description: True when the input is truncated or incomplete before Get can complete the addressed lookup.
+    - name: returns_existing_path_lookup_result
+      type: bool
+      direction: output
+      description: True when Get returns the addressed value, value type, end offset, and no error for a well-formed existing path lookup.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_missing_path_result_for_well_formed_lookup
+      type: bool
+      direction: output
+      description: True when Get reports the defined not-found outcome for a well-formed lookup whose addressed path does not exist.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_parse_error_for_incomplete_lookup
+      type: bool
+      direction: output
+      description: True when Get reports a parse-related error for an incomplete or truncated lookup input.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_root_value_without_key_path
+      type: bool
+      direction: output
+      description: True when Get returns the closest complete root JSON value for a well-formed input when no key path is provided.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_missing_path_result_for_empty_input
+      type: bool
+      direction: output
+      description: True when Get reports the defined not-found outcome for an empty input with a provided key path.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: path_segment_is_object_key
+      type: bool
+      direction: input
+      description: True when the current lookup path segment is interpreted as an object-member key rather than as an array index.
+    - name: segment_is_evaluated_at_current_scope
+      type: bool
+      direction: input
+      description: True when the current lookup segment is being matched against the current JSON structural scope rather than against a sibling or deeper subtree.
+    - name: path_segment_is_array_index
+      type: bool
+      direction: input
+      description: True when the current lookup path segment is interpreted as an array index.
+    - name: array_index_segment_is_valid
+      type: bool
+      direction: input
+      description: True when the current array-index path segment has valid index syntax.
+    - name: array_index_is_in_bounds
+      type: bool
+      direction: input
+      description: True when the addressed array index is within the bounds of the addressed array.
+      data_constraint:
+        domain: integer
+        condition: index >= 0 && index < array_length
+        parameters:
+            - name: index
+              type: int
+            - name: array_length
+              type: int
+              constraint: '>= 0'
+    - name: array_index_is_out_of_bounds
+      type: bool
+      direction: input
+      description: True when the addressed array index exceeds the bounds of the addressed array.
+      data_constraint:
+        domain: integer
+        condition: index < 0 || index >= array_length
+        parameters:
+            - name: index
+              type: int
+            - name: array_length
+              type: int
+              constraint: '>= 0'
+    - name: escaped_json_object_key_is_present
+      type: bool
+      direction: input
+      description: True when the addressed object member key is encoded with JSON escape sequences in the payload.
+    - name: decoded_path_segment_matches_escaped_key
+      type: bool
+      direction: input
+      description: True when the decoded lookup path segment matches the logical value of an escaped JSON object key.
+    - name: addressed_value_is_string
+      type: bool
+      direction: input
+      description: True when the addressed successful lookup value is a JSON string token.
+    - name: addressed_value_is_number
+      type: bool
+      direction: input
+      description: True when the addressed value is a JSON number token.
+    - name: addressed_value_is_boolean
+      type: bool
+      direction: input
+      description: True when the addressed value is a JSON boolean token.
+    - name: returns_value_from_current_scope_object_key
+      type: bool
+      direction: output
+      description: True when Get resolves the requested object-member path segment only against the current structural scope and returns that value.
+    - name: returns_value_from_in_bounds_array_index
+      type: bool
+      direction: output
+      description: True when Get resolves a valid in-bounds array-index path segment and returns the addressed element.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_invalid_array_index_not_found
+      type: bool
+      direction: output
+      description: True when Get reports the defined not-found outcome for a malformed array-index path segment.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_oob_array_index_not_found
+      type: bool
+      direction: output
+      description: True when Get reports the defined not-found outcome for a valid but out-of-bounds array index.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_value_from_decoded_escaped_key
+      type: bool
+      direction: output
+      description: True when Get resolves an escaped JSON object key by comparing the decoded path segment to the logical key value.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: returns_unquoted_raw_string_contents
+      type: bool
+      direction: output
+      description: True when Get returns JSON string contents without surrounding quotes and without JSON unescaping.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: malformed_input_outside_addressed_token
+      type: bool
+      direction: input
+      description: True when malformed JSON appears outside the addressed token path rather than inside the token that lookup is trying to return.
+    - name: addressed_token_can_be_isolated
+      type: bool
+      direction: input
+      description: True when Get can still isolate a complete addressed token or determine lookup absence despite malformed input elsewhere in the document.
+    - name: returns_best_effort_lookup_result
+      type: bool
+      direction: output
+      description: True when Get preserves the corresponding success or not-found lookup result despite malformed input outside the addressed token path.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: addressed_token_shape_is_invalid
+      type: bool
+      direction: input
+      description: True when the addressed token cannot be classified as string, object, array, number, boolean, or null.
+    - name: returns_value_type_error
+      type: bool
+      direction: output
+      description: True when Get returns a value-type classification error for an invalid addressed token shape.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: raw_string_token_is_well_formed
+      type: bool
+      direction: input
+      description: True when the addressed raw JSON string token is well formed and can be decoded.
+    - name: returns_getstring_decoded_value
+      type: bool
+      direction: output
+      description: True when GetString returns the addressed value as a decoded Go string.
+    - name: raw_number_token_is_integer_parseable
+      type: bool
+      direction: input
+      description: True when the addressed JSON number token can be parsed as an int64 value.
+    - name: returns_getint_value
+      type: bool
+      direction: output
+      description: True when GetInt returns the addressed value as an int64.
+    - name: raw_number_token_is_float_parseable
+      type: bool
+      direction: input
+      description: True when the addressed JSON number token can be parsed as a float64 value.
+    - name: returns_getfloat_value
+      type: bool
+      direction: output
+      description: True when GetFloat returns the addressed value as a float64.
+    - name: raw_boolean_token_is_well_formed
+      type: bool
+      direction: input
+      description: True when the addressed JSON boolean token is a valid `true` or `false` literal.
+    - name: returns_getboolean_value
+      type: bool
+      direction: output
+      description: True when GetBoolean returns the addressed value as a Go bool.
+    - name: addressed_array_is_well_formed
+      type: bool
+      direction: input
+      description: True when ArrayEach is operating on a well-formed addressed JSON array.
+    - name: addressed_array_is_empty
+      type: bool
+      direction: input
+      description: True when ArrayEach is operating on an addressed array that contains no elements.
+    - name: array_callback_receives_elements_in_order
+      type: bool
+      direction: output
+      description: True when ArrayEach invokes the callback for each addressed array element in encounter order.
+    - name: empty_array_produces_no_callbacks
+      type: bool
+      direction: output
+      description: True when ArrayEach emits no callbacks for a well-formed empty addressed array.
+    - name: malformed_array_input_returns_error
+      type: bool
+      direction: output
+      description: True when ArrayEach returns an error for malformed or unusable array input.
+    - name: addressed_object_is_well_formed
+      type: bool
+      direction: input
+      description: True when ObjectEach is operating on a well-formed addressed JSON object.
+    - name: addressed_object_is_empty
+      type: bool
+      direction: input
+      description: True when ObjectEach is operating on an addressed object that contains no entries.
+    - name: object_callback_receives_entries
+      type: bool
+      direction: output
+      description: True when ObjectEach invokes the callback with the correct key, value, and value-type tuple for each addressed object entry.
+    - name: object_callback_error_is_returned
+      type: bool
+      direction: output
+      description: True when ObjectEach returns an error produced by the callback instead of swallowing it.
+    - name: empty_object_produces_no_entries
+      type: bool
+      direction: output
+      description: True when ObjectEach emits no entry callbacks for a well-formed empty addressed object.
+    - name: malformed_object_input_returns_error
+      type: bool
+      direction: output
+      description: True when ObjectEach returns an error for malformed or unusable addressed object input.
+    - name: object_callback_returns_error
+      type: bool
+      direction: input
+      description: True when the callback supplied to ObjectEach returns an error during iteration.
+    - name: multipath_requests_are_provided
+      type: bool
+      direction: input
+      description: True when EachKey is called with one or more requested key paths.
+    - name: eachkey_callback_receives_found_values
+      type: bool
+      direction: output
+      description: True when EachKey invokes the callback with the value and type for each requested path that is found during the scan.
+    - name: missing_multipath_request_does_not_emit_callback
+      type: bool
+      direction: output
+      description: True when EachKey does not emit a found-value callback for a requested path that is absent.
+    - name: eachkey_malformed_input_returns_error
+      type: bool
+      direction: output
+      description: True when EachKey surfaces an error for malformed or unusable input during the scan.
+    - name: eachkey_completes_requested_scan
+      type: bool
+      direction: output
+      description: True when EachKey completes the requested multi-path scan and stops once the requested results have been determined.
+    - name: set_path_is_provided
+      type: bool
+      direction: input
+      description: True when Set is called with at least one mutation path segment.
+      data_constraint:
+        domain: integer
+        condition: set_path_segment_count > 0
+        parameters:
+            - name: set_path_segment_count
+              type: int
+              constraint: '>= 0'
+    - name: set_target_exists
+      type: bool
+      direction: input
+      description: True when the full addressed Set path already exists in the input JSON.
+    - name: set_creates_missing_path
+      type: bool
+      direction: output
+      description: True when Set creates the missing addressed path inside a valid target container.
+    - name: set_returns_updated_document
+      type: bool
+      direction: output
+      description: True when Set returns the updated JSON document for the addressed mutation case.
+    - name: set_returns_not_found_error
+      type: bool
+      direction: output
+      description: True when Set returns `KeyPathNotFoundError` because the requested mutation path is not usable for the provided input.
+    - name: delete_path_is_provided
+      type: bool
+      direction: input
+      description: True when Delete is called with at least one path segment.
+    - name: delete_returns_empty_document_without_path
+      type: bool
+      direction: output
+      description: True when Delete returns an empty byte slice because no path segment was provided.
+    - name: delete_target_exists
+      type: bool
+      direction: input
+      description: True when the addressed Delete target exists and can be isolated in the input JSON.
+    - name: delete_input_is_unusable_for_requested_path
+      type: bool
+      direction: input
+      description: True when Delete cannot safely resolve the requested path because the input is malformed, truncated, or otherwise unusable for that deletion request.
+    - name: delete_returns_document_without_target
+      type: bool
+      direction: output
+      description: True when Delete returns the JSON document with the addressed value removed.
+    - name: delete_preserves_input_when_target_missing
+      type: bool
+      direction: output
+      description: True when Delete leaves the input unchanged because the addressed target is missing in otherwise usable input.
+    - name: delete_returns_original_input_on_unusable_input
+      type: bool
+      direction: output
+      description: True when Delete returns the original byte payload unchanged because the input is unusable for the requested deletion.
+    - name: delete_completes_without_panic
+      type: bool
+      direction: output
+      description: True when Delete completes the requested call path without panicking.
+    - name: returns_unsafe_string_view
+      type: bool
+      direction: output
+      description: True when GetUnsafeString returns the addressed raw value bytes mapped directly as a Go string without JSON unescaping.
+    - name: raw_boolean_literal_is_valid
+      type: bool
+      direction: input
+      description: True when ParseBoolean receives a valid boolean literal token.
+    - name: returns_parseboolean_value
+      type: bool
+      direction: output
+      description: True when ParseBoolean returns the corresponding Go bool value.
+    - name: returns_parseboolean_error
+      type: bool
+      direction: output
+      description: True when ParseBoolean returns the documented malformed-value error for an invalid boolean token.
+    - name: raw_float_token_is_well_formed
+      type: bool
+      direction: input
+      description: True when ParseFloat receives a well-formed floating-point number token.
+    - name: returns_parsefloat_value
+      type: bool
+      direction: output
+      description: True when ParseFloat returns the corresponding float64 value.
+    - name: returns_parsefloat_error
+      type: bool
+      direction: output
+      description: True when ParseFloat returns the documented malformed-value error for a malformed numeric token.
+    - name: raw_string_literal_is_well_formed
+      type: bool
+      direction: input
+      description: True when ParseString receives a well-formed raw JSON string literal body.
+    - name: returns_parsestring_value
+      type: bool
+      direction: output
+      description: True when ParseString returns the corresponding decoded Go string value.
+    - name: returns_parsestring_error
+      type: bool
+      direction: output
+      description: True when ParseString returns the documented malformed-value error for a malformed encoded string literal.
+    - name: raw_int_token_is_well_formed
+      type: bool
+      direction: input
+      description: True when ParseInt receives a syntactically well-formed integer token that does not overflow int64.
+    - name: raw_int_token_overflows_int64
+      type: bool
+      direction: input
+      description: True when ParseInt receives an integer token whose magnitude exceeds the supported int64 range.
+    - name: returns_parseint_value
+      type: bool
+      direction: output
+      description: True when ParseInt returns the corresponding int64 value.
+    - name: returns_parseint_overflow_error
+      type: bool
+      direction: output
+      description: True when ParseInt returns the documented overflow error for an integer token outside the supported int64 range.
+    - name: returns_parseint_malformed_error
+      type: bool
+      direction: output
+      description: True when ParseInt returns the documented malformed-value error for a non-integer or otherwise malformed token.
+    - name: input_is_truncated_at_value_boundary
+      type: bool
+      direction: input
+      description: True when the JSON input is truncated at a value boundary where the value token ends at EOF with no closing delimiter (e.g., '{"a":1' with no closing brace).
+    - name: returns_error_for_truncated_value_boundary
+      type: bool
+      direction: output
+      description: True when Get returns a parse-related error or not-found result for input truncated at a value boundary, without panicking.
+    - name: input_is_truncated_mid_structure
+      type: bool
+      direction: input
+      description: True when the JSON input is truncated in the middle of a structural element where an object or array is opened but never closed.
+    - name: returns_error_for_truncated_mid_structure
+      type: bool
+      direction: output
+      description: True when Get returns a parse-related error for input truncated mid-structure, without panicking.
+    - name: input_is_truncated_mid_key
+      type: bool
+      direction: input
+      description: True when the JSON input is truncated in the middle of a key string where the key is not terminated by a closing quote.
+    - name: returns_error_for_truncated_mid_key
+      type: bool
+      direction: output
+      description: True when Get returns a parse-related error for input truncated mid-key, without panicking.
+    - name: tokenEnd_returns_len_data
+      type: bool
+      direction: input
+      description: True when the internal helper tokenEnd returns len(data) as a sentinel value indicating no delimiter was found in the remaining input.
+    - name: caller_bounds_checks_tokenEnd_sentinel
+      type: bool
+      direction: output
+      description: True when all callers of tokenEnd treat the len(data) sentinel as an end-of-input condition and do not use it as an unchecked array index.
+    - name: stringEnd_returns_negative_one
+      type: bool
+      direction: input
+      description: True when the internal helper stringEnd returns -1 indicating no closing quote was found.
+    - name: caller_handles_stringEnd_sentinel
+      type: bool
+      direction: output
+      description: True when all callers of stringEnd treat -1 as a malformed-string condition and do not proceed with normal value extraction.
+    - name: blockEnd_returns_negative_one
+      type: bool
+      direction: input
+      description: True when the internal helper blockEnd returns -1 indicating no matching closing bracket or brace was found.
+    - name: caller_handles_blockEnd_sentinel
+      type: bool
+      direction: output
+      description: True when all callers of blockEnd treat -1 as a malformed-structure condition and do not proceed with normal value extraction.
+    - name: path_segment_is_negative_array_index
+      type: bool
+      direction: input
+      description: True when the current path segment is a negative array index such as "[-1]".
+    - name: returns_not_found_for_negative_array_index
+      type: bool
+      direction: output
+      description: True when Get returns the defined not-found result for a negative array index because negative indexing is not supported.
+    - name: delete_input_is_truncated_at_value_boundary
+      type: bool
+      direction: input
+      description: True when Delete is called on input truncated at a value boundary where tokenEnd would return len(data) as a sentinel.
+    - name: delete_returns_original_input_on_truncated_value
+      type: bool
+      direction: output
+      description: True when Delete returns the original byte payload unchanged for input truncated at a value boundary.
+    - name: delete_completes_without_panic_on_truncated_value
+      type: bool
+      direction: output
+      description: True when Delete completes without panicking on input truncated at a value boundary.
+    - name: delete_discards_internalGet_error
+      type: bool
+      direction: input
+      description: True when Delete discards an error returned by internalGet (assigns to underscore) instead of using it to short-circuit.
+    - name: delete_propagates_internalGet_error
+      type: bool
+      direction: output
+      description: True when Delete uses an error returned by internalGet to short-circuit to the safe fallback path.
+    - name: delete_array_input_is_truncated
+      type: bool
+      direction: input
+      description: True when Delete is called with an array-element path on input where the array is truncated.
+    - name: delete_returns_original_input_on_truncated_array
+      type: bool
+      direction: output
+      description: True when Delete returns the original byte payload unchanged for truncated array input.
+    - name: delete_completes_without_panic_on_truncated_array
+      type: bool
+      direction: output
+      description: True when Delete completes without panicking on truncated array input.
+    - name: set_input_is_truncated
+      type: bool
+      direction: input
+      description: True when Set is called on truncated JSON input where path resolution encounters incomplete structural elements.
+    - name: set_returns_error_for_truncated_input
+      type: bool
+      direction: output
+      description: True when Set returns an error for truncated input rather than producing corrupt output or panicking.
+    - name: array_callback_returns_error
+      type: bool
+      direction: input
+      description: True when the Get call for an array element within ArrayEach returns an error.
+    - name: array_callback_error_is_propagated
+      type: bool
+      direction: output
+      description: True when ArrayEach propagates the element-level Get error to the caller.
+    - name: array_is_truncated_mid_element
+      type: bool
+      direction: input
+      description: True when ArrayEach encounters an array element that is truncated or incomplete.
+    - name: returns_error_for_truncated_array_element
+      type: bool
+      direction: output
+      description: True when ArrayEach returns a parse-related error for a truncated array element, without panicking.
+    - name: object_is_truncated_mid_entry
+      type: bool
+      direction: input
+      description: True when ObjectEach encounters an object entry whose value is truncated or incomplete.
+    - name: returns_error_for_truncated_object_entry
+      type: bool
+      direction: output
+      description: True when ObjectEach returns a parse-related error for a truncated object entry, without panicking.
+    - name: array_has_malformed_delimiter
+      type: bool
+      direction: input
+      description: True when ArrayEach encounters a malformed delimiter between array elements where a comma is expected but absent or wrong.
+    - name: returns_error_for_malformed_array_delimiter
+      type: bool
+      direction: output
+      description: True when ArrayEach returns MalformedArrayError for a malformed delimiter between array elements.
+    - name: delete_input_is_truncated_mid_structure
+      type: bool
+      direction: input
+      description: True when Delete is called on input truncated mid-structure with unclosed nested objects or arrays.
+    - name: delete_returns_original_input_on_truncated_structure
+      type: bool
+      direction: output
+      description: True when Delete returns the original byte payload unchanged for mid-structure truncated input.
+    - name: delete_completes_without_panic_on_truncated_structure
+      type: bool
+      direction: output
+      description: True when Delete completes without panicking on mid-structure truncated input.
+    - name: raw_boolean_literal_is_partial
+      type: bool
+      direction: input
+      description: True when ParseBoolean receives a partial boolean literal such as "tru" or "fals".
+    - name: returns_error_for_partial_boolean_literal
+      type: bool
+      direction: output
+      description: True when ParseBoolean returns MalformedValueError for a partial boolean literal.
+    - name: raw_int_token_is_at_int64_max_boundary
+      type: bool
+      direction: input
+      description: True when ParseInt receives an integer token at the exact int64 boundary values (max 9223372036854775807 or min -9223372036854775808).
+    - name: returns_correct_value_at_int64_boundary
+      type: bool
+      direction: output
+      description: True when ParseInt returns the correct int64 value at the exact boundary without overflow error.
+    - name: raw_int_token_is_at_int64_max_plus_one
+      type: bool
+      direction: input
+      description: True when ParseInt receives an integer token exactly one beyond the int64 range (9223372036854775808 or -9223372036854775809).
+    - name: returns_overflow_at_int64_max_plus_one
+      type: bool
+      direction: output
+      description: True when ParseInt returns OverflowIntegerError for an integer token exactly one beyond the int64 range.
+    - name: raw_string_has_truncated_escape_sequence
+      type: bool
+      direction: input
+      description: True when ParseString receives a string containing a truncated escape sequence such as a lone backslash or incomplete unicode escape like '\u00'.
+    - name: returns_error_for_truncated_escape_sequence
+      type: bool
+      direction: output
+      description: True when ParseString returns MalformedValueError for a truncated escape sequence.
+    - name: raw_string_has_missing_low_surrogate
+      type: bool
+      direction: input
+      description: True when ParseString encounters a UTF-16 high surrogate escape not followed by a valid low surrogate escape.
+    - name: substitutes_replacement_for_missing_low_surrogate
+      type: bool
+      direction: output
+      description: True when ParseString substitutes U+FFFD for a lone high surrogate, matching encoding/json behavior.
+    - name: raw_string_has_invalid_low_surrogate
+      type: bool
+      direction: input
+      description: True when ParseString encounters a UTF-16 high surrogate followed by a unicode escape whose value is below the low surrogate range.
+    - name: substitutes_replacement_for_invalid_low_surrogate
+      type: bool
+      direction: output
+      description: True when ParseString substitutes U+FFFD for a high surrogate followed by an invalid low surrogate, matching encoding/json behavior.
+    - name: raw_string_has_backslash_at_end
+      type: bool
+      direction: input
+      description: True when ParseString encounters a string ending with a lone backslash with no character after it.
+    - name: returns_error_for_backslash_at_end
+      type: bool
+      direction: output
+      description: True when ParseString returns MalformedValueError for a string ending with a lone backslash.
+    - name: parseint_input_is_empty
+      type: bool
+      direction: input
+      description: True when ParseInt receives an empty byte slice.
+    - name: returns_parseint_malformed_for_empty
+      type: bool
+      direction: output
+      description: True when ParseInt returns MalformedValueError for an empty byte slice.
+    - name: parsefloat_input_is_empty
+      type: bool
+      direction: input
+      description: True when ParseFloat receives an empty byte slice.
+    - name: returns_parsefloat_malformed_for_empty
+      type: bool
+      direction: output
+      description: True when ParseFloat returns MalformedValueError for an empty byte slice.
+    - name: parseboolean_input_is_empty
+      type: bool
+      direction: input
+      description: True when ParseBoolean receives an empty byte slice.
+    - name: returns_parseboolean_malformed_for_empty
+      type: bool
+      direction: output
+      description: True when ParseBoolean returns MalformedValueError for an empty byte slice.
+    - name: parsestring_input_is_empty
+      type: bool
+      direction: input
+      description: True when ParseString receives an empty byte slice.
+    - name: returns_parsestring_identity_for_empty
+      type: bool
+      direction: output
+      description: True when ParseString returns an empty Go string without error for an empty byte slice.
+    - name: set_path_points_beyond_eof
+      type: bool
+      direction: input
+      description: True when Set is called with a path that resolves to a location beyond the end of available data.
+    - name: set_returns_error_for_path_beyond_eof
+      type: bool
+      direction: output
+      description: True when Set returns an error for a path that resolves beyond the end of available data.
+    - name: set_target_is_nested_in_existing_structure
+      type: bool
+      direction: input
+      description: True when Set is called with a multi-level path where intermediate levels exist but the leaf does not.
+    - name: set_performs_nested_mutation_correctly
+      type: bool
+      direction: output
+      description: True when Set correctly creates missing nested structure and inserts the value at the correct location.
+    - name: set_called_without_path
+      type: bool
+      direction: input
+      description: True when Set is called without any key path segments.
+      data_constraint:
+        domain: integer
+        condition: set_path_segment_count == 0
+        parameters:
+            - name: set_path_segment_count
+              type: int
+              constraint: '>= 0'
+    - name: set_returns_error_without_path
+      type: bool
+      direction: output
+      description: True when Set returns KeyPathNotFoundError because no path segment was provided.
+    - name: getstring_input_is_malformed
+      type: bool
+      direction: input
+      description: True when GetString is called on malformed input where the underlying Get call returns an error.
+    - name: returns_getstring_error_for_malformed
+      type: bool
+      direction: output
+      description: True when GetString propagates the error from Get for malformed input.
+    - name: getstring_value_has_truncated_escape
+      type: bool
+      direction: input
+      description: True when GetString addresses a JSON string value containing a truncated escape sequence.
+    - name: returns_getstring_error_for_truncated_escape
+      type: bool
+      direction: output
+      description: True when GetString returns an error from ParseString for a truncated escape sequence.
+    - name: getstring_addressed_value_is_not_string
+      type: bool
+      direction: input
+      description: True when GetString addresses a value that is not a JSON string.
+    - name: returns_getstring_type_mismatch_error
+      type: bool
+      direction: output
+      description: True when GetString returns a type-mismatch error for a non-string addressed value.
+    - name: getstring_input_is_empty
+      type: bool
+      direction: input
+      description: True when GetString is called on empty input.
+    - name: returns_getstring_error_for_empty_input
+      type: bool
+      direction: output
+      description: True when GetString returns not-found or error for empty input.
+    - name: getint_input_is_malformed
+      type: bool
+      direction: input
+      description: True when GetInt is called on malformed input where the underlying Get call returns an error.
+    - name: returns_getint_error_for_malformed
+      type: bool
+      direction: output
+      description: True when GetInt propagates the error from Get for malformed input.
+    - name: getint_value_overflows_int64
+      type: bool
+      direction: input
+      description: True when GetInt addresses a JSON number token whose magnitude exceeds the int64 range.
+    - name: returns_getint_overflow_error
+      type: bool
+      direction: output
+      description: True when GetInt returns the documented overflow error for a value exceeding int64 range.
+    - name: getint_addressed_value_is_not_number
+      type: bool
+      direction: input
+      description: True when GetInt addresses a value that is not a JSON number.
+    - name: returns_getint_type_mismatch_error
+      type: bool
+      direction: output
+      description: True when GetInt returns a type-mismatch error for a non-number addressed value.
+    - name: getint_input_is_empty
+      type: bool
+      direction: input
+      description: True when GetInt is called on empty input.
+    - name: returns_getint_error_for_empty_input
+      type: bool
+      direction: output
+      description: True when GetInt returns not-found or error for empty input.
+    - name: getboolean_addressed_value_is_partial_literal
+      type: bool
+      direction: input
+      description: True when GetBoolean addresses a value that is a partial boolean literal due to truncation.
+    - name: returns_getboolean_error_for_partial
+      type: bool
+      direction: output
+      description: True when GetBoolean returns an error from type classification or ParseBoolean for a partial boolean literal.
+    - name: getunsafestring_input_is_malformed
+      type: bool
+      direction: input
+      description: True when GetUnsafeString is called on malformed input where the underlying Get call returns an error.
+    - name: returns_getunsafestring_error_for_malformed
+      type: bool
+      direction: output
+      description: True when GetUnsafeString propagates the error from Get for malformed input.
+    - name: getunsafestring_input_is_empty
+      type: bool
+      direction: input
+      description: True when GetUnsafeString is called on empty input.
+    - name: returns_getunsafestring_error_for_empty
+      type: bool
+      direction: output
+      description: True when GetUnsafeString returns not-found or error for empty input.
+    - name: getunsafestring_input_is_truncated_at_value_boundary
+      type: bool
+      direction: input
+      description: True when GetUnsafeString is called on input truncated at a value boundary.
+    - name: returns_getunsafestring_error_for_truncated_value
+      type: bool
+      direction: output
+      description: True when GetUnsafeString propagates the error from Get for input truncated at a value boundary.
+    - name: arrayeach_input_is_truncated_at_value_boundary
+      type: bool
+      direction: input
+      description: True when ArrayEach is called on input truncated at a value boundary.
+    - name: returns_error_for_arrayeach_truncated_value
+      type: bool
+      direction: output
+      description: True when ArrayEach returns an error for input truncated at a value boundary, without panicking.
+    - name: objecteach_input_is_truncated_mid_structure
+      type: bool
+      direction: input
+      description: True when ObjectEach is called on input truncated mid-structure where the object or a nested structure is not closed.
+    - name: returns_error_for_objecteach_truncated_structure
+      type: bool
+      direction: output
+      description: True when ObjectEach returns an error for truncated mid-structure input, without panicking.
+    - name: eachkey_tokenEnd_sentinel_reached
+      type: bool
+      direction: input
+      description: True when EachKey encounters a tokenEnd sentinel value during multi-path scanning.
+    - name: eachkey_handles_sentinel_safely
+      type: bool
+      direction: output
+      description: True when EachKey treats the tokenEnd sentinel as an end-of-input condition and returns safely.
+    - name: get_called_twice_with_same_input
+      type: bool
+      direction: input
+      description: True when Get is called twice with identical JSON input and identical key paths.
+    - name: get_returns_identical_results
+      type: bool
+      direction: output
+      description: True when Get returns identical value slices, value types, offsets, and error values on both calls.
+    - name: get_called_on_valid_input
+      type: bool
+      direction: input
+      description: True when Get is called on a non-nil JSON byte slice.
+    - name: get_does_not_mutate_input
+      type: bool
+      direction: output
+      description: True when Get does not mutate the input byte slice during the call.
+    - name: get_input_is_nil
+      type: bool
+      direction: input
+      description: True when Get is called with a nil byte slice as input.
+    - name: get_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when Get returns a not-found or error result without panicking for nil input.
+    - name: get_input_is_deeply_nested
+      type: bool
+      direction: input
+      description: True when Get is called on JSON with deeply nested structures (64+ levels).
+    - name: get_handles_deep_nesting_safely
+      type: bool
+      direction: output
+      description: True when Get returns a correct result or error for deeply nested input without panicking.
+    - name: getstring_called_twice_with_same_input
+      type: bool
+      direction: input
+      description: True when GetString is called twice with identical JSON input and identical key paths.
+    - name: getstring_returns_identical_results
+      type: bool
+      direction: output
+      description: True when GetString returns identical decoded string values and error values on both calls.
+    - name: getstring_input_is_nil
+      type: bool
+      direction: input
+      description: True when GetString is called with a nil byte slice as input.
+    - name: getstring_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when GetString returns an empty string and error without panicking for nil input.
+    - name: getstring_input_has_escaped_unicode
+      type: bool
+      direction: input
+      description: True when GetString addresses a JSON string containing escaped Unicode sequences.
+    - name: getstring_decodes_and_preserves_semantics
+      type: bool
+      direction: output
+      description: True when GetString decodes escaped Unicode to correct Go string runes preserving semantic equivalence.
+    - name: getstring_input_has_unicode_edge_cases
+      type: bool
+      direction: input
+      description: True when GetString addresses a JSON string containing Unicode edge cases like BOM or ZWJ.
+    - name: getstring_handles_unicode_edges_safely
+      type: bool
+      direction: output
+      description: True when GetString handles Unicode edge cases correctly or returns a well-defined error.
+    - name: typed_getter_called_twice_with_same_input
+      type: bool
+      direction: input
+      description: True when GetInt, GetFloat, or GetBoolean is called twice with identical input.
+    - name: typed_getter_returns_identical_results
+      type: bool
+      direction: output
+      description: True when typed getters return identical typed values and error values on both calls.
+    - name: typed_getter_input_is_nil
+      type: bool
+      direction: input
+      description: True when GetInt, GetFloat, or GetBoolean is called with a nil byte slice.
+    - name: typed_getter_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when typed getters return zero value and error without panicking for nil input.
+    - name: getint_input_has_large_number_edge_case
+      type: bool
+      direction: input
+      description: True when GetInt addresses a JSON number with edge-case formatting like leading zeros or max-length digit strings.
+    - name: getint_handles_large_numbers_safely
+      type: bool
+      direction: output
+      description: True when GetInt returns correct int64 or well-defined error for large-number edge cases.
+    - name: traversal_called_twice_with_same_input
+      type: bool
+      direction: input
+      description: True when ArrayEach, ObjectEach, or EachKey is called twice with identical input.
+    - name: traversal_returns_identical_results
+      type: bool
+      direction: output
+      description: True when traversal callbacks are invoked in the same order with same values on both calls.
+    - name: traversal_input_is_nil
+      type: bool
+      direction: input
+      description: True when ArrayEach, ObjectEach, or EachKey is called with a nil byte slice.
+    - name: traversal_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when traversal returns error without invoking callbacks and without panicking for nil input.
+    - name: traversal_input_is_deeply_nested
+      type: bool
+      direction: input
+      description: True when ArrayEach or ObjectEach is called on JSON with deeply nested structures.
+    - name: traversal_handles_deep_nesting_safely
+      type: bool
+      direction: output
+      description: True when traversal handles deeply nested input safely without panicking or stack overflowing.
+    - name: set_applied_twice_with_same_args
+      type: bool
+      direction: input
+      description: True when Set is called twice on the same input with the same value and key path.
+    - name: set_second_call_produces_same_result
+      type: bool
+      direction: output
+      description: True when the second Set call produces the same output as the first application.
+    - name: mutation_input_is_nil
+      type: bool
+      direction: input
+      description: True when Set or Delete is called with a nil byte slice.
+    - name: mutation_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when Set returns error and Delete returns nil/empty without panicking for nil input.
+    - name: mutation_input_has_unicode_keys
+      type: bool
+      direction: input
+      description: True when Set or Delete is called with key paths containing Unicode characters.
+    - name: mutation_handles_unicode_keys_safely
+      type: bool
+      direction: output
+      description: True when Set or Delete correctly resolves Unicode key paths or returns well-defined error.
+    - name: getunsafestring_called_twice_with_same_input
+      type: bool
+      direction: input
+      description: True when GetUnsafeString is called twice with identical input.
+    - name: getunsafestring_returns_identical_results
+      type: bool
+      direction: output
+      description: True when GetUnsafeString returns identical raw string values on both calls.
+    - name: getunsafestring_input_is_nil
+      type: bool
+      direction: input
+      description: True when GetUnsafeString is called with a nil byte slice.
+    - name: getunsafestring_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when GetUnsafeString returns empty string and error without panicking for nil input.
+    - name: getunsafestring_input_has_unicode_edge_cases
+      type: bool
+      direction: input
+      description: True when GetUnsafeString addresses a value with Unicode edge cases.
+    - name: getunsafestring_handles_unicode_edges_safely
+      type: bool
+      direction: output
+      description: True when GetUnsafeString returns raw bytes as Go string without corruption for Unicode edge cases.
+    - name: parse_helper_called_twice_with_same_input
+      type: bool
+      direction: input
+      description: True when a Parse helper is called twice with identical byte input.
+    - name: parse_helper_returns_identical_results
+      type: bool
+      direction: output
+      description: True when Parse helpers return identical typed values and error values on both calls.
+    - name: parse_helper_input_is_nil
+      type: bool
+      direction: input
+      description: True when a Parse helper is called with a nil byte slice.
+    - name: parse_helper_returns_safe_result_for_nil
+      type: bool
+      direction: output
+      description: True when Parse helpers return zero value and error (or empty string) without panicking for nil input.
+    - name: parsestring_input_has_standard_escapes
+      type: bool
+      direction: input
+      description: True when ParseString input contains standard JSON escape sequences.
+    - name: parsestring_roundtrip_preserves_semantics
+      type: bool
+      direction: output
+      description: True when ParseString decoded string preserves semantic equivalence with original JSON encoding.
+    - name: parseint_input_has_edge_case_number
+      type: bool
+      direction: input
+      description: True when ParseInt receives an edge-case numeric token like negative zero or very long digit strings.
+    - name: parseint_handles_edge_numbers_safely
+      type: bool
+      direction: output
+      description: True when ParseInt returns correct int64 or well-defined error for edge-case numbers.
+    - name: array_index
       type: int
-    - name: array_length
+      direction: input
+      description: The array index N addressed by an array-index path component [N]. Unbounded above; the boundary of interest is N versus the current length of the addressed array.
+      range:
+        min: 0
+    - name: addressed_array_length
       type: int
-      constraint: '>= 0'
-- name: array_index_is_out_of_bounds
-  type: bool
-  direction: input
-  description: True when the addressed array index exceeds the bounds of the addressed array.
-  data_constraint:
-    domain: integer
-    condition: index < 0 || index >= array_length
-    parameters:
-    - name: index
+      direction: input
+      description: The current element count of the array addressed by an array-index path component during Set mutation.
+      proof_auxiliary: true
+      proof_auxiliary_reason: Domain-bound input that parameterizes the array_index partition data_constraints (in-bounds vs beyond-length) consumed by solver boundary analysis; not a direct FRETish operand.
+      range:
+        min: 0
+    - name: set_targets_array_index_beyond_length
+      type: bool
+      direction: input
+      description: True when Set addresses an array-index path component [N] where N >= the current length of the addressed array (the beyond-length partition of array_index).
+      data_constraint:
+        domain: integer
+        condition: array_index >= addressed_array_length
+        parameters:
+            - name: array_index
+              type: int
+              constraint: '>= 0'
+            - name: addressed_array_length
+              type: int
+              constraint: '>= 0'
+    - name: set_targets_array_index_within_length
+      type: bool
+      direction: input
+      description: True when Set addresses an array-index path component [N] where N < the current length of the addressed array (the in-bounds partition of array_index, complement of set_targets_array_index_beyond_length).
+      proof_auxiliary: true
+      proof_auxiliary_reason: Partition-witness variable that completes the array_index domain coverage (in-bounds vs beyond-length) so data_constraints_complete can prove the partition; not a direct FRETish operand.
+      data_constraint:
+        domain: integer
+        condition: array_index < addressed_array_length
+        parameters:
+            - name: array_index
+              type: int
+              constraint: '>= 0'
+            - name: addressed_array_length
+              type: int
+              constraint: '>= 0'
+    - name: set_appends_value_at_array_end
+      type: bool
+      direction: output
+      description: True when Set appends the value at the end of the addressed array (the new element's index becomes len(array)) and returns the mutated document, rather than overwriting an existing element or panicking.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: path_component_length
       type: int
-    - name: array_length
-      type: int
-      constraint: '>= 0'
-- name: escaped_json_object_key_is_present
-  type: bool
-  direction: input
-  description: True when the addressed object member key is encoded with JSON escape sequences in the payload.
-- name: decoded_path_segment_matches_escaped_key
-  type: bool
-  direction: input
-  description: True when the decoded lookup path segment matches the logical value of an escaped JSON object key.
-- name: addressed_value_is_string
-  type: bool
-  direction: input
-  description: True when the addressed successful lookup value is a JSON string token.
-- name: addressed_value_is_number
-  type: bool
-  direction: input
-  description: True when the addressed value is a JSON number token.
-- name: addressed_value_is_boolean
-  type: bool
-  direction: input
-  description: True when the addressed value is a JSON boolean token.
-- name: returns_value_from_current_scope_object_key
-  type: bool
-  direction: output
-  description: True when Get resolves the requested object-member path segment only against the current structural scope and returns that value.
-- name: returns_value_from_in_bounds_array_index
-  type: bool
-  direction: output
-  description: True when Get resolves a valid in-bounds array-index path segment and returns the addressed element.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_invalid_array_index_not_found
-  type: bool
-  direction: output
-  description: True when Get reports the defined not-found outcome for a malformed array-index path segment.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_oob_array_index_not_found
-  type: bool
-  direction: output
-  description: True when Get reports the defined not-found outcome for a valid but out-of-bounds array index.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_value_from_decoded_escaped_key
-  type: bool
-  direction: output
-  description: True when Get resolves an escaped JSON object key by comparing the decoded path segment to the logical key value.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: returns_unquoted_raw_string_contents
-  type: bool
-  direction: output
-  description: True when Get returns JSON string contents without surrounding quotes and without JSON unescaping.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: malformed_input_outside_addressed_token
-  type: bool
-  direction: input
-  description: True when malformed JSON appears outside the addressed token path rather than inside the token that lookup is trying to return.
-- name: addressed_token_can_be_isolated
-  type: bool
-  direction: input
-  description: True when Get can still isolate a complete addressed token or determine lookup absence despite malformed input elsewhere in the document.
-- name: returns_best_effort_lookup_result
-  type: bool
-  direction: output
-  description: True when Get preserves the corresponding success or not-found lookup result despite malformed input outside the addressed token path.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: addressed_token_shape_is_invalid
-  type: bool
-  direction: input
-  description: True when the addressed token cannot be classified as string, object, array, number, boolean, or null.
-- name: returns_value_type_error
-  type: bool
-  direction: output
-  description: True when Get returns a value-type classification error for an invalid addressed token shape.
-  properties:
-    merge: last_wins
-    idempotent: true
-    commutative: true
-- name: raw_string_token_is_well_formed
-  type: bool
-  direction: input
-  description: True when the addressed raw JSON string token is well formed and can be decoded.
-- name: returns_getstring_decoded_value
-  type: bool
-  direction: output
-  description: True when GetString returns the addressed value as a decoded Go string.
-- name: raw_number_token_is_integer_parseable
-  type: bool
-  direction: input
-  description: True when the addressed JSON number token can be parsed as an int64 value.
-- name: returns_getint_value
-  type: bool
-  direction: output
-  description: True when GetInt returns the addressed value as an int64.
-- name: raw_number_token_is_float_parseable
-  type: bool
-  direction: input
-  description: True when the addressed JSON number token can be parsed as a float64 value.
-- name: returns_getfloat_value
-  type: bool
-  direction: output
-  description: True when GetFloat returns the addressed value as a float64.
-- name: raw_boolean_token_is_well_formed
-  type: bool
-  direction: input
-  description: True when the addressed JSON boolean token is a valid `true` or `false` literal.
-- name: returns_getboolean_value
-  type: bool
-  direction: output
-  description: True when GetBoolean returns the addressed value as a Go bool.
-- name: addressed_array_is_well_formed
-  type: bool
-  direction: input
-  description: True when ArrayEach is operating on a well-formed addressed JSON array.
-- name: addressed_array_is_empty
-  type: bool
-  direction: input
-  description: True when ArrayEach is operating on an addressed array that contains no elements.
-- name: array_callback_receives_elements_in_order
-  type: bool
-  direction: output
-  description: True when ArrayEach invokes the callback for each addressed array element in encounter order.
-- name: empty_array_produces_no_callbacks
-  type: bool
-  direction: output
-  description: True when ArrayEach emits no callbacks for a well-formed empty addressed array.
-- name: malformed_array_input_returns_error
-  type: bool
-  direction: output
-  description: True when ArrayEach returns an error for malformed or unusable array input.
-- name: addressed_object_is_well_formed
-  type: bool
-  direction: input
-  description: True when ObjectEach is operating on a well-formed addressed JSON object.
-- name: addressed_object_is_empty
-  type: bool
-  direction: input
-  description: True when ObjectEach is operating on an addressed object that contains no entries.
-- name: object_callback_receives_entries
-  type: bool
-  direction: output
-  description: True when ObjectEach invokes the callback with the correct key, value, and value-type tuple for each addressed object entry.
-- name: object_callback_error_is_returned
-  type: bool
-  direction: output
-  description: True when ObjectEach returns an error produced by the callback instead of swallowing it.
-- name: empty_object_produces_no_entries
-  type: bool
-  direction: output
-  description: True when ObjectEach emits no entry callbacks for a well-formed empty addressed object.
-- name: malformed_object_input_returns_error
-  type: bool
-  direction: output
-  description: True when ObjectEach returns an error for malformed or unusable addressed object input.
-- name: object_callback_returns_error
-  type: bool
-  direction: input
-  description: True when the callback supplied to ObjectEach returns an error during iteration.
-- name: multipath_requests_are_provided
-  type: bool
-  direction: input
-  description: True when EachKey is called with one or more requested key paths.
-- name: eachkey_callback_receives_found_values
-  type: bool
-  direction: output
-  description: True when EachKey invokes the callback with the value and type for each requested path that is found during the scan.
-- name: missing_multipath_request_does_not_emit_callback
-  type: bool
-  direction: output
-  description: True when EachKey does not emit a found-value callback for a requested path that is absent.
-- name: eachkey_malformed_input_returns_error
-  type: bool
-  direction: output
-  description: True when EachKey surfaces an error for malformed or unusable input during the scan.
-- name: eachkey_completes_requested_scan
-  type: bool
-  direction: output
-  description: True when EachKey completes the requested multi-path scan and stops once the requested results have been determined.
-- name: set_path_is_provided
-  type: bool
-  direction: input
-  description: True when Set is called with at least one mutation path segment.
-  data_constraint:
-    domain: integer
-    condition: set_path_segment_count > 0
-    parameters:
-    - name: set_path_segment_count
-      type: int
-      constraint: '>= 0'
-- name: set_target_exists
-  type: bool
-  direction: input
-  description: True when the full addressed Set path already exists in the input JSON.
-- name: set_creates_missing_path
-  type: bool
-  direction: output
-  description: True when Set creates the missing addressed path inside a valid target container.
-- name: set_returns_updated_document
-  type: bool
-  direction: output
-  description: True when Set returns the updated JSON document for the addressed mutation case.
-- name: set_returns_not_found_error
-  type: bool
-  direction: output
-  description: True when Set returns `KeyPathNotFoundError` because the requested mutation path is not usable for the provided input.
-- name: delete_path_is_provided
-  type: bool
-  direction: input
-  description: True when Delete is called with at least one path segment.
-- name: delete_returns_empty_document_without_path
-  type: bool
-  direction: output
-  description: True when Delete returns an empty byte slice because no path segment was provided.
-- name: delete_target_exists
-  type: bool
-  direction: input
-  description: True when the addressed Delete target exists and can be isolated in the input JSON.
-- name: delete_input_is_unusable_for_requested_path
-  type: bool
-  direction: input
-  description: True when Delete cannot safely resolve the requested path because the input is malformed, truncated, or otherwise unusable for that deletion request.
-- name: delete_returns_document_without_target
-  type: bool
-  direction: output
-  description: True when Delete returns the JSON document with the addressed value removed.
-- name: delete_preserves_input_when_target_missing
-  type: bool
-  direction: output
-  description: True when Delete leaves the input unchanged because the addressed target is missing in otherwise usable input.
-- name: delete_returns_original_input_on_unusable_input
-  type: bool
-  direction: output
-  description: True when Delete returns the original byte payload unchanged because the input is unusable for the requested deletion.
-- name: delete_completes_without_panic
-  type: bool
-  direction: output
-  description: True when Delete completes the requested call path without panicking.
-- name: returns_unsafe_string_view
-  type: bool
-  direction: output
-  description: True when GetUnsafeString returns the addressed raw value bytes mapped directly as a Go string without JSON unescaping.
-- name: raw_boolean_literal_is_valid
-  type: bool
-  direction: input
-  description: True when ParseBoolean receives a valid boolean literal token.
-- name: returns_parseboolean_value
-  type: bool
-  direction: output
-  description: True when ParseBoolean returns the corresponding Go bool value.
-- name: returns_parseboolean_error
-  type: bool
-  direction: output
-  description: True when ParseBoolean returns the documented malformed-value error for an invalid boolean token.
-- name: raw_float_token_is_well_formed
-  type: bool
-  direction: input
-  description: True when ParseFloat receives a well-formed floating-point number token.
-- name: returns_parsefloat_value
-  type: bool
-  direction: output
-  description: True when ParseFloat returns the corresponding float64 value.
-- name: returns_parsefloat_error
-  type: bool
-  direction: output
-  description: True when ParseFloat returns the documented malformed-value error for a malformed numeric token.
-- name: raw_string_literal_is_well_formed
-  type: bool
-  direction: input
-  description: True when ParseString receives a well-formed raw JSON string literal body.
-- name: returns_parsestring_value
-  type: bool
-  direction: output
-  description: True when ParseString returns the corresponding decoded Go string value.
-- name: returns_parsestring_error
-  type: bool
-  direction: output
-  description: True when ParseString returns the documented malformed-value error for a malformed encoded string literal.
-- name: raw_int_token_is_well_formed
-  type: bool
-  direction: input
-  description: True when ParseInt receives a syntactically well-formed integer token that does not overflow int64.
-- name: raw_int_token_overflows_int64
-  type: bool
-  direction: input
-  description: True when ParseInt receives an integer token whose magnitude exceeds the supported int64 range.
-- name: returns_parseint_value
-  type: bool
-  direction: output
-  description: True when ParseInt returns the corresponding int64 value.
-- name: returns_parseint_overflow_error
-  type: bool
-  direction: output
-  description: True when ParseInt returns the documented overflow error for an integer token outside the supported int64 range.
-- name: returns_parseint_malformed_error
-  type: bool
-  direction: output
-  description: True when ParseInt returns the documented malformed-value error for a non-integer or otherwise malformed token.
-- name: input_is_truncated_at_value_boundary
-  type: bool
-  direction: input
-  description: True when the JSON input is truncated at a value boundary where the value token ends at EOF with no closing delimiter (e.g., '{"a":1' with no closing brace).
-- name: returns_error_for_truncated_value_boundary
-  type: bool
-  direction: output
-  description: True when Get returns a parse-related error or not-found result for input truncated at a value boundary, without panicking.
-- name: input_is_truncated_mid_structure
-  type: bool
-  direction: input
-  description: True when the JSON input is truncated in the middle of a structural element where an object or array is opened but never closed.
-- name: returns_error_for_truncated_mid_structure
-  type: bool
-  direction: output
-  description: True when Get returns a parse-related error for input truncated mid-structure, without panicking.
-- name: input_is_truncated_mid_key
-  type: bool
-  direction: input
-  description: True when the JSON input is truncated in the middle of a key string where the key is not terminated by a closing quote.
-- name: returns_error_for_truncated_mid_key
-  type: bool
-  direction: output
-  description: True when Get returns a parse-related error for input truncated mid-key, without panicking.
-- name: tokenEnd_returns_len_data
-  type: bool
-  direction: input
-  description: True when the internal helper tokenEnd returns len(data) as a sentinel value indicating no delimiter was found in the remaining input.
-- name: caller_bounds_checks_tokenEnd_sentinel
-  type: bool
-  direction: output
-  description: True when all callers of tokenEnd treat the len(data) sentinel as an end-of-input condition and do not use it as an unchecked array index.
-- name: stringEnd_returns_negative_one
-  type: bool
-  direction: input
-  description: True when the internal helper stringEnd returns -1 indicating no closing quote was found.
-- name: caller_handles_stringEnd_sentinel
-  type: bool
-  direction: output
-  description: True when all callers of stringEnd treat -1 as a malformed-string condition and do not proceed with normal value extraction.
-- name: blockEnd_returns_negative_one
-  type: bool
-  direction: input
-  description: True when the internal helper blockEnd returns -1 indicating no matching closing bracket or brace was found.
-- name: caller_handles_blockEnd_sentinel
-  type: bool
-  direction: output
-  description: True when all callers of blockEnd treat -1 as a malformed-structure condition and do not proceed with normal value extraction.
-- name: path_segment_is_negative_array_index
-  type: bool
-  direction: input
-  description: True when the current path segment is a negative array index such as "[-1]".
-- name: returns_not_found_for_negative_array_index
-  type: bool
-  direction: output
-  description: True when Get returns the defined not-found result for a negative array index because negative indexing is not supported.
-- name: delete_input_is_truncated_at_value_boundary
-  type: bool
-  direction: input
-  description: True when Delete is called on input truncated at a value boundary where tokenEnd would return len(data) as a sentinel.
-- name: delete_returns_original_input_on_truncated_value
-  type: bool
-  direction: output
-  description: True when Delete returns the original byte payload unchanged for input truncated at a value boundary.
-- name: delete_completes_without_panic_on_truncated_value
-  type: bool
-  direction: output
-  description: True when Delete completes without panicking on input truncated at a value boundary.
-- name: delete_discards_internalGet_error
-  type: bool
-  direction: input
-  description: True when Delete discards an error returned by internalGet (assigns to underscore) instead of using it to short-circuit.
-- name: delete_propagates_internalGet_error
-  type: bool
-  direction: output
-  description: True when Delete uses an error returned by internalGet to short-circuit to the safe fallback path.
-- name: delete_array_input_is_truncated
-  type: bool
-  direction: input
-  description: True when Delete is called with an array-element path on input where the array is truncated.
-- name: delete_returns_original_input_on_truncated_array
-  type: bool
-  direction: output
-  description: True when Delete returns the original byte payload unchanged for truncated array input.
-- name: delete_completes_without_panic_on_truncated_array
-  type: bool
-  direction: output
-  description: True when Delete completes without panicking on truncated array input.
-- name: set_input_is_truncated
-  type: bool
-  direction: input
-  description: True when Set is called on truncated JSON input where path resolution encounters incomplete structural elements.
-- name: set_returns_error_for_truncated_input
-  type: bool
-  direction: output
-  description: True when Set returns an error for truncated input rather than producing corrupt output or panicking.
-- name: array_callback_returns_error
-  type: bool
-  direction: input
-  description: True when the Get call for an array element within ArrayEach returns an error.
-- name: array_callback_error_is_propagated
-  type: bool
-  direction: output
-  description: True when ArrayEach propagates the element-level Get error to the caller.
-- name: array_is_truncated_mid_element
-  type: bool
-  direction: input
-  description: True when ArrayEach encounters an array element that is truncated or incomplete.
-- name: returns_error_for_truncated_array_element
-  type: bool
-  direction: output
-  description: True when ArrayEach returns a parse-related error for a truncated array element, without panicking.
-- name: object_is_truncated_mid_entry
-  type: bool
-  direction: input
-  description: True when ObjectEach encounters an object entry whose value is truncated or incomplete.
-- name: returns_error_for_truncated_object_entry
-  type: bool
-  direction: output
-  description: True when ObjectEach returns a parse-related error for a truncated object entry, without panicking.
-- name: array_has_malformed_delimiter
-  type: bool
-  direction: input
-  description: True when ArrayEach encounters a malformed delimiter between array elements where a comma is expected but absent or wrong.
-- name: returns_error_for_malformed_array_delimiter
-  type: bool
-  direction: output
-  description: True when ArrayEach returns MalformedArrayError for a malformed delimiter between array elements.
-- name: delete_input_is_truncated_mid_structure
-  type: bool
-  direction: input
-  description: True when Delete is called on input truncated mid-structure with unclosed nested objects or arrays.
-- name: delete_returns_original_input_on_truncated_structure
-  type: bool
-  direction: output
-  description: True when Delete returns the original byte payload unchanged for mid-structure truncated input.
-- name: delete_completes_without_panic_on_truncated_structure
-  type: bool
-  direction: output
-  description: True when Delete completes without panicking on mid-structure truncated input.
-- name: raw_boolean_literal_is_partial
-  type: bool
-  direction: input
-  description: True when ParseBoolean receives a partial boolean literal such as "tru" or "fals".
-- name: returns_error_for_partial_boolean_literal
-  type: bool
-  direction: output
-  description: True when ParseBoolean returns MalformedValueError for a partial boolean literal.
-- name: raw_int_token_is_at_int64_max_boundary
-  type: bool
-  direction: input
-  description: True when ParseInt receives an integer token at the exact int64 boundary values (max 9223372036854775807 or min -9223372036854775808).
-- name: returns_correct_value_at_int64_boundary
-  type: bool
-  direction: output
-  description: True when ParseInt returns the correct int64 value at the exact boundary without overflow error.
-- name: raw_int_token_is_at_int64_max_plus_one
-  type: bool
-  direction: input
-  description: True when ParseInt receives an integer token exactly one beyond the int64 range (9223372036854775808 or -9223372036854775809).
-- name: returns_overflow_at_int64_max_plus_one
-  type: bool
-  direction: output
-  description: True when ParseInt returns OverflowIntegerError for an integer token exactly one beyond the int64 range.
-- name: raw_string_has_truncated_escape_sequence
-  type: bool
-  direction: input
-  description: True when ParseString receives a string containing a truncated escape sequence such as a lone backslash or incomplete unicode escape like '\u00'.
-- name: returns_error_for_truncated_escape_sequence
-  type: bool
-  direction: output
-  description: True when ParseString returns MalformedValueError for a truncated escape sequence.
-- name: raw_string_has_missing_low_surrogate
-  type: bool
-  direction: input
-  description: True when ParseString encounters a UTF-16 high surrogate escape not followed by a valid low surrogate escape.
-- name: returns_error_for_missing_low_surrogate
-  type: bool
-  direction: output
-  description: True when ParseString returns MalformedValueError for a high surrogate without a following low surrogate.
-- name: raw_string_has_invalid_low_surrogate
-  type: bool
-  direction: input
-  description: True when ParseString encounters a UTF-16 high surrogate followed by a unicode escape whose value is below the low surrogate range.
-- name: returns_error_for_invalid_low_surrogate
-  type: bool
-  direction: output
-  description: True when ParseString returns MalformedValueError for a high surrogate followed by an invalid low surrogate.
-- name: raw_string_has_backslash_at_end
-  type: bool
-  direction: input
-  description: True when ParseString encounters a string ending with a lone backslash with no character after it.
-- name: returns_error_for_backslash_at_end
-  type: bool
-  direction: output
-  description: True when ParseString returns MalformedValueError for a string ending with a lone backslash.
-- name: parseint_input_is_empty
-  type: bool
-  direction: input
-  description: True when ParseInt receives an empty byte slice.
-- name: returns_parseint_malformed_for_empty
-  type: bool
-  direction: output
-  description: True when ParseInt returns MalformedValueError for an empty byte slice.
-- name: parsefloat_input_is_empty
-  type: bool
-  direction: input
-  description: True when ParseFloat receives an empty byte slice.
-- name: returns_parsefloat_malformed_for_empty
-  type: bool
-  direction: output
-  description: True when ParseFloat returns MalformedValueError for an empty byte slice.
-- name: parseboolean_input_is_empty
-  type: bool
-  direction: input
-  description: True when ParseBoolean receives an empty byte slice.
-- name: returns_parseboolean_malformed_for_empty
-  type: bool
-  direction: output
-  description: True when ParseBoolean returns MalformedValueError for an empty byte slice.
-- name: parsestring_input_is_empty
-  type: bool
-  direction: input
-  description: True when ParseString receives an empty byte slice.
-- name: returns_parsestring_identity_for_empty
-  type: bool
-  direction: output
-  description: True when ParseString returns an empty Go string without error for an empty byte slice.
-- name: set_path_points_beyond_eof
-  type: bool
-  direction: input
-  description: True when Set is called with a path that resolves to a location beyond the end of available data.
-- name: set_returns_error_for_path_beyond_eof
-  type: bool
-  direction: output
-  description: True when Set returns an error for a path that resolves beyond the end of available data.
-- name: set_target_is_nested_in_existing_structure
-  type: bool
-  direction: input
-  description: True when Set is called with a multi-level path where intermediate levels exist but the leaf does not.
-- name: set_performs_nested_mutation_correctly
-  type: bool
-  direction: output
-  description: True when Set correctly creates missing nested structure and inserts the value at the correct location.
-- name: set_called_without_path
-  type: bool
-  direction: input
-  description: True when Set is called without any key path segments.
-  data_constraint:
-    domain: integer
-    condition: set_path_segment_count == 0
-    parameters:
-    - name: set_path_segment_count
-      type: int
-      constraint: '>= 0'
-- name: set_returns_error_without_path
-  type: bool
-  direction: output
-  description: True when Set returns KeyPathNotFoundError because no path segment was provided.
-- name: getstring_input_is_malformed
-  type: bool
-  direction: input
-  description: True when GetString is called on malformed input where the underlying Get call returns an error.
-- name: returns_getstring_error_for_malformed
-  type: bool
-  direction: output
-  description: True when GetString propagates the error from Get for malformed input.
-- name: getstring_value_has_truncated_escape
-  type: bool
-  direction: input
-  description: True when GetString addresses a JSON string value containing a truncated escape sequence.
-- name: returns_getstring_error_for_truncated_escape
-  type: bool
-  direction: output
-  description: True when GetString returns an error from ParseString for a truncated escape sequence.
-- name: getstring_addressed_value_is_not_string
-  type: bool
-  direction: input
-  description: True when GetString addresses a value that is not a JSON string.
-- name: returns_getstring_type_mismatch_error
-  type: bool
-  direction: output
-  description: True when GetString returns a type-mismatch error for a non-string addressed value.
-- name: getstring_input_is_empty
-  type: bool
-  direction: input
-  description: True when GetString is called on empty input.
-- name: returns_getstring_error_for_empty_input
-  type: bool
-  direction: output
-  description: True when GetString returns not-found or error for empty input.
-- name: getint_input_is_malformed
-  type: bool
-  direction: input
-  description: True when GetInt is called on malformed input where the underlying Get call returns an error.
-- name: returns_getint_error_for_malformed
-  type: bool
-  direction: output
-  description: True when GetInt propagates the error from Get for malformed input.
-- name: getint_value_overflows_int64
-  type: bool
-  direction: input
-  description: True when GetInt addresses a JSON number token whose magnitude exceeds the int64 range.
-- name: returns_getint_overflow_error
-  type: bool
-  direction: output
-  description: True when GetInt returns the documented overflow error for a value exceeding int64 range.
-- name: getint_addressed_value_is_not_number
-  type: bool
-  direction: input
-  description: True when GetInt addresses a value that is not a JSON number.
-- name: returns_getint_type_mismatch_error
-  type: bool
-  direction: output
-  description: True when GetInt returns a type-mismatch error for a non-number addressed value.
-- name: getint_input_is_empty
-  type: bool
-  direction: input
-  description: True when GetInt is called on empty input.
-- name: returns_getint_error_for_empty_input
-  type: bool
-  direction: output
-  description: True when GetInt returns not-found or error for empty input.
-- name: getboolean_addressed_value_is_partial_literal
-  type: bool
-  direction: input
-  description: True when GetBoolean addresses a value that is a partial boolean literal due to truncation.
-- name: returns_getboolean_error_for_partial
-  type: bool
-  direction: output
-  description: True when GetBoolean returns an error from type classification or ParseBoolean for a partial boolean literal.
-- name: getunsafestring_input_is_malformed
-  type: bool
-  direction: input
-  description: True when GetUnsafeString is called on malformed input where the underlying Get call returns an error.
-- name: returns_getunsafestring_error_for_malformed
-  type: bool
-  direction: output
-  description: True when GetUnsafeString propagates the error from Get for malformed input.
-- name: getunsafestring_input_is_empty
-  type: bool
-  direction: input
-  description: True when GetUnsafeString is called on empty input.
-- name: returns_getunsafestring_error_for_empty
-  type: bool
-  direction: output
-  description: True when GetUnsafeString returns not-found or error for empty input.
-- name: getunsafestring_input_is_truncated_at_value_boundary
-  type: bool
-  direction: input
-  description: True when GetUnsafeString is called on input truncated at a value boundary.
-- name: returns_getunsafestring_error_for_truncated_value
-  type: bool
-  direction: output
-  description: True when GetUnsafeString propagates the error from Get for input truncated at a value boundary.
-- name: arrayeach_input_is_truncated_at_value_boundary
-  type: bool
-  direction: input
-  description: True when ArrayEach is called on input truncated at a value boundary.
-- name: returns_error_for_arrayeach_truncated_value
-  type: bool
-  direction: output
-  description: True when ArrayEach returns an error for input truncated at a value boundary, without panicking.
-- name: objecteach_input_is_truncated_mid_structure
-  type: bool
-  direction: input
-  description: True when ObjectEach is called on input truncated mid-structure where the object or a nested structure is not closed.
-- name: returns_error_for_objecteach_truncated_structure
-  type: bool
-  direction: output
-  description: True when ObjectEach returns an error for truncated mid-structure input, without panicking.
-- name: eachkey_tokenEnd_sentinel_reached
-  type: bool
-  direction: input
-  description: True when EachKey encounters a tokenEnd sentinel value during multi-path scanning.
-- name: eachkey_handles_sentinel_safely
-  type: bool
-  direction: output
-  description: True when EachKey treats the tokenEnd sentinel as an end-of-input condition and returns safely.
-- name: get_called_twice_with_same_input
-  type: bool
-  direction: input
-  description: True when Get is called twice with identical JSON input and identical key paths.
-- name: get_returns_identical_results
-  type: bool
-  direction: output
-  description: True when Get returns identical value slices, value types, offsets, and error values on both calls.
-- name: get_called_on_valid_input
-  type: bool
-  direction: input
-  description: True when Get is called on a non-nil JSON byte slice.
-- name: get_does_not_mutate_input
-  type: bool
-  direction: output
-  description: True when Get does not mutate the input byte slice during the call.
-- name: get_input_is_nil
-  type: bool
-  direction: input
-  description: True when Get is called with a nil byte slice as input.
-- name: get_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when Get returns a not-found or error result without panicking for nil input.
-- name: get_input_is_deeply_nested
-  type: bool
-  direction: input
-  description: True when Get is called on JSON with deeply nested structures (64+ levels).
-- name: get_handles_deep_nesting_safely
-  type: bool
-  direction: output
-  description: True when Get returns a correct result or error for deeply nested input without panicking.
-- name: getstring_called_twice_with_same_input
-  type: bool
-  direction: input
-  description: True when GetString is called twice with identical JSON input and identical key paths.
-- name: getstring_returns_identical_results
-  type: bool
-  direction: output
-  description: True when GetString returns identical decoded string values and error values on both calls.
-- name: getstring_input_is_nil
-  type: bool
-  direction: input
-  description: True when GetString is called with a nil byte slice as input.
-- name: getstring_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when GetString returns an empty string and error without panicking for nil input.
-- name: getstring_input_has_escaped_unicode
-  type: bool
-  direction: input
-  description: True when GetString addresses a JSON string containing escaped Unicode sequences.
-- name: getstring_decodes_and_preserves_semantics
-  type: bool
-  direction: output
-  description: True when GetString decodes escaped Unicode to correct Go string runes preserving semantic equivalence.
-- name: getstring_input_has_unicode_edge_cases
-  type: bool
-  direction: input
-  description: True when GetString addresses a JSON string containing Unicode edge cases like BOM or ZWJ.
-- name: getstring_handles_unicode_edges_safely
-  type: bool
-  direction: output
-  description: True when GetString handles Unicode edge cases correctly or returns a well-defined error.
-- name: typed_getter_called_twice_with_same_input
-  type: bool
-  direction: input
-  description: True when GetInt, GetFloat, or GetBoolean is called twice with identical input.
-- name: typed_getter_returns_identical_results
-  type: bool
-  direction: output
-  description: True when typed getters return identical typed values and error values on both calls.
-- name: typed_getter_input_is_nil
-  type: bool
-  direction: input
-  description: True when GetInt, GetFloat, or GetBoolean is called with a nil byte slice.
-- name: typed_getter_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when typed getters return zero value and error without panicking for nil input.
-- name: getint_input_has_large_number_edge_case
-  type: bool
-  direction: input
-  description: True when GetInt addresses a JSON number with edge-case formatting like leading zeros or max-length digit strings.
-- name: getint_handles_large_numbers_safely
-  type: bool
-  direction: output
-  description: True when GetInt returns correct int64 or well-defined error for large-number edge cases.
-- name: traversal_called_twice_with_same_input
-  type: bool
-  direction: input
-  description: True when ArrayEach, ObjectEach, or EachKey is called twice with identical input.
-- name: traversal_returns_identical_results
-  type: bool
-  direction: output
-  description: True when traversal callbacks are invoked in the same order with same values on both calls.
-- name: traversal_input_is_nil
-  type: bool
-  direction: input
-  description: True when ArrayEach, ObjectEach, or EachKey is called with a nil byte slice.
-- name: traversal_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when traversal returns error without invoking callbacks and without panicking for nil input.
-- name: traversal_input_is_deeply_nested
-  type: bool
-  direction: input
-  description: True when ArrayEach or ObjectEach is called on JSON with deeply nested structures.
-- name: traversal_handles_deep_nesting_safely
-  type: bool
-  direction: output
-  description: True when traversal handles deeply nested input safely without panicking or stack overflowing.
-- name: set_applied_twice_with_same_args
-  type: bool
-  direction: input
-  description: True when Set is called twice on the same input with the same value and key path.
-- name: set_second_call_produces_same_result
-  type: bool
-  direction: output
-  description: True when the second Set call produces the same output as the first application.
-- name: mutation_input_is_nil
-  type: bool
-  direction: input
-  description: True when Set or Delete is called with a nil byte slice.
-- name: mutation_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when Set returns error and Delete returns nil/empty without panicking for nil input.
-- name: mutation_input_has_unicode_keys
-  type: bool
-  direction: input
-  description: True when Set or Delete is called with key paths containing Unicode characters.
-- name: mutation_handles_unicode_keys_safely
-  type: bool
-  direction: output
-  description: True when Set or Delete correctly resolves Unicode key paths or returns well-defined error.
-- name: getunsafestring_called_twice_with_same_input
-  type: bool
-  direction: input
-  description: True when GetUnsafeString is called twice with identical input.
-- name: getunsafestring_returns_identical_results
-  type: bool
-  direction: output
-  description: True when GetUnsafeString returns identical raw string values on both calls.
-- name: getunsafestring_input_is_nil
-  type: bool
-  direction: input
-  description: True when GetUnsafeString is called with a nil byte slice.
-- name: getunsafestring_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when GetUnsafeString returns empty string and error without panicking for nil input.
-- name: getunsafestring_input_has_unicode_edge_cases
-  type: bool
-  direction: input
-  description: True when GetUnsafeString addresses a value with Unicode edge cases.
-- name: getunsafestring_handles_unicode_edges_safely
-  type: bool
-  direction: output
-  description: True when GetUnsafeString returns raw bytes as Go string without corruption for Unicode edge cases.
-- name: parse_helper_called_twice_with_same_input
-  type: bool
-  direction: input
-  description: True when a Parse helper is called twice with identical byte input.
-- name: parse_helper_returns_identical_results
-  type: bool
-  direction: output
-  description: True when Parse helpers return identical typed values and error values on both calls.
-- name: parse_helper_input_is_nil
-  type: bool
-  direction: input
-  description: True when a Parse helper is called with a nil byte slice.
-- name: parse_helper_returns_safe_result_for_nil
-  type: bool
-  direction: output
-  description: True when Parse helpers return zero value and error (or empty string) without panicking for nil input.
-- name: parsestring_input_has_standard_escapes
-  type: bool
-  direction: input
-  description: True when ParseString input contains standard JSON escape sequences.
-- name: parsestring_roundtrip_preserves_semantics
-  type: bool
-  direction: output
-  description: True when ParseString decoded string preserves semantic equivalence with original JSON encoding.
-- name: parseint_input_has_edge_case_number
-  type: bool
-  direction: input
-  description: True when ParseInt receives an edge-case numeric token like negative zero or very long digit strings.
-- name: parseint_handles_edge_numbers_safely
-  type: bool
-  direction: output
-  description: True when ParseInt returns correct int64 or well-defined error for edge-case numbers.
+      direction: input
+      description: The byte length of a single caller-supplied key path component string. The boundary of interest is the empty-component case (length 0).
+      proof_auxiliary: true
+      proof_auxiliary_reason: Domain-bound input that parameterizes the path_component_length partition data_constraints (empty vs nonempty) consumed by solver boundary analysis; not a direct FRETish operand.
+      range:
+        min: 0
+    - name: path_component_is_empty_string
+      type: bool
+      direction: input
+      description: True when any caller-supplied key path component is the empty string (the empty partition of path_component_length, length == 0). An empty-string component is neither a valid object key nor the [ array-index marker.
+      data_constraint:
+        domain: integer
+        condition: path_component_length == 0
+        parameters:
+            - name: path_component_length
+              type: int
+              constraint: '>= 0'
+    - name: path_component_is_nonempty_string
+      type: bool
+      direction: input
+      description: True when every caller-supplied key path component is non-empty (the nonempty partition of path_component_length, complement of path_component_is_empty_string).
+      proof_auxiliary: true
+      proof_auxiliary_reason: Partition-witness variable that completes the path_component_length domain coverage (empty vs nonempty) so data_constraints_complete can prove the partition; not a direct FRETish operand.
+      data_constraint:
+        domain: integer
+        condition: path_component_length > 0
+        parameters:
+            - name: path_component_length
+              type: int
+              constraint: '>= 0'
+    - name: returns_not_found_for_empty_key_component
+      type: bool
+      direction: output
+      description: True when the parser treats an empty-string key path component as an unresolvable path, returning KeyPathNotFoundError for the Get family and Delete (and EachKey omitting the callback) or a defined error/document for Set.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: completes_without_panic_on_empty_key_component
+      type: bool
+      direction: output
+      description: True when the parser completes the call without panicking for an empty-string key path component, never reaching an unguarded keys[i][0] / p[level][0] dereference (the OSS-Fuzz 4649128545288192 / hazard-sweep class).
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
 independence:
     declared: true
-    reason: "jsonparser requirements govern a single pure-function parser (Get and its typed/walking/mutation helpers) over untrusted byte input; each guarantee constrains a distinct output variable representing one observational outcome of the same parse (e.g. returns_existing_path_lookup_result, returns_missing_path_result_for_well_formed_lookup, returns_parse_error_for_incomplete_lookup). The output vocabulary is intentionally disjoint per behavioral outcome across 118 output variables, so the connected-component decomposition over shared output variables places each requirement in a singleton component and cross-requirement consistency contradictions are not solver-checkable via shared outputs. The input preconditions are mutually exclusive (well-formed/existing-path vs missing-path vs incomplete/truncated vs empty vs malformed), so the distinct outputs cannot simultaneously hold for one parse and do not actually conflict."
+    reason: jsonparser requirements govern a single pure-function parser (Get and its typed/walking/mutation helpers) over untrusted byte input; each guarantee constrains a distinct output variable representing one observational outcome of the same parse (e.g. returns_existing_path_lookup_result, returns_missing_path_result_for_well_formed_lookup, returns_parse_error_for_incomplete_lookup). The output vocabulary is intentionally disjoint per behavioral outcome across 118 output variables, so the connected-component decomposition over shared output variables places each requirement in a singleton component and cross-requirement consistency contradictions are not solver-checkable via shared outputs. The input preconditions are mutually exclusive (well-formed/existing-path vs missing-path vs incomplete/truncated vs empty vs malformed), so the distinct outputs cannot simultaneously hold for one parse and do not actually conflict.
+domain:
+    mutex:
+        - name: path_segment_kind
+          members:
+            - path_segment_is_object_key
+            - path_segment_is_array_index
+          reason: A single lookup path segment is interpreted as either an object-member key or an array index, never both; the parser branches on the leading [ marker so at most one classification holds for a given segment.

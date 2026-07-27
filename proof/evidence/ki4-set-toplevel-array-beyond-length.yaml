@@ -1,0 +1,20 @@
+schema_version: proof.evidence_profile.v1
+profile: ki4-set-toplevel-array-beyond-length-reproducer
+evidence_type: known_issue_tripwire
+component: parser
+requirement: SYS-REQ-110
+requirements:
+    - SYS-REQ-110
+artifact: parser_test.go
+command: go test -v -run TestSetTopLevelArrayBeyondLength_KI4 -count=1 ./...
+status: pass
+observed_result: known_issue_reproduced
+executed_at: "2026-07-27T11:44:03Z"
+input_set:
+    - parser_test.go
+    - parser.go
+freshness_hashes:
+    parser.go: sha256:e9023030331ff369422c6bc40ee5aa666e5d8fb36cd150524fda65988df6f08d
+    parser_test.go: sha256:4eaaa41b9c4b22a61d678384b40d04b9f71d78efa61633a661c29e737b2f9bc1
+known_issues:
+    - KI-4

@@ -26,26 +26,30 @@ var (
 const unescapeStackBufSize = 64
 
 // SYS-REQ-044
-// reqproof:lemma tokenEnd_in_range func(data []byte) bool {
-//   r := tokenEnd(data)
-//   return r >= 0 && r <= len(data)
-// }
-// reqproof:lemma tokenEnd_nonneg func(data []byte) bool {
-//   // tokenEnd never signals via a negative sentinel — the empty-input
-//   // path returns len(data)==0 (still nonneg), and any hit returns the
-//   // loop index (also nonneg).
-//   return tokenEnd(data) >= 0
-// }
-// reqproof:lemma tokenEnd_empty_zero func(data []byte) bool {
-//   return !(len(data) == 0) || tokenEnd(data) == 0
-// }
-// reqproof:lemma tokenEnd_path_indexable_implies_nonneg func(data []byte) bool {
-//   r := tokenEnd(data)
-//   if r < len(data) {
-//     return r >= 0
-//   }
-//   return true
-// }
+//
+//	reqproof:lemma tokenEnd_in_range func(data []byte) bool {
+//	  r := tokenEnd(data)
+//	  return r >= 0 && r <= len(data)
+//	}
+//
+//	reqproof:lemma tokenEnd_nonneg func(data []byte) bool {
+//	  // tokenEnd never signals via a negative sentinel — the empty-input
+//	  // path returns len(data)==0 (still nonneg), and any hit returns the
+//	  // loop index (also nonneg).
+//	  return tokenEnd(data) >= 0
+//	}
+//
+//	reqproof:lemma tokenEnd_empty_zero func(data []byte) bool {
+//	  return !(len(data) == 0) || tokenEnd(data) == 0
+//	}
+//
+//	reqproof:lemma tokenEnd_path_indexable_implies_nonneg func(data []byte) bool {
+//	  r := tokenEnd(data)
+//	  if r < len(data) {
+//	    return r >= 0
+//	  }
+//	  return true
+//	}
 func tokenEnd(data []byte) int {
 	for i, c := range data {
 		// reqproof:invariant 0 <= i
@@ -57,6 +61,16 @@ func tokenEnd(data []byte) int {
 	}
 
 	return len(data)
+}
+
+// isJSONWhitespace reports whether b is one of the four JSON whitespace bytes
+// (space 0x20, tab 0x09, LF 0x0A, CR 0x0D) per RFC 8259 §2. Used by Delete's
+// trailing-comma cleanup to decide whether the byte at endOffset+tokEnd is
+// whitespace preceding a comma, so the cleanup advances past both. The byte
+// set mirrors tokenEnd's whitespace classification above.
+// SYS-REQ-010, SYS-REQ-034, SYS-REQ-035
+func isJSONWhitespace(b byte) bool {
+	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }
 
 // SYS-REQ-001
@@ -148,23 +162,27 @@ func findKeyStart(data []byte, key string) (int, error) {
 }
 
 // SYS-REQ-001
-// reqproof:lemma tokenStart_in_range func(data []byte) bool {
-//   r := tokenStart(data)
-//   return r >= 0 && r <= len(data)
-// }
-// reqproof:lemma tokenStart_nonneg func(data []byte) bool {
-//   return tokenStart(data) >= 0
-// }
-// reqproof:lemma tokenStart_empty_zero func(data []byte) bool {
-//   return !(len(data) == 0) || tokenStart(data) == 0
-// }
-// reqproof:lemma tokenStart_path_indexable_when_nonempty func(data []byte) bool {
-//   r := tokenStart(data)
-//   if len(data) > 0 {
-//     return r >= 0 && r < len(data)
-//   }
-//   return r == 0
-// }
+//
+//	reqproof:lemma tokenStart_in_range func(data []byte) bool {
+//	  r := tokenStart(data)
+//	  return r >= 0 && r <= len(data)
+//	}
+//
+//	reqproof:lemma tokenStart_nonneg func(data []byte) bool {
+//	  return tokenStart(data) >= 0
+//	}
+//
+//	reqproof:lemma tokenStart_empty_zero func(data []byte) bool {
+//	  return !(len(data) == 0) || tokenStart(data) == 0
+//	}
+//
+//	reqproof:lemma tokenStart_path_indexable_when_nonempty func(data []byte) bool {
+//	  r := tokenStart(data)
+//	  if len(data) > 0 {
+//	    return r >= 0 && r < len(data)
+//	  }
+//	  return r == 0
+//	}
 func tokenStart(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		// reqproof:invariant -1 <= i
@@ -181,25 +199,29 @@ func tokenStart(data []byte) int {
 
 // SYS-REQ-001
 // Find position of next character which is not whitespace
-// reqproof:lemma nextToken_in_range func(data []byte) bool {
-//   r := nextToken(data)
-//   return r >= -1 && r < len(data)
-// }
-// reqproof:lemma nextToken_empty_neg func(data []byte) bool {
-//   return !(len(data) == 0) || nextToken(data) == -1
-// }
-// reqproof:lemma nextToken_signed_disjoint func(data []byte) bool {
-//   r := nextToken(data)
-//   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
-//   return r == -1 || r >= 0
-// }
-// reqproof:lemma nextToken_path_indexable_implies_lt_len func(data []byte) bool {
-//   r := nextToken(data)
-//   if r >= 0 {
-//     return r < len(data)
-//   }
-//   return true
-// }
+//
+//	reqproof:lemma nextToken_in_range func(data []byte) bool {
+//	  r := nextToken(data)
+//	  return r >= -1 && r < len(data)
+//	}
+//
+//	reqproof:lemma nextToken_empty_neg func(data []byte) bool {
+//	  return !(len(data) == 0) || nextToken(data) == -1
+//	}
+//
+//	reqproof:lemma nextToken_signed_disjoint func(data []byte) bool {
+//	  r := nextToken(data)
+//	  // Result is either -1 (sentinel) or a non-negative index — never -2 or below
+//	  return r == -1 || r >= 0
+//	}
+//
+//	reqproof:lemma nextToken_path_indexable_implies_lt_len func(data []byte) bool {
+//	  r := nextToken(data)
+//	  if r >= 0 {
+//	    return r < len(data)
+//	  }
+//	  return true
+//	}
 func nextToken(data []byte) int {
 	for i, c := range data {
 		// reqproof:invariant 0 <= i
@@ -215,25 +237,29 @@ func nextToken(data []byte) int {
 
 // SYS-REQ-001
 // Find position of last character which is not whitespace
-// reqproof:lemma lastToken_in_range func(data []byte) bool {
-//   r := lastToken(data)
-//   return r >= -1 && r < len(data)
-// }
-// reqproof:lemma lastToken_empty_neg func(data []byte) bool {
-//   return !(len(data) == 0) || lastToken(data) == -1
-// }
-// reqproof:lemma lastToken_signed_disjoint func(data []byte) bool {
-//   r := lastToken(data)
-//   // Result is either -1 (sentinel) or a non-negative index — never -2 or below
-//   return r == -1 || r >= 0
-// }
-// reqproof:lemma lastToken_path_indexable_implies_lt_len func(data []byte) bool {
-//   r := lastToken(data)
-//   if r >= 0 {
-//     return r < len(data)
-//   }
-//   return true
-// }
+//
+//	reqproof:lemma lastToken_in_range func(data []byte) bool {
+//	  r := lastToken(data)
+//	  return r >= -1 && r < len(data)
+//	}
+//
+//	reqproof:lemma lastToken_empty_neg func(data []byte) bool {
+//	  return !(len(data) == 0) || lastToken(data) == -1
+//	}
+//
+//	reqproof:lemma lastToken_signed_disjoint func(data []byte) bool {
+//	  r := lastToken(data)
+//	  // Result is either -1 (sentinel) or a non-negative index — never -2 or below
+//	  return r == -1 || r >= 0
+//	}
+//
+//	reqproof:lemma lastToken_path_indexable_implies_lt_len func(data []byte) bool {
+//	  r := lastToken(data)
+//	  if r >= 0 {
+//	    return r < len(data)
+//	  }
+//	  return true
+//	}
 func lastToken(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		// reqproof:invariant -1 <= i
@@ -252,6 +278,25 @@ func lastToken(data []byte) int {
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
 func stringEnd(data []byte) (int, bool) {
+	// fast path: SIMD-scan for the first '"' or '\'. If no '\' precedes the
+	// first '"' (the overwhelmingly common case for JSON string values),
+	// the quote is unescaped and we return directly — skipping the per-byte
+	// escape-tracking loop. Bound: bytes.IndexByte finds the first match in
+	// either direction, so firstBackslash > firstQuote (or == -1) is exactly
+	// the condition "no backslash precedes the closing quote", which is
+	// equivalent to the slow loop's `escaped == false` state at the quote.
+	firstQuote := bytes.IndexByte(data, '"')
+	if firstQuote == -1 {
+		// Slow path's tail semantics: return -1 with escaped flag true iff
+		// at least one '\' was encountered before end-of-input.
+		return -1, bytes.IndexByte(data, '\\') != -1
+	}
+	firstBackslash := bytes.IndexByte(data, '\\')
+	if firstBackslash == -1 || firstBackslash > firstQuote {
+		return firstQuote + 1, false
+	}
+	// Slow path: at least one '\' precedes the first '"' — the per-byte
+	// walker is needed to disambiguate escaped vs. unescaped quotes.
 	escaped := false
 	for i, c := range data {
 		if c == '"' {
@@ -311,7 +356,7 @@ func blockEnd(data []byte, openSym byte, closeSym byte) int {
 	return -1
 }
 
-// SYS-REQ-001, SYS-REQ-020, SYS-REQ-021, SYS-REQ-022, SYS-REQ-023, SYS-REQ-047
+// SYS-REQ-001, SYS-REQ-020, SYS-REQ-021, SYS-REQ-022, SYS-REQ-023, SYS-REQ-047, SYS-REQ-111
 func searchKeys(data []byte, keys ...string) int {
 	keyLevel := 0
 	level := 0
@@ -412,7 +457,8 @@ func searchKeys(data []byte, keys ...string) int {
 				// Note: keys[level][0] == '[' is guaranteed by the outer if-guard,
 				// so the former middle term `keys[level][0] != '['` was always false
 				// (dead code) and has been removed.
-				if keyLen < 3 || keys[level][keyLen-1] != ']' {
+				// guard: bounds-check on the same variable before the [keyLen-1] deref.
+				if len(keys[level]) < 3 || keys[level][keyLen-1] != ']' {
 					return -1
 				}
 				aIdx, err := strconv.Atoi(keys[level][1 : keyLen-1])
@@ -480,7 +526,7 @@ func sameTree(p1, p2 []string) bool {
 
 const stackArraySize = 128
 
-// SYS-REQ-008, SYS-REQ-085
+// SYS-REQ-008, SYS-REQ-085, SYS-REQ-111
 func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]string) int {
 	var x struct{}
 	var level, pathsMatched, i int
@@ -716,7 +762,7 @@ var (
 	nullLiteral  = []byte("null")
 )
 
-// SYS-REQ-009
+// SYS-REQ-009, SYS-REQ-110, SYS-REQ-111
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
 	// guard: empty key component — not an array index.
 	isIndex := len(keys[0]) > 0 && string(keys[0][0]) == "["
@@ -767,7 +813,7 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 	return buffer
 }
 
-// SYS-REQ-009
+// SYS-REQ-009, SYS-REQ-111
 func calcAllocateSpace(keys []string, setValue []byte, comma, object bool) int {
 	// guard: empty key component — not an array index.
 	isIndex := len(keys[0]) > 0 && string(keys[0][0]) == "["
@@ -868,11 +914,26 @@ func Delete(data []byte, keys ...string) []byte {
 			return data
 		}
 
-		if data[endOffset+tokEnd] == ','  {
+		// guard: tokenEnd sentinel may return -1 on truncated input; bounds-check before deref.
+		idx := endOffset + tokEnd
+		// Scan forward from idx through any JSON whitespace to find the next
+		// real token. The original check only matched a single ' ' byte
+		// before the comma, so inputs like '{"a":1,\n"b":2}' or '[0,0  ,0]'
+		// (multiple whitespace bytes) bypassed the cleanup and left a
+		// dangling comma sequence. Found by FuzzPathMutation.
+		nextTokIdx := idx
+		for nextTokIdx < len(data) && isJSONWhitespace(data[nextTokIdx]) {
+			nextTokIdx++
+		}
+		if len(data) > idx && data[idx] == ',' {
 			endOffset += tokEnd + 1
-		} else if data[endOffset+tokEnd] == ' ' && len(data) > endOffset+tokEnd+1 && data[endOffset+tokEnd+1] == ',' {
-			endOffset += tokEnd + 2
-		} else if data[endOffset+tokEnd] == '}' && data[tokStart] == ',' {
+		} else if len(data) > nextTokIdx && data[nextTokIdx] == ',' {
+			// Symmetric with the array-branch case below: when the bytes
+			// after the deleted element are "<ws>+," (one or more JSON
+			// whitespace bytes then a comma), advance endOffset past all
+			// of them so the trailing comma is removed with the element.
+			endOffset += nextTokIdx - idx + tokEnd + 1
+		} else if len(data) > idx && data[idx] == '}' && data[tokStart] == ',' {
 			keyOffset = tokStart
 		}
 	} else {
@@ -890,9 +951,26 @@ func Delete(data []byte, keys ...string) []byte {
 			return data
 		}
 
-		if data[endOffset+tokEnd] == ',' {
+		// guard: tokenEnd sentinel may return -1 on truncated input; bounds-check before deref.
+		idx := endOffset + tokEnd
+		// Scan forward from idx through any JSON whitespace to find the next
+		// real token (mirrors the object-branch cleanup above). The original
+		// check only matched a single ' ' byte before the comma, so inputs
+		// like '[0,0  ,0]' or '[0,0\n\n,0]' bypassed the cleanup. Found by
+		// FuzzPathMutation.
+		nextTokIdx := idx
+		for nextTokIdx < len(data) && isJSONWhitespace(data[nextTokIdx]) {
+			nextTokIdx++
+		}
+		if len(data) > idx && data[idx] == ',' {
 			endOffset += tokEnd + 1
-		} else if data[endOffset+tokEnd] == ']' && data[tokStart] == ',' {
+		} else if len(data) > nextTokIdx && data[nextTokIdx] == ',' {
+			// Symmetric with the object-branch case above: when the bytes
+			// after the deleted element are "<ws>+," (one or more JSON
+			// whitespace bytes then a comma), advance endOffset past all
+			// of them so the trailing comma is removed with the element.
+			endOffset += nextTokIdx - idx + tokEnd + 1
+		} else if len(data) > idx && data[idx] == ']' && data[tokStart] == ',' {
 			keyOffset = tokStart
 		}
 	}
@@ -904,7 +982,13 @@ func Delete(data []byte, keys ...string) []byte {
 	remainedTok := nextToken(remainedValue)
 
 	var newOffset int
-	if prevTok > -1 && remainedTok > -1 && remainedValue[remainedTok] == '}' && data[prevTok] == ',' {
+	// Cleanup must remove the trailing comma both for objects (close '}') and
+	// arrays (close ']'). The original check only handled '}', so deleting
+	// the last array element left a dangling ',]' / ', ]' sequence and
+	// produced malformed JSON output (found by FuzzPathMutation,
+	// e.g. Delete("[0,0 ]", "[1]") -> "[0, ]"). The array close is now
+	// covered symmetrically with the object close.
+	if prevTok > -1 && remainedTok > -1 && (remainedValue[remainedTok] == '}' || remainedValue[remainedTok] == ']') && data[prevTok] == ',' {
 		newOffset = prevTok
 	} else if prevTok > -1 {
 		newOffset = prevTok + 1
@@ -930,7 +1014,7 @@ Returns:
 `err` - On any parsing error
 
 */
-// SYS-REQ-009, SYS-REQ-051, SYS-REQ-068, SYS-REQ-069, SYS-REQ-070
+// SYS-REQ-009, SYS-REQ-051, SYS-REQ-068, SYS-REQ-069, SYS-REQ-070, SYS-REQ-110
 func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error) {
 	// ensure keys are set
 	if len(keys) == 0 {
@@ -958,36 +1042,94 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		}
 		comma := true
 		object := false
+		// KI-3: when the path's next component expects one container type but
+		// the existing structure is the other (array-index [N] under an object,
+		// or an object key under an array), auto-coerce the container to the
+		// type expected by the path and proceed with fresh insertion. The
+		// mismatched container is treated as if it needs to be (re)created, so
+		// the output is always valid JSON.
+		coerceTopLevel := false
+		coerceStart := 0
 		if endOffset == -1 {
 			firstToken := nextToken(data)
-			// We can't set a top-level key if data isn't an object
-			if firstToken < 0 || data[firstToken] != '{' {
+			if firstToken < 0 {
 				return nil, KeyPathNotFoundError
 			}
-			// Don't need a comma if the input is an empty object
-			secondToken := firstToken + 1 + nextToken(data[firstToken+1:])
-			if data[secondToken] == '}' {
+			pathIsIndex := len(keys[0]) > 0 && keys[0][0] == '['
+			// An empty trailing key component is the degenerate "no path
+			// provided" case (SYS-REQ-111), not a real object key — it must
+			// keep returning KeyPathNotFoundError on a non-object root, so it
+			// is excluded from auto-coerce.
+			pathIsObjectKey := len(keys[0]) > 0 && !pathIsIndex
+			dataIsObject := data[firstToken] == '{'
+			dataIsArray := data[firstToken] == '['
+			if (pathIsIndex && dataIsObject) || (pathIsObjectKey && dataIsArray) {
+				// SYS-REQ-009: cross-type Set at the top level — replace the
+				// mismatched container with a fresh container of the type the
+				// path expects, then perform a fresh insertion.
+				coerceTopLevel = true
+				coerceStart = firstToken
 				comma = false
+				object = !pathIsIndex
+				endOffset = lastToken(data)
+			} else if !dataIsObject {
+				// Matching array+array-index is intentionally unsupported at the
+				// top level (unchanged behavior); non-container input and the
+				// degenerate empty-key-on-non-object case are rejected.
+				return nil, KeyPathNotFoundError
+			} else {
+				// Don't need a comma if the input is an empty object
+				secondToken := firstToken + 1 + nextToken(data[firstToken+1:])
+				if data[secondToken] == '}' {
+					comma = false
+				}
+				// Set the top level key at the end (accounting for any trailing whitespace)
+				// This assumes last token is valid like '}', could check and return error
+				endOffset = lastToken(data)
 			}
-			// Set the top level key at the end (accounting for any trailing whitespace)
-			// This assumes last token is valid like '}', could check and return error
-			endOffset = lastToken(data)
 		}
 		depthOffset := endOffset
 		if depth != 0 {
-			// if subpath is a non-empty object, add to it
-			// or if subpath is a non-empty array, add to it
-			if (data[startOffset] == '{' && data[startOffset+1+nextToken(data[startOffset+1:])] != '}') ||
-				(data[startOffset] == '[' && data[startOffset+1+nextToken(data[startOffset+1:])] == '{') && keys[depth:][0][0] == 91 {
-				depthOffset--
-				startOffset = depthOffset
-				// otherwise, over-write it with a new object
-			} else {
+			trailing := keys[depth:]
+			pathIsIndex := len(trailing) > 0 && len(trailing[0]) > 0 && trailing[0][0] == '['
+			containerIsObject := data[startOffset] == '{'
+			containerIsArray := data[startOffset] == '['
+			if (pathIsIndex && containerIsObject) || (!pathIsIndex && containerIsArray) {
+				// SYS-REQ-009: cross-type Set under a subpath — replace the
+				// mismatched container (data[startOffset:depthOffset]) with a
+				// fresh container of the type the path expects. startOffset and
+				// depthOffset already bound the existing container, so keep them
+				// and let createInsertComponent build the replacement.
 				comma = false
-				object = true
+				object = !pathIsIndex
+			} else {
+				// if subpath is a non-empty object, add to it
+				// or if subpath is a non-empty array, add to it
+				// guard: nextToken returns -1 on truncated input; bounds-check the computed offset.
+				subObjOff := startOffset + 1 + nextToken(data[startOffset+1:])
+				// The array-append condition must fire for ANY non-empty array
+				// (scalar, string, bool, null, nested, or object elements), not
+				// just arrays whose first element happens to be '{'. The former
+				// `data[subObjOff] == '{'` check silently destroyed scalar
+				// arrays on beyond-length Set (SYS-REQ-110 violation: the whole
+				// array was replaced with a single-element [value]).
+				if (containerIsObject && subObjOff >= 0 && subObjOff < len(data) && data[subObjOff] != '}') ||
+					(containerIsArray && subObjOff >= 0 && subObjOff < len(data) && data[subObjOff] != ']' && pathIsIndex) {
+					depthOffset--
+					startOffset = depthOffset
+					// otherwise, over-write it with a new object
+				} else {
+					comma = false
+					object = true
+				}
 			}
 		} else {
-			startOffset = depthOffset
+			if coerceTopLevel {
+				startOffset = coerceStart
+				depthOffset = endOffset + 1
+			} else {
+				startOffset = depthOffset
+			}
 		}
 		value = append(data[:startOffset], append(createInsertComponent(keys[depth:], setValue, comma, object), data[depthOffset:]...)...)
 	} else {
@@ -1125,6 +1267,21 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 	nT := nextToken(data)
 	if nT == -1 {
 		return -1, MalformedJsonError
+	}
+
+	// Guard: when ArrayEach is called without a key path, the addressed
+	// root value must be an array. Without this guard, the main loop below
+	// happily parses the first token of a non-array value (e.g. the opening
+	// key of an object, or a bare number) as if it were an array element,
+	// invoking the callback once with bogus data before eventually returning
+	// MalformedArrayError. A caller performing side effects in the callback
+	// would observe a spurious invocation on input that is not an array at
+	// all. (SYS-REQ-029 partition: non-array root, no key path.)
+	// When a key path IS provided, the keys block below already enforces the
+	// same contract via its own `data[offset] != '['` check after resolving
+	// the path, so the guard is only needed for the no-keys case.
+	if len(keys) == 0 && data[nT] != '[' {
+		return -1, MalformedArrayError
 	}
 
 	offset = nT + 1

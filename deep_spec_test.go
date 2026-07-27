@@ -615,28 +615,42 @@ func TestTruncatedEscapeSequences(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-061 [malformed]
-// High surrogate without low surrogate shall return MalformedValueError.
+// A lone high surrogate is malformed per RFC 8259/WHATWG; per DEFECT-260727-SNGT
+// the parser matches encoding/json by substituting U+FFFD (NOT returning
+// MalformedValueError). SYS-REQ-061's strict error-return is superseded for
+// the lone-surrogate case by the encoding/json parity fix.
 func TestMissingSurrogateLow(t *testing.T) {
-	// \uD800 alone (high surrogate, no low)
-	_, err := ParseString([]byte(`\uD800`))
-	if !errors.Is(err, MalformedValueError) {
-		t.Fatalf("ParseString(high surrogate only) error = %v, want %v", err, MalformedValueError)
+	// \uD800 alone (high surrogate, no low) → U+FFFD substitution, no error.
+	got, err := ParseString([]byte(`\uD800`))
+	if err != nil {
+		t.Fatalf("ParseString(high surrogate only) error = %v, want nil (U+FFFD substitution)", err)
+	}
+	if got != "\uFFFD" {
+		t.Fatalf("ParseString(high surrogate only) = %q, want %q (U+FFFD)", got, "\uFFFD")
 	}
 
-	// High surrogate followed by non-escape text
-	_, err = ParseString([]byte(`\uD800abc`))
-	if !errors.Is(err, MalformedValueError) {
-		t.Fatalf("ParseString(high surrogate + text) error = %v, want %v", err, MalformedValueError)
+	// High surrogate followed by non-escape text → U+FFFD + literal text.
+	got, err = ParseString([]byte(`\uD800abc`))
+	if err != nil {
+		t.Fatalf("ParseString(high surrogate + text) error = %v, want nil", err)
+	}
+	if got != "\uFFFDabc" {
+		t.Fatalf("ParseString(high surrogate + text) = %q, want %q", got, "\uFFFDabc")
 	}
 }
 
 // Verifies: SYS-REQ-062 [malformed]
-// High surrogate followed by invalid low surrogate shall return MalformedValueError.
+// A high surrogate followed by an out-of-range second escape is a lone high
+// surrogate → U+FFFD + the second escape reprocessed, matching encoding/json
+// (DEFECT-260727-SNGT). SYS-REQ-062's error-return is superseded for this case.
 func TestInvalidSurrogateLow(t *testing.T) {
-	// \uD800\u0041 - valid unicode escape but not in low surrogate range
-	_, err := ParseString([]byte(`\uD800\u0041`))
-	if !errors.Is(err, MalformedValueError) {
-		t.Fatalf("ParseString(invalid low surrogate) error = %v, want %v", err, MalformedValueError)
+	// \uD800\u0041 - valid unicode escape but not in low surrogate range → U+FFFD + 'A'.
+	got, err := ParseString([]byte(`\uD800\u0041`))
+	if err != nil {
+		t.Fatalf("ParseString(invalid low surrogate) error = %v, want nil (U+FFFD + 'A')", err)
+	}
+	if got != "\uFFFDA" {
+		t.Fatalf("ParseString(invalid low surrogate) = %q, want %q", got, "\uFFFDA")
 	}
 }
 

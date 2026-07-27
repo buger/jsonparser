@@ -1,0 +1,91 @@
+# SIG-07 missing-accumulation-cap -- Go OpenGrep signal rules.
+#
+# Sibling of data/solidity/accumulation_safety.yaml. Detects state-
+# accumulator writes (s += v) inside a for/range loop so the reviewer
+# can confirm an explicit upper cap is enforced before the write. Without
+# a cap, a single actor can drive inventory risk past a policy limit
+# (cumulative rewards, total shares issued, per-account volume). The
+# catalog obligation that owns this signal is `accumulation_bounded`
+# (pkg/catalog/data/domain/defi/accumulation_bounded.yaml).
+#
+# What it detects:
+#   Any accumulator write that lives inside a for/range loop body and
+#   touches either:
+#     (1) a map element -- `$MAP[$KEY] += $VALUE` (per-token traded
+#         volume, per-user reward credit); or
+#     (2) a struct-field receiver -- `$RECV.$FIELD += $VALUE` (cumulative
+#         issued shares, total rewards paid).
+#   Reported at INFO severity for human review.
+#
+# Heuristic, not a proof:
+#   OpenGrep cannot statically resolve whether the loop is bounded by an
+#   immutable / constant, whether an `if (s + v) > MAX { ... }` precedes
+#   the write, or whether the accumulator is reset before use. Reviewers
+#   are expected to trace backward from each += write and confirm a bound
+#   is enforced on the path. The catalog obligation's
+#   `trigger_phrases_review_needed` lists "increment provably bounded"
+#   and "accumulator reset before use" as the two reviewer-supplied
+#   escape hatches.
+#
+# Why we do not structurally suppress the safe shape:
+#   The structural safe shape is "preceding cap check" on the same path,
+#   which OpenGrep cannot match reliably (it requires intra-procedural
+#   path analysis). Including a brittle pattern-not clause would either
+#   (a) suppress true positives when the cap check is named differently,
+#   or (b) double-report when the cap check is structurally present but
+#   on the wrong path. The honest tradeoff is flag-then-review at INFO
+#   severity: every loop-internal += write is reported once, and the
+#   reviewer documents the cap in force.
+#
+# Out of scope (deliberate):
+#   - Local-variable accumulations (`local += v`) are NOT flagged because
+#     Go local variables do not persist across calls -- they cannot grow
+#     unbounded across the contract's lifetime. Only struct fields and
+#     map elements are reported.
+#   - Long-form scalar self-add (`x = x + v`) is rare in Go (idiomatic
+#     code uses `+=`) and is not flagged; reviewers reading the rule's
+#     notes can identify it manually.
+#
+# Fixtures: data/go/fixtures/go.missing_accumulation_cap/{positive,negative}/
+# validated by `proof signals validate --signal <id> --strict`.
+rules:
+  - id: go.accumulation.missing-cap
+    message: State accumulator (+=) write inside a loop; confirm an explicit cap is enforced before the write.
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: go.missing_accumulation_cap
+        provider: opengrep
+        tags: [token_accounting, parameter_bounds]
+        obligations: [accumulation_bounded]
+        confidence: low
+        notes: |
+          Two accumulator shapes are matched:
+            (1) `$MAP[$KEY] += $VALUE` -- the canonical map-credit shape
+                (per-token traded volume, per-user reward credit).
+            (2) `$RECV.$FIELD += $VALUE` -- the canonical struct-field
+                credit shape (cumulative issued shares, total rewards
+                paid).
+
+          Both shapes are reported only when inside a for/range loop
+          body, where the per-iteration growth is unbounded by the
+          language. Single-shot accumulator writes outside a loop are
+          out of scope -- they are individually auditable at the call
+          site and the catalog obligation's reviewer-evidence leg
+          already requires confirming the cap on the write path.
+
+          Local-variable accumulations (`local += v`) are deliberately
+          not flagged: Go local variables do not persist across calls
+          and cannot grow unbounded across the program's lifetime.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-inside: |
+          for ... {
+            ...
+          }
+      - pattern-either:
+          - pattern: $MAP[$KEY] += $VALUE
+          - pattern: $RECV.$FIELD += $VALUE

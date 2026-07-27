@@ -42,13 +42,13 @@ verification:
         roles:
             - system_owner
             - lead_engineer
-        reviewed_at: "2026-07-26T15:21:06Z"
-        comment: 'Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)'
-        fingerprint: sha256:c66ffb7e18343ff7a857ba7a56e52cc7d835ac4004a05831e0400f07d1e4f272
+        reviewed_at: "2026-07-26T18:45:53Z"
+        comment: 'Re-approved after SYS-REQ-111 obligation delegation'
+        fingerprint: sha256:3e38073cb4b97e65e4e90d2d38a4631fe3abd4afcf1fbf11650d26b6ce1a45d2
         ai_generated: false
         motivation:
             kind: unchanged
-            rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+            rationale: 'L3 strict: obligation classes added to share nil_safety/no_path_provided coverage with SYS-REQ-111; requirement intent unchanged'
         motivation_history:
             - kind: unchanged
               rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
@@ -58,17 +58,29 @@ verification:
               rationale: 'L3 strict sweep: obligation decomposition + verification-state alignment completed; requirement content and obligation intent unchanged'
               superseded_at: "2026-07-26T15:21:06Z"
               superseded_by: human:buger
+            - kind: unchanged
+              rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+              superseded_at: "2026-07-26T18:45:53Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-14T00:00:00Z"
-    last_modified_by: human:buger
-    last_modified_at: "2026-07-26T15:21:06Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T18:58:57Z"
 obligation_checklist:
     - missing_path
+    - nil_safety
+    - no_path_provided
 obligation_hazards:
     - class: missing_path
       worst_case: Get returns a stale value slice from a previously cached offset instead of KeyPathNotFoundError when the path is missing, leaking a sibling field's bytes to the caller (silent data corruption).
       severity: low
+    - class: nil_safety
+      worst_case: An empty-string key component flowing into searchKeys on nil-or-zero-length internal slices triggers an unguarded keys[i][0] / p[level][0] dereference, crashing the goroutine (OSS-Fuzz 4649128545288192 panic class, SYS-REQ-111 hazard).
+      severity: high
+    - class: no_path_provided
+      worst_case: An empty-string key component is structurally a no-effective-path case; if the early guard regresses the keys[i][0] dereference panics with index-out-of-range on the empty component slice (SYS-REQ-111 hazard class).
+      severity: high
 verification_state: passing
 lifecycle:
     change_history:
@@ -96,5 +108,10 @@ lifecycle:
           from: approved
           to: approved
           reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T14:36:40Z comment="Re-approved after obligation/verification-state alignment under L3 strict posture")'
+          changed_by: human:buger
+        - date: "2026-07-26T18:45:53Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T15:21:06Z comment="Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)")'
           changed_by: human:buger
 obligation_class: missing_path

@@ -1,6 +1,6 @@
 id: SYS-REQ-010
 version: 1
-status: review
+status: approved
 priority: shall
 category: functional
 req_type: guarantee
@@ -35,21 +35,34 @@ verification:
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        reviewed_at: "2026-04-23T00:00:00Z"
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-26T20:26:16Z"
+        comment: Re-approved after parser.go Delete whitespace-cleanup fix (DEFECT-260726-3PSJ). malformed_input obligation attached (high); nominal+negative witnesses in TestDeleteMalformedJSONRegression_SYS_REQ_010. FuzzPathMutation 60s + FuzzJSONStructureAware 30s crash-free post-fix.
+        fingerprint: sha256:329895adb060c250d735fb3c50cf5dd5838f9304c3a47bb5358544c740998700
         ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260726-3PSJ
+            rationale: parser.go Delete extended to consume any JSON whitespace run before trailing comma (both branches) and remove leading comma for both } and ] close brackets. Four FuzzPathMutation regression seeds lock the discovered shapes. Behavior changed (the bug fix); obligation added to enforce the partition henceforth.
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:15:31Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-07-26T14:54:14Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T20:26:16Z"
 obligation_checklist:
     - empty_input
+    - malformed_input
     - nil_safety
 obligation_hazards:
     - class: empty_input
       worst_case: Delete with no path returns a non-empty document instead of an empty one, leaking data the caller explicitly asked to erase.
       severity: low
+    - class: malformed_input
+      worst_case: Delete on a well-formed array/object with whitespace between the deleted element and the trailing comma (or the close bracket) leaves a dangling comma or close-bracket sequence in the output, producing malformed JSON the caller cannot re-parse (DEFECT-260726-3PSJ, found by FuzzPathMutation).
+      severity: high
     - class: nil_safety
       worst_case: Delete on nil data panics in nextToken at data[0] instead of returning the empty document, crashing the caller on a nil trust-boundary input.
       severity: high

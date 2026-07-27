@@ -1,0 +1,409 @@
+rules:
+  - id: go.process.shell-interpreter
+    message: Shell interpreter execution may require argument-safety and cancellation evidence when inputs cross a trust boundary.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: process.shell_interpreter
+        provider: opengrep
+        tags: [process_dependency, command_execution]
+        confidence: low
+    pattern-either:
+      - pattern: exec.Command("sh", "-c", ...)
+      - pattern: exec.Command("bash", "-c", ...)
+      - pattern: exec.Command("cmd", "/c", ...)
+      - pattern: exec.Command("powershell", "/c", ...)
+      - pattern: exec.Command("powershell", "-Command", ...)
+      - pattern: exec.Command("pwsh", "-Command", ...)
+      - pattern: exec.CommandContext($CTX, "sh", "-c", ...)
+      - pattern: exec.CommandContext($CTX, "bash", "-c", ...)
+      - pattern: exec.CommandContext($CTX, "cmd", "/c", ...)
+      - pattern: exec.CommandContext($CTX, "powershell", "/c", ...)
+      - pattern: exec.CommandContext($CTX, "powershell", "-Command", ...)
+      - pattern: exec.CommandContext($CTX, "pwsh", "-Command", ...)
+
+  - id: go.process.exec-wrapper
+    message: Project-specific process wrapper starts a subprocess; require timeout/cancellation and argument-safety evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: process.exec_wrapper
+        provider: opengrep
+        tags: [process_dependency, command_execution]
+        obligations: [external_call_timeout_bounded, malformed_input]
+        confidence: medium
+    pattern-either:
+      - pattern: $X.exec.Command(...)
+      - pattern: $X.execCommand(...)
+
+  - id: go.net.lookup-then-dial
+    message: DNS lookup is separated from later network use; require DNS pinning or private-network policy evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: network.lookup_then_connect
+        provider: opengrep
+        tags: [http_client, network_boundary]
+        obligations: [ssrf_protection, redirect_policy_explicit]
+        confidence: medium
+    pattern-either:
+      - pattern: |
+          net.LookupHost($HOST)
+          ...
+          http.Get($URL)
+      - pattern: |
+          net.LookupHost($HOST)
+          ...
+          http.NewRequest(..., $URL, ...)
+      - pattern: |
+          net.LookupIP($HOST)
+          ...
+          net.Dial($NETWORK, $ADDR)
+
+  - id: go.boundary.slice-range-boundary-fields
+    message: Slice range uses boundary-shaped fields; require bounds and integer-width evidence for the field source.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.integer_narrowing_index
+        provider: opengrep
+        tags: [panic_safety]
+        obligations: [boundary, overflow_safety]
+        confidence: medium
+    pattern-either:
+      - pattern: $BUF[$R.Start:$R.End]
+      - pattern: $BUF[$R.Offset:$R.End]
+      - pattern: $BUF[$R.Start:$R.Length]
+      - pattern: $BUF[$R.Offset:$R.Length]
+      - pattern: $BUF[$R.Start:$R.Len]
+      - pattern: $BUF[$R.Offset:$R.Len]
+
+  - id: go.boundary.unchecked-tail-access
+    message: Slice or array tail access uses len(x)-N without an obvious nearby length guard.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.unchecked_slice_tail_access
+        provider: opengrep
+        tags: [panic_safety]
+        obligations: [boundary, nil_safety, panic_free_input_handling]
+        confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern: return $X[len($X)-$N]
+          - pattern: $Y := $X[len($X)-$N]
+          - pattern: $Y = $X[len($X)-$N]
+          - pattern: $Y := &$X[len($X)-$N]
+          - pattern: $Y = &$X[len($X)-$N]
+          - pattern: $Y, $OK := $X[len($X)-$N].($T)
+          - pattern: $Y, $OK = $X[len($X)-$N].($T)
+          - pattern: $A, $B := $X[0], $X[len($X)-$N]
+          - pattern: $A, $B = $X[0], $X[len($X)-$N]
+      - metavariable-comparison:
+          metavariable: $N
+          comparison: int($N) > 0
+      - pattern-not-inside: |
+          func $F(...) {
+            if len($X) == 0 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            if len($X) == 0 { return }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            if ... || len($X) == 0 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if len($X) == 0 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if ... || len($X) == 0 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            if len($X) < 2 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if len($X) < $N { return ... }
+            ...
+            return $X[len($X)-$N]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if len($X) <= $N { return ... }
+            ...
+            return $X[len($X)-$N]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            if len($X) < 2 { continue }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          for ... {
+            if len($X) < 2 { continue }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if len($X) < 2 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            if len($X) <= 2 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if len($X) <= 2 { return ... }
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          if len($X) > 0 {
+            ...
+            $X[len($X)-1]
+            ...
+          }
+      - pattern-not-inside: |
+          if len($X) >= 1 {
+            ...
+            $X[len($X)-1]
+            ...
+          }
+      - pattern-not-inside: |
+          if len($X) >= 2 {
+            ...
+            $X[len($X)-1]
+            ...
+          }
+      - pattern-not-inside: |
+          if len($X) < 2 || $X[len($X)-1] == ... {
+            ...
+          }
+      - pattern-not-inside: |
+          if len($X) < 2 || $X[len($X)-1] != ... {
+            ...
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            if len($Y) == 0 { return ... }
+            ...
+            $X := $Y[:1]
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            if len($Y) == 0 { return ... }
+            ...
+            $X := $Y[:1]
+            ...
+            $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            $X := append(...)
+            ...
+            return $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            $X := append(...)
+            ...
+            return $X[len($X)-2]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            $X = append($X, ...)
+            ...
+            &$X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            $X = append($X, ...)
+            ...
+            &$X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            $X = append($X, ...)
+            ...
+            return $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            $X = append($X, ...)
+            ...
+            return $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) $RET {
+            $X := append(...)
+            ...
+            $Y := $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            $X := append(...)
+            ...
+            $Y := $X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            $X = append($X, ...)
+            ...
+            &$X[len($X)-1]
+          }
+      - pattern-not-inside: |
+          $X := strings.Split(...)
+          ...
+      - pattern-not-inside: |
+          $X = strings.Split(...)
+          ...
+      - pattern-not-inside: |
+          $X := strings.SplitN(...)
+          ...
+      - pattern-not-inside: |
+          $X = strings.SplitN(...)
+          ...
+      - pattern-not-inside: |
+          $X := strings.Fields(...)
+          ...
+      - pattern-not-inside: |
+          $X = strings.Fields(...)
+          ...
+      - pattern-not-inside: |
+          $X := strings.FieldsFunc(...)
+          ...
+      - pattern-not-inside: |
+          $X = strings.FieldsFunc(...)
+          ...
+
+  - id: go.boundary.append-after-reslice
+    message: |
+      A new variable is bound to append(src[:n], x), aliasing the original
+      backing array. When n is below len(src), the append overwrites src[n]
+      in place, so the freshly bound slice and the still-live src share -- and
+      silently clobber -- the same storage; mutating one corrupts the other.
+      Copy into a fresh slice (append([]T(nil), src[:n]...)) or document the
+      in-place contract.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.slice_append_after_slicing
+        provider: opengrep
+        tags: [boundary]
+        obligations: [boundary]
+        confidence: medium
+        notes: |
+          Generalized signal I from the graphql-go-tools audit (issue #73).
+          Distinct from control_flow.range_mutate_iteratee, which targets the
+          element-skipping defect of deleting during a range loop; this rule
+          targets backing-array aliasing.
+
+          Restricted to the := new-variable binding form
+          (dst := append(src[:n], x)) -- the shape that creates a fresh alias
+          while the source name stays live. The bare = reassignment form is
+          deliberately NOT matched: the dominant benign idiom in real code is
+          truncate-and-summarize into a now-dead local
+          (cr.Details = append(details[:10], summary)), where the source is
+          not read after the append. Matching = produced 23 false positives
+          on reqproof's own corpus (all that idiom) and zero true positives,
+          so the = form is excluded to keep the rule green and precise.
+
+          Within the := form: append(src[:len(src)], x) (ordinary grow) and
+          append(src[:0], x) (buffer reset) are excluded via metavariable
+          guards. confidence: medium because liveness of src after the append
+          is not statically proven at this layer.
+    patterns:
+      - pattern: $DST := append($SRC[:$N], $X)
+      - metavariable-pattern:
+          metavariable: $N
+          patterns:
+            - pattern-not: len($SRC)
+            - pattern-not: "0"
+      - pattern-not: $SRC := append($SRC[:$N], $X)
+
+  - id: go.auth.jwt-parsed-without-verification
+    message: >-
+      Token claims are read without verifying the signature (ParseUnverified /
+      nil keyfunc / manual payload decode). Verify the signature before trusting
+      claims.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      proof:
+        signal_id: go.jwt_unverified_parse
+        provider: opengrep
+        tags: [auth_boundary]
+        confidence: medium
+        notes: |
+          A signed token (JWT / OIDC ID token) is parsed via an unverified path --
+          jwt.ParseUnverified, jwt.Parse with a nil/constant keyfunc -- so downstream
+          trust of the claims is unauthenticated. The test-helper pattern-not-inside
+          suppresses matches in *_test.go bodies.
+    patterns:
+      - pattern-either:
+          - pattern: $P.ParseUnverified($TOK, ...)
+          - pattern: jwt.ParseUnverified($TOK, ...)
+          - pattern: jwt.Parse($TOK, nil)
+          - pattern: jwt.Parse($TOK, func(...) (interface{}, error) { return $K, nil })
+      - pattern-not-inside: |
+          func $F($T *testing.T) { ... }
+
+  - id: go.exposure.raw-error-to-http-response
+    message: >-
+      Raw internal error text is written straight into an HTTP response body via
+      http.Error, leaking stack/driver/technology detail to the client. Return a
+      generic message and log the detail with an internal reference id.
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: go.raw_error_in_http_response
+        provider: opengrep
+        tags: [error_handling, network_boundary]
+        obligations: [error_handling]
+        confidence: medium
+        notes: |
+          Sink-coupled to the HTTP response boundary. http.Error's first argument
+          is typed http.ResponseWriter and its message argument is written verbatim
+          to the response body by the net/http contract, so err.Error() reaching it
+          provably crosses the client boundary. Unlike a bare fmt.Errorf("...%w", err)
+          wrap (which never reaches a client and floods on normal error handling),
+          this fires only on the actual leak sink. Measured 0 FP on the Go corpus.
+          Scoped to http.Error deliberately: a generic writer form (fmt.Fprint /
+          w.Write of err.Error()) also matches in-memory buffers and is a known FP.
+          Test bodies suppressed.
+    patterns:
+      - pattern: http.Error($W, $E.Error(), $CODE)
+      - pattern-not-inside: |
+          func $F($T *testing.T) { ... }

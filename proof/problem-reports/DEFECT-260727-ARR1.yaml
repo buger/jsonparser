@@ -1,0 +1,72 @@
+schema_version: 1
+id: DEFECT-260727-ARR1
+title: ArrayEach on non-array root emitted spurious callback before erroring
+introduced_in: inception
+source:
+    type: audit_finding
+classification:
+    surface: error_handling
+    severity: medium
+disposition:
+    status: covered_by_requirement
+    covered_by: SYS-REQ-029
+    owner: human:buger
+    requirements:
+        - SYS-REQ-029
+        - SYS-REQ-006
+    evidence:
+        verified_by:
+            - parser_test.go:TestArrayEachNonArrayRootNoCallback_SYS029
+    reviewer: human:buger
+    reviewed_at: "2026-07-27T06:50:00Z"
+    resolution_note: |
+        FIXED: parser.go:ArrayEach now guards `data[nT] != '['` when no key
+        path is provided, returning MalformedArrayError immediately without
+        invoking the callback. The non_array_root_no_callback obligation on
+        SYS-REQ-029 enforces the no-spurious-callback invariant henceforth.
+    reason: |
+        Fixed in parser.go:ArrayEach — added a guard after nextToken that
+        checks `data[nT] != '['` when no key path is provided, returning
+        MalformedArrayError immediately WITHOUT invoking the callback.
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-029
+    obligation: non_array_root_no_callback
+    regression_tests:
+        - parser_test.go:TestArrayEachNonArrayRootNoCallback_SYS029
+    notes: parser.go:ArrayEach root-token-type guard prevents recurrence.
+affects:
+    - SYS-REQ-029
+    - SYS-REQ-006
+evidence:
+    reproduction: |
+        ArrayEach([]byte(`{"a":1,"b":2}`), cb)
+        BUG (pre-fix):  cb invoked once with value="a" (the object key parsed
+                        as a string element!), then returns MalformedArrayError.
+        FIX (post-fix): cb never invoked; returns MalformedArrayError immediately.
+    failing_partitions:
+        - object root  (e.g. {"a":1,"b":2}) — 1 spurious callback
+        - number root  (e.g. 12345)         — 1 spurious callback
+    passing_partitions_unchanged:
+        - string root  (e.g. "hello") — already 0 callbacks (Get failed first)
+        - bool root    (e.g. true)    — already 0 callbacks (Get failed first)
+        - all array roots — unaffected
+        - key-path ArrayEach — unaffected (existing guard in keys block)
+root_cause:
+    missing_requirement: false
+    missing_test_partition: true
+    missing_mcdc_variable: false
+    notes: |
+        parser.go:ArrayEach lacked a root-token-type guard in the no-keys path.
+        The main loop unconditionally parsed the first token after the assumed
+        `[` as an array element; for object/number input, this misinterpreted
+        the first content byte as an element and invoked the callback with
+        bogus data before the structural-malformed check triggered.
+history:
+    - at: "2026-07-27T06:31:30Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-27T06:35:00Z"
+      by: human:buger
+      action: dispositioned
+      reason: Fixed and covered by SYS-REQ-029 regression test.
