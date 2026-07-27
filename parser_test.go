@@ -2331,9 +2331,11 @@ var parseStringTest = []ParseTest{
 		out:    "\uFFFF",
 	},
 	{
+		// \uDF00 is a lone low surrogate: per DEFECT-260727-SNGT it now matches
+		// encoding/json (U+FFFD substitution) rather than returning an error.
 		in:     `\uDF00`,
 		intype: String,
-		isErr:  true,
+		out:    "\uFFFD",
 	},
 }
 
@@ -2366,6 +2368,18 @@ func TestParseString(t *testing.T) {
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=F => FALSE
 // MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=T => TRUE
 func TestParseInt(t *testing.T) {
+	// SYS-REQ-015:malformed_input:nominal
+	//   Witness for the happy-path nominal partition: ParseInt on well-formed
+	//   JSON Number tokens ("0", "-12345", "9223372036854775807") returns the
+	//   expected int64 value with no error.
+	// SYS-REQ-015:malformed_input:negative
+	//   Witness for the malformed-input partition of ParseInt. The "alpha
+	//   suffix", "fractional token", and "empty input" rows below all assert
+	//   MalformedValueError is returned for tokens that do not conform to the
+	//   JSON Number grammar. (Note: the sign-only partition `ParseInt("-")`
+	//   is tracked separately under DEFECT-260726-3F95 / KI-2 — that partition
+	//   currently returns (0, nil) instead of MalformedValueError and is the
+	//   one malformed sub-case NOT covered here.)
 	tests := []struct {
 		name    string
 		in      string
@@ -2428,6 +2442,121 @@ func TestParseInt(t *testing.T) {
 			}
 			if got != test.want {
 				t.Fatalf("ParseInt(%q) value mismatch: expected %d, got %d", test.in, test.want, got)
+			}
+		})
+	}
+}
+
+// TestParseInt_SignOnlyTripwire_KI2 reproduces the live failure mode tracked
+// as KnownIssue KI-2 / DEFECT-260726-3F95. It PASSES while the bug is present
+// (ParseInt("-") returns (0, nil)) and FAILS the moment the one-line guard
+// lands in bytes.go:parseInt, at which point KI-2 must be flipped to
+// status: fixed and this tripwire removed.
+//
+// Reproduces: KI-2
+func TestParseInt_SignOnlyTripwire_KI2(t *testing.T) {
+	v, err := ParseInt([]byte("-"))
+	// Tripwire: while the bug is present, the call returns (0, nil).
+	if err != nil {
+		t.Fatalf("KI-2 tripwire no longer reproduces: ParseInt(\"-\") err = %v (the bug has been FIXED — flip KI-2 to status: fixed and delete this tripwire)", err)
+	}
+	if v != 0 {
+		t.Fatalf("KI-2 tripwire no longer reproduces: ParseInt(\"-\") v = %d (the bug has been FIXED — flip KI-2 to status: fixed and delete this tripwire)", v)
+	}
+	// Also exercise the `+`-prefixed variant for documentation: parseInt does
+	// not treat `+` as a sign, so it hits the c < '0' branch and correctly
+	// returns MalformedValueError. This row pins the asymmetry so a future
+	// fix that accidentally widened the sign classifier surfaces here too.
+	if _, err := ParseInt([]byte("+")); err == nil {
+		t.Fatalf("ParseInt(\"+\") unexpectedly returned nil error — `+` is not a JSON number prefix")
+	}
+}
+
+// Reproduces: KI-4
+// TestSetTopLevelArrayBeyondLength_KI4 documents the open design gap
+// (DEFECT-260727-T7P7): Set on a top-level array-index beyond length
+// returns KeyPathNotFoundError instead of appending. SYS-REQ-110
+// unconditionally requires append-at-end, but the code's top-level
+// branch explicitly excludes matching array+array-index. This test
+// PASSES (asserts the current behavior) and will need to be updated
+// if the design decision is to extend Set.
+func TestSetTopLevelArrayBeyondLength_KI4(t *testing.T) {
+	_, err := Set([]byte(`[1,2,3]`), []byte(`99`), "[5]")
+	if err != KeyPathNotFoundError {
+		t.Fatalf("KI-4 no longer reproduces: Set([1,2,3], 99, [5]) err = %v, want KeyPathNotFoundError (if this changed, the design gap was resolved — flip KI-4 to fixed)", err)
+	}
+}
+
+// Verifies: SYS-REQ-110 [boundary]
+// SYS-REQ-110:boundary:negative
+// SYS-REQ-110:element_type_partition:nominal
+//   Positive/nominal witness for the element_type_partition obligation: Set
+//   with a beyond-length array index on a non-empty nested array of SCALAR
+//   elements must append at end and preserve all existing elements. Before
+//   this fix, the condition `data[subObjOff] == '{'` limited append-behavior
+//   to arrays whose first element was an object; scalar arrays (numbers,
+//   strings, bools, nulls, nested arrays) were silently replaced with
+//   [value], destroying all data.
+func TestSetBeyondLengthScalarArrayPreservesElements_SYS110(t *testing.T) {
+	cases := []struct {
+		name     string
+		data     string
+		keys     []string
+		setValue string
+		want     string
+	}{
+		{"number_array", `{"a":[1,2,3]}`, []string{"a", "[9]"}, `99`, `{"a":[1,2,3,99]}`},
+		{"string_array", `{"a":["x","y"]}`, []string{"a", "[9]"}, `"z"`, `{"a":["x","y","z"]}`},
+		{"bool_array", `{"a":[true,false]}`, []string{"a", "[9]"}, `true`, `{"a":[true,false,true]}`},
+		{"null_array", `{"a":[null,null]}`, []string{"a", "[9]"}, `null`, `{"a":[null,null,null]}`},
+		{"nested_number_array", `{"a":[[1,2]]}`, []string{"a", "[9]"}, `99`, `{"a":[[1,2],99]}`},
+		{"mixed_first_number", `{"a":[1,{"x":2}]}`, []string{"a", "[9]"}, `99`, `{"a":[1,{"x":2},99]}`},
+		{"index_equals_len", `{"a":[1,2,3]}`, []string{"a", "[3]"}, `99`, `{"a":[1,2,3,99]}`},
+		{"index_len_plus_one", `{"a":[1,2,3]}`, []string{"a", "[4]"}, `99`, `{"a":[1,2,3,99]}`},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := Set([]byte(c.data), []byte(c.setValue), c.keys...)
+			if err != nil {
+				t.Fatalf("Set(%s,%v) returned error: %v", c.data, c.keys, err)
+			}
+			if string(got) != c.want {
+				t.Fatalf("Set(%s,%v) = %s; want %s (scalar array elements must be preserved on beyond-length append)", c.data, c.keys, string(got), c.want)
+			}
+		})
+	}
+}
+
+// Verifies: SYS-REQ-029 [malformed_input]
+// SYS-REQ-029:malformed_input:negative
+// SYS-REQ-029:non_array_root_no_callback:negative
+//   Negative witness: ArrayEach on a non-array root value (object, number,
+//   string, bool) must NOT invoke the callback at all and must return an
+//   error. Before this fix, ArrayEach emitted exactly one spurious callback
+//   with the first token of the non-array value (e.g. the object key parsed
+//   as a string element) before returning MalformedArrayError — a caller
+//   performing side effects in the callback observed a bogus invocation.
+func TestArrayEachNonArrayRootNoCallback_SYS029(t *testing.T) {
+	cases := []struct {
+		name string
+		data string
+	}{
+		{"object_root", `{"a":1,"b":2}`},
+		{"number_root", `12345`},
+		{"bool_root", `true`},
+		{"null_root", `null`},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			callbacks := 0
+			_, err := ArrayEach([]byte(c.data), func(v []byte, vt ValueType, o int, e error) {
+				callbacks++
+			})
+			if err == nil {
+				t.Fatalf("ArrayEach(%s) expected error, got nil", c.data)
+			}
+			if callbacks != 0 {
+				t.Fatalf("ArrayEach(%s) emitted %d callback(s) before erroring — non-array root must not invoke callback", c.data, callbacks)
 			}
 		})
 	}

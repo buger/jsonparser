@@ -1,0 +1,44 @@
+rules:
+  - id: go.deserializer.request-body-json
+    message: Request body JSON decode; require input size/schema/malformed-input obligations.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: deserializer.request_body_json
+        provider: opengrep
+        tags: [deserializer, accepts_user_data]
+        obligations: [input_size_bounded, malformed_input]
+        confidence: high
+    patterns:
+      - pattern: json.NewDecoder($R.Body).Decode(...)
+
+  - id: go.deserializer.request-body-readall
+    message: Whole request body is read into memory; require an explicit request-size bound.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: deserializer.request_body_readall
+        provider: opengrep
+        tags: [deserializer, accepts_user_data]
+        obligations: [input_size_bounded, malformed_input]
+        confidence: high
+    pattern-either:
+      - pattern: io.ReadAll($R.Body)
+      - pattern: ioutil.ReadAll($R.Body)
+
+  - id: go.deserializer.yaml-unmarshal
+    message: YAML unmarshal can amplify CPU/memory on malicious input; review parser-budget evidence when the source is untrusted.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: deserializer.yaml_unmarshal
+        provider: opengrep
+        tags: [structured_data_parser]
+        confidence: low
+    pattern-either:
+      - pattern: yaml.Unmarshal($DATA, ...)
+      - pattern: yaml.UnmarshalStrict($DATA, ...)
+      - pattern: sigyaml.Unmarshal($DATA, ...)

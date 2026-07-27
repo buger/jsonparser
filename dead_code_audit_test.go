@@ -3,6 +3,7 @@ package jsonparser
 import (
 	"fmt"
 	"testing"
+	"unicode/utf8"
 )
 
 // =============================================================================
@@ -239,10 +240,15 @@ func TestRemoval3_DecodeUnicodeEscape_BMP_NonSurrogate(t *testing.T) {
 
 // Verifies: SYS-REQ-014 [boundary]
 func TestRemoval3_DecodeUnicodeEscape_HighSurrogateAlone(t *testing.T) {
-	// \uD800 is a high surrogate — should require a low surrogate pair
+	// \uD800 is a lone high surrogate. Per RFC 8259/WHATWG a lone surrogate in
+	// a JSON string is malformed; match encoding/json by substituting U+FFFD
+	// and consuming only the 6 bytes of the escape (DEFECT-260727-SNGT).
 	r, n := decodeUnicodeEscape([]byte(`\uD800`))
-	if n != -1 {
-		t.Fatalf("expected error (n=-1) for lone high surrogate, got n=%d r=0x%X", n, r)
+	if n != 6 {
+		t.Fatalf("expected consumed=6 for lone high surrogate (U+FFFD substitution), got n=%d", n)
+	}
+	if r != utf8.RuneError {
+		t.Fatalf("expected U+FFFD (utf8.RuneError), got U+%X", r)
 	}
 }
 

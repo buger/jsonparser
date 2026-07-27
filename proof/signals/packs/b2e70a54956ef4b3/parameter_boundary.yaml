@@ -1,0 +1,38 @@
+# SIG-08 parameter-boundary-degenerate -- Go INFO-severity review-prompt rule.
+#
+# Sibling of data/solidity/parameter_boundary.yaml. Fires on every configurable
+# parameter setter (`func ... SetX(...)` -- both bare-function and method-receiver
+# forms) to generate the auditor's worklist for boundary-value testing (d=0,
+# d=math.Max*, d=sentinel, d exceeding any downstream narrowing-cast width).
+#
+# This is a REVIEW-PROMPT signal, not a defect finding: the rule deliberately
+# matches the configurable surface broadly, at low confidence and INFO
+# severity, so reviewers can cite a stable signal_id when triaging setters.
+#
+# Note: only exported setters (`SetX`, capital S) are matched -- unexported
+# `setX` helpers are internal call sites, not the configurable boundary.
+#
+# Carries the existing catalog obligation parameter_boundary_safe (defi); no
+# new catalog entry.
+# Fixtures: data/go/fixtures/<signal_id>/{positive,negative}/ -- validated by
+# `proof signals validate --signal <id> --strict`.
+rules:
+  - id: go.parameter-boundary.degenerate
+    message: Configurable parameter setter -- reviewer tests boundary values (0, math.Max*, sentinel, narrowing-cast boundary)
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: go.parameter_boundary_degenerate
+        provider: opengrep
+        tags: [governance, parameter_bounds]
+        obligations: [parameter_boundary_safe]
+        confidence: low
+        notes: |
+          INFO-severity review-prompt worklist (SIG-08). Fires on every
+          `func ... SetX(...)` to enumerate the configurable parameter surface
+          for boundary-value testing. Low confidence by design -- this is a
+          worklist, not a finding. Matches both bare-function setters
+          (`func SetX(...)`) and method-receiver setters
+          (`func (s *T) SetX(...)`); unexported setX is intentionally excluded.
+    pattern-regex: \bfunc\s*(\([^)]*\)\s*)?Set\w*\s*\(

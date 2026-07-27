@@ -1,0 +1,105 @@
+schema_version: 1
+id: DEFECT-260727-SNGT
+title: Unescape lone-Unicode-surrogate mishandling synthesizes bogus non-BMP chars
+introduced_in: inception
+source:
+    type: test_failure
+    reference: testdata/fuzz/FuzzJSONStructureAware/e1408e32ad385bf0
+    finder: FuzzJSONStructureAware checkParseStringGate (ParseString differential vs encoding/json)
+    reproducer_command: go test -run='FuzzJSONStructureAware/e1408e32ad385bf0' -v ./...
+classification:
+    surface: data_integrity
+    severity: high
+disposition:
+    status: covered_by_requirement
+    covered_by: SYS-REQ-014
+    owner: human:buger
+    requirements:
+        - SYS-REQ-014
+        - SYS-REQ-061
+        - SYS-REQ-062
+    evidence:
+        verified_by:
+            - escape_test.go:TestUnescapeLoneHighSurrogate
+            - escape_test.go:TestUnescapeLoneHighSurrogateFollowedByNonEscape
+            - escape_test.go:TestUnescapeLoneLowSurrogate
+            - escape_test.go:TestUnescapeHighSurrogateThenNonSurrogate
+            - escape_test.go:TestUnescapeValidSurrogatePairStillWorks
+            - escape_test.go:TestParseStringLoneSurrogateMatchesEncodingJSON
+    reviewer: human:buger
+    reviewed_at: "2026-07-27T08:20:00Z"
+    resolution_note: |
+        FIXED in escape.go:decodeUnicodeEscape. After reading a high surrogate
+        the function now verifies in[6:8] == "\u" before reading a low surrogate,
+        and validates any second escape is in the DC00-DFFF low-surrogate range.
+        A lone high/low surrogate now substitutes U+FFFD and consumes only the 6
+        bytes of the lone-surrogate escape, matching encoding/json byte-for-byte.
+        Valid surrogate pairs (e.g. \uD800\uDC00 -> U+10000) are unchanged.
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-014
+    obligation: lone_surrogate_substitutes_replacement_char
+    regression_tests:
+        - escape_test.go:TestUnescapeLoneHighSurrogate
+        - escape_test.go:TestUnescapeLoneHighSurrogateFollowedByNonEscape
+        - escape_test.go:TestUnescapeLoneLowSurrogate
+        - escape_test.go:TestUnescapeHighSurrogateThenNonSurrogate
+        - escape_test.go:TestUnescapeValidSurrogatePairStillWorks
+        - escape_test.go:TestParseStringLoneSurrogateMatchesEncodingJSON
+    notes: |
+        escape.go:decodeUnicodeEscape now (a) treats a leading low surrogate as
+        a lone surrogate, (b) requires "\u" after a high surrogate before reading
+        a low surrogate, and (c) rejects BMP/high second escapes as lone-high.
+        Truncated/genuinely-malformed escapes still return MalformedValueError.
+affects:
+    - SYS-REQ-014
+    - SYS-REQ-061
+    - SYS-REQ-062
+evidence:
+    reproduction: |
+        ParseString([]byte(`\uDB29A7FA71 a`))  (JSON: {"a":"\uDB29A7FA71 a"} path [a])
+        BUG (pre-fix):  returns "\U000dc271 a"  — decodeSingleUnicodeEscape misread the
+                        literal "A7FA" after "\uDB29" as a low surrogate (it assumes the
+                        "\u" prefix and reads hex at fixed offsets), synthesizing the
+                        bogus code point (0xDB29, 0xFA71) -> U+DC271.
+        FIX (post-fix): returns "\uFFFDA7FA71 a", byte-identical to encoding/json.
+    reference_oracle: |
+        encoding/json.Unmarshal([]byte(`"\uDB29A7FA71"`), &s) -> s == "\uFFFDA7FA71"
+        (U+FFFD substitution for the lone high surrogate; following bytes preserved).
+    fuzzer_verification: |
+        go test -run='^$' -fuzz=FuzzJSONStructureAware -fuzztime=60s ./...
+          -> PASS, 10442095 execs, 0 crashes (was 1 crash before the fix)
+        go test -run='^$' -fuzz=FuzzPathMutation -fuzztime=30s ./...
+          -> PASS, 13640998 execs, 0 crashes
+    failing_partitions:
+        - lone high surrogate not followed by "\u" (e.g. \uDB29A7FA)     — bogus pair
+        - lone high surrogate at end of input (e.g. \uD800)              — error, now U+FFFD
+        - lone low surrogate (e.g. \uDC00, \uDF00)                       — error, now U+FFFD
+        - high surrogate followed by non-low "\u" escape (e.g. \uD800\u0041) — error, now U+FFFD+A
+    passing_partitions_unchanged:
+        - valid surrogate pair (\uD800\uDC00 -> U+10000, \uD83D\uDE03 -> U+1F603)
+        - BMP codepoint escapes (\u0041, \uFFFF, \uFF11)
+        - truncated/genuinely-malformed escapes (\u, \u12, \u123X, \x) — still error
+        - basic 2-char escapes (\", \\, \n, \t, ...)
+root_cause:
+    missing_requirement: false
+    missing_test_partition: true
+    missing_mcdc_variable: false
+    notes: |
+        escape.go:decodeUnicodeEscape (root cause at escape.go:126 in the
+        pre-fix source) called decodeSingleUnicodeEscape(in[6:]) to read the low
+        surrogate WITHOUT first verifying in[6:8] == "\u". Because
+        decodeSingleUnicodeEscape assumes the "\u" prefix and reads hex at fixed
+        offsets [2:6], any literal bytes following a lone high surrogate were
+        misread as a low surrogate and a bogus non-BMP code point was synthesized.
+        Additionally the lone-low-surrogate and high-then-non-low-surrogate cases
+        returned a hard error instead of the U+FFFD substitution that
+        encoding/json (and RFC 8259/WHATWG interoperability) use.
+history:
+    - at: "2026-07-27T08:13:06Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-27T08:20:00Z"
+      by: human:buger
+      action: dispositioned
+      reason: Fixed in escape.go; regression tests + 60s fuzz re-run (0 crashes) verify.

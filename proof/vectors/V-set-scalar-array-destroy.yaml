@@ -1,0 +1,12 @@
+id: V-set-scalar-array-destroy
+title: Set beyond-length on scalar array silently destroys all elements
+priority: P0
+status: closed-null
+related_obligation_classes:
+    - element_type_partition
+close_note: Fixed in DEFECT-260727-WWWY; regression test TestSetBeyondLengthScalarArrayPreservesElements_SYS110 locks all scalar element-type partitions.
+campaign_log:
+    - at: "2026-07-27T06:42:11Z"
+      status: closed-null
+      note: Fixed in DEFECT-260727-WWWY; regression test TestSetBeyondLengthScalarArrayPreservesElements_SYS110 locks all scalar element-type partitions.
+      actor: agent

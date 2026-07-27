@@ -1,6 +1,6 @@
 id: SYS-REQ-014
 version: 1
-status: review
+status: approved
 priority: shall
 category: functional
 req_type: guarantee
@@ -37,14 +37,22 @@ verification:
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        reviewed_at: "2026-04-23T00:00:00Z"
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T11:43:30Z"
+        comment: 'Surrogate-bug hardening: motivation linked to DEFECT-260727-SNGT'
+        fingerprint: sha256:6625d92fc2c1e1310bb4beed62026539b1db99f58c27bb6fe174ba836d5f2a79
         ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-SNGT
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:21:50Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-07-26T14:54:14Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T11:43:30Z"
 obligation_checklist:
     - encoding_safety
 obligation_hazards:

@@ -1,0 +1,53 @@
+id: KI-4
+title: Set on top-level array-index beyond length returns KeyPathNotFoundError instead of appending
+description: SYS-REQ-110 unconditionally requires append-at-end for [N] where N >= len(array), but Set's top-level branch explicitly rejects matching array+array-index paths with KeyPathNotFoundError. Nested arrays are fixed (DEFECT-260727-WWWY); only top-level arrays are affected.
+affected_requirements:
+    - SYS-REQ-110
+evidence_manifests:
+    - proof/evidence/ki4-set-toplevel-array-beyond-length.yaml
+severity: medium
+severity_basis: risk
+risk: correctness
+cve_surface: none
+affected_api: Set
+attacker_input: Caller-controlled path [N] where N >= len(top-level array)
+reproducer_command: go test -v -run TestSetTopLevelArrayBeyondLength_KI4 -count=1 ./...
+introduced_in: inception
+mitigation: Wrap the top-level array in an object (e.g. {"items":[...]}), or append manually by re-slicing.
+remediation: Extend parser.go:Set endOffset==-1 branch to handle (pathIsIndex && dataIsArray) top-level arrays, OR narrow SYS-REQ-110 to document the top-level exception.
+customer_impact: Set fails for a common use case (appending to a top-level JSON array); callers must wrap the array in an object.
+owner: human:buger
+review_date: "2026-08-15"
+release_disposition: ship_with_known_issue
+status: open
+poc_quality:
+    real_infrastructure: true
+    quantitative_impact: true
+    control_test: true
+    handles_mutant: true
+    covers_poisoned: true
+    deterministic: true
+    minimal: true
+    upstream_ready: true
+    reproducible: true
+    validated: true
+    current_deployment_relevance: true
+    honest_severity: true
+    no_inflation: true
+    operational_path_verified: true
+    notes: |
+        real_infrastructure: parser_test.go:TestSetTopLevelArrayBeyondLength_KI4 runs against the live codebase
+        quantitative_impact: Set([1,2,3], 99, [5]) returns KeyPathNotFoundError — 100% failure rate on the partition
+        control_test: parser_test.go:TestSetBeyondLengthScalarArrayPreservesElements_SYS110 (positive: nested case works)
+        operational_path_verified: parser_test.go:TestSetTopLevelArrayBeyondLength_KI4 asserts the exact failure mode
+        honest_severity: medium correctness — no data corruption, no panic, just a documented feature gap
+        no_inflation: severity is medium (correctness), not security; CVE surface is none
+        current_deployment_relevance: affects any caller using top-level JSON arrays with Set
+history:
+    - at: "2026-07-27T07:02:12Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-27T07:05:35Z"
+      by: human:buger
+      action: edit
+      detail: add-evidence-manifest

@@ -1,0 +1,93 @@
+{
+  "schema_version": "proof.signal_packs.v1",
+  "proof_version": "0.1.0-dev",
+  "pack_ref": "builtin:go/default",
+  "pack_hash": "sha256:b2e70a54956ef4b380c6748d755dd5682d8e91a327335ca0b96c46d164d6cf9e",
+  "files": [
+    {
+      "source_path": "data/go/accumulation_safety.yaml",
+      "path": "accumulation_safety.yaml",
+      "sha256": "sha256:f5c4c52b3f0ce6f524b7134d5309a474f49549bbbc460151299c55d2ecbae23e"
+    },
+    {
+      "source_path": "data/go/boundary.yaml",
+      "path": "boundary.yaml",
+      "sha256": "sha256:cc8e6a0f48eb1ba6c159b410ffe18c125a0ce2d70e1b39bd89ba13a3da8d8e46"
+    },
+    {
+      "source_path": "data/go/bug_vectors.yaml",
+      "path": "bug_vectors.yaml",
+      "sha256": "sha256:e288b0b7a00ff5dfa99317846fd810d93c5f0928c539af5a2fddeb10549b0d0c"
+    },
+    {
+      "source_path": "data/go/concurrency.yaml",
+      "path": "concurrency.yaml",
+      "sha256": "sha256:b539581124f31133fb59c015f821c6e258631c0dff3428ce76faea740f160168"
+    },
+    {
+      "source_path": "data/go/control_flow.yaml",
+      "path": "control_flow.yaml",
+      "sha256": "sha256:5587fbe2a866f8c4d57b904fe78d318a6f0a1b74ace9ba7cf3a3d7b89b665083"
+    },
+    {
+      "source_path": "data/go/db.yaml",
+      "path": "db.yaml",
+      "sha256": "sha256:6bca6819945180267a5e3f248b0345ff82cd78c3b5190d7aef4570f03bdaf23b"
+    },
+    {
+      "source_path": "data/go/deserializer.yaml",
+      "path": "deserializer.yaml",
+      "sha256": "sha256:6365d2aab184141a0a86c18b764bedc43057b9fbbf1ad74ec892026974453f72"
+    },
+    {
+      "source_path": "data/go/error_handling_consistency.yaml",
+      "path": "error_handling_consistency.yaml",
+      "sha256": "sha256:e18497e5f2232ad45f6d26989fd93e51b780b359c4d48e5daa77b07c42b8aa05"
+    },
+    {
+      "source_path": "data/go/filesystem.yaml",
+      "path": "filesystem.yaml",
+      "sha256": "sha256:1559b3ed39d25a724c1e3421c66921d3f41720afc5d4e850d675016e7b27d14f"
+    },
+    {
+      "source_path": "data/go/http_client.yaml",
+      "path": "http_client.yaml",
+      "sha256": "sha256:592e21bdde111130542d8fa6e32270e5853431aabade91d490b7276c1d5e04d5"
+    },
+    {
+      "source_path": "data/go/invariant.yaml",
+      "path": "invariant.yaml",
+      "sha256": "sha256:4be2e2c91bb31864c8492efc53d1c678ad8aee995f12bf3f7416e759e4d4a93d"
+    },
+    {
+      "source_path": "data/go/logging.yaml",
+      "path": "logging.yaml",
+      "sha256": "sha256:7e913ba6447ea1f7b37cc77242b11feea64d593ec19af35d05d6a3ab589edd4e"
+    },
+    {
+      "source_path": "data/go/loop_safety.yaml",
+      "path": "loop_safety.yaml",
+      "sha256": "sha256:6360c2aac512059da104492ec811ba73f1e2ae373c6791fb6deec51f1ce202c0"
+    },
+    {
+      "source_path": "data/go/narrowing_cast.yaml",
+      "path": "narrowing_cast.yaml",
+      "sha256": "sha256:935212aaea5638f8eebaa188eece2e5a653705bbfe39ac98a9d9ecffc4a6b4e2"
+    },
+    {
+      "source_path": "data/go/parameter_boundary.yaml",
+      "path": "parameter_boundary.yaml",
+      "sha256": "sha256:aac59e3bf4e1328a984892677f03e4e0d751fb793ea55ddc2295c7d619331d0c"
+    },
+    {
+      "source_path": "data/go/process.yaml",
+      "path": "process.yaml",
+      "sha256": "sha256:177ca51d46288a9c8630ef1ed50df49ae8b505eb0f908a67bd89b729f37ed4ea"
+    },
+    {
+      "source_path": "data/go/runtime.yaml",
+      "path": "runtime.yaml",
+      "sha256": "sha256:f8e8e4db13e2ea214f4bfca33c5686f9090632b8cb5272c949b7652b01a17a31"
+    }
+  ]
+}

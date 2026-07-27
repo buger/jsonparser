@@ -1,0 +1,873 @@
+{
+  "schema_version": "proof.code_signals.report.v1",
+  "provider": "opengrep",
+  "generated_at": "2026-07-26T18:13:40Z",
+  "input_hash": "sha256:914a096595bdd4ebc32ccc333ab7997dc6f841e28999fbbed4bbb2635cb2c14d",
+  "mode": "run",
+  "source": "stdout",
+  "format": "sarif",
+  "command": [
+    "opengrep",
+    "scan",
+    "--config",
+    "proof/signals/packs/b2e70a54956ef4b3",
+    "--config",
+    "proof/signals/rules/unchecked-caller-slice-deref.yaml",
+    "--sarif",
+    "--quiet",
+    "--no-rewrite-rule-ids",
+    "parser.go",
+    "bytes.go",
+    "bytes_safe.go",
+    "bytes_unsafe.go",
+    "escape.go",
+    "fuzz.go"
+  ],
+  "signals": [
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_safe.go",
+      "span": {
+        "start_line": 17,
+        "end_line": 17
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:fe3119b96b14a5d6af36c144eaef4b8c20e112f9c0dc139147b9ac3f15cb0f72",
+      "source_hash": "sha256:c521faa882880601144a8304a9c4569ae5f4c7b26a386dbdd3d07000aac149bf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 23,
+        "end_line": 23
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:4f008f2f2295917345078e595bb601ff8e19626939579a6c39f1fed287134799",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 27,
+        "end_line": 27
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:a323cad1fb84faf3126f5b98668af4ca11e195b89a7eb994d24f8b36f05173c3",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 27,
+        "end_line": 27
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:a323cad1fb84faf3126f5b98668af4ca11e195b89a7eb994d24f8b36f05173c3",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 33,
+        "end_line": 33
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:75700221f3ead5235f601d98fc9d397d02076dc663c3ad2927473b89b431c06a",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 38,
+        "end_line": 38
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:9e7d10de0e7665702225f5ca9017d26c37e764d61ee0935fd7b19c31ea6a25c8",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 39,
+        "end_line": 39
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:91c9b7904ab4af01f15e74e13d018c34baa8038d06c5034dde604de9773d2ed7",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "bytes_unsafe.go",
+      "span": {
+        "start_line": 43,
+        "end_line": 43
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:f3bba04247519ddb546671819ef7701b145be7aeebde4895bab74d8fe533b059",
+      "source_hash": "sha256:101293bfce83fc5822c2cfc817c986d787f1d6c09d2542e76cc6186c5490f1cf"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "escape.go",
+      "span": {
+        "start_line": 172,
+        "end_line": 172
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:3cfc4e9b9e0b96325157d67f3f5c82894136abc271aeb45047c03de9d0068c5f",
+      "source_hash": "sha256:e8ce5a0dce3df69e94a574100bee57c53da1cbe78a10d5c9499fa8a5b4bb59d7"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "escape.go",
+      "span": {
+        "start_line": 188,
+        "end_line": 188
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:dd073ae32570d0168554630bf8e7dbe8c83bab9cc9a8c3c1b8b0d78cc5fe9f4d",
+      "source_hash": "sha256:e8ce5a0dce3df69e94a574100bee57c53da1cbe78a10d5c9499fa8a5b4bb59d7"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "escape.go",
+      "span": {
+        "start_line": 220,
+        "end_line": 220
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:a8ce66892736f7e09801f5e7793a06624fcf506fbe6b78d363d1ffcbaa8415cf",
+      "source_hash": "sha256:e8ce5a0dce3df69e94a574100bee57c53da1cbe78a10d5c9499fa8a5b4bb59d7"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.loop.unguarded-external-call",
+      "signal_id": "go.unguarded_external_call_in_loop",
+      "artifact": "escape.go",
+      "span": {
+        "start_line": 220,
+        "end_line": 220
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_handling",
+        "external_call",
+        "liveness"
+      ],
+      "message": "Method call inside a for/range loop without an inline error check; a single failing iteration continues silently or unwinds the whole loop.",
+      "fingerprint": "sha256:eb8271009eef7e2f4fc3730f035740e313b2dc0a2db6e8cfea98b4a4acf1be1e",
+      "source_hash": "sha256:e8ce5a0dce3df69e94a574100bee57c53da1cbe78a10d5c9499fa8a5b4bb59d7"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 40,
+        "end_line": 40
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:27289900d88332d1ffbc1989c350151ae08e7def3dfc75c42e9cd510c56d2212",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 57,
+        "end_line": 57
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:aa65e7ba048d5a92538475efd39d6c207c00fe058f8a09e3b904b6d31b0eef0d",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 66,
+        "end_line": 66
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:b2898cd8920898bcf09c288f773ba425464712504113ef08d1b24990012ccb3c",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 75,
+        "end_line": 75
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:4e3b7b824bf5882ac38c6c526b9b8b6dcfe4d60348d1266ae435b087506cf7d5",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 90,
+        "end_line": 90
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:0d04820d27fb109f8115ee46855de7290e4bfe6e07b55be2e54674abf746580e",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 99,
+        "end_line": 99
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:dcae2c190f61a048d1f0423f2de888fd7cb1acba3840c4677ae0cc74aecd95e6",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 108,
+        "end_line": 108
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:70c5afbb6e8b85c656c5e062b523cdefc4a45c8b90529304739b61ddfac78c76",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 117,
+        "end_line": 117
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:a157907c5de6914e682b7c7139bf9d93f8c7a6d63a57f4a2d7ff904d557df703",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "fuzz.go",
+      "span": {
+        "start_line": 126,
+        "end_line": 126
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:b61a7b186cee41693d59ab4b19d8809f4c7028e8a5a57e00daceb685169cbd39",
+      "source_hash": "sha256:bfdbab1d7663889971646e13864a84b2fdfe03e24e36438ebcadeb271fbebe5d"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 278,
+        "end_line": 278
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:bfa0524485ebe899c1271ba71dc22d3a31b220a9b8a14343bb620f9a4ac95001",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 282,
+        "end_line": 282
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:2a5f8e0d6afadade58ed5da2024be67f3f62b4105f596d21b585d3407b59cc06",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 284,
+        "end_line": 284
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:5040ae30dc5923f453101bd6b3b8373685408625f54eaf97d54c4382770f6191",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 328,
+        "end_line": 328
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:185a88f68721164187291ef1511fcebb4d7eb93cbb768eb655908aa4ede2c4fe",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 454,
+        "end_line": 454
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:f6afea93db44772c5543153dceb306ad5f5d6d07df5c7ed2e9786b8031dbd1b8",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.loop.unguarded-external-call",
+      "signal_id": "go.unguarded_external_call_in_loop",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 454,
+        "end_line": 454
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_handling",
+        "external_call",
+        "liveness"
+      ],
+      "message": "Method call inside a for/range loop without an inline error check; a single failing iteration continues silently or unwinds the whole loop.",
+      "fingerprint": "sha256:3cace53e85db8b6a7aa0bec8d5025c53ed13d6108c349f155a4d84e7d58f6502",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 656,
+        "end_line": 656
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:c4a9885c26e9987e079e0745bb634aecec197a09e7d84372efd9a0da2dbffeac",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 656,
+        "end_line": 656
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:8a92a0683965712c552052980218c4b9def4bd8799d401087f2df87d9a598af9",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.loop.unguarded-external-call",
+      "signal_id": "go.unguarded_external_call_in_loop",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 656,
+        "end_line": 656
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_handling",
+        "external_call",
+        "liveness"
+      ],
+      "message": "Method call inside a for/range loop without an inline error check; a single failing iteration continues silently or unwinds the whole loop.",
+      "fingerprint": "sha256:d0405e64110f0f31a0036f170d1e7e8def3e1d3244855a598d9d91dda5fdff2c",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 666,
+        "end_line": 688
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:6857776ddb00421ef8715fd8d63db573f1264285c20e3c148d47ea45de5051a8",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 670,
+        "end_line": 670
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:3620f9477aceaef90892fa8bba1f9f14fa3847a687572ef89fea66cb90c4e9fc",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 670,
+        "end_line": 670
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:d973066305433155ce265429ac19a55632893e1a8ea42422982b551398a8beba",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.loop.unguarded-external-call",
+      "signal_id": "go.unguarded_external_call_in_loop",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 670,
+        "end_line": 670
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_handling",
+        "external_call",
+        "liveness"
+      ],
+      "message": "Method call inside a for/range loop without an inline error check; a single failing iteration continues silently or unwinds the whole loop.",
+      "fingerprint": "sha256:20092754016589f95470c7f1e2f6798d16bb38f16b35a60575ea8184500b2402",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error.discarded-result",
+      "signal_id": "error.discarded",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1061,
+        "end_line": 1061
+      },
+      "confidence": "medium",
+      "tags": [
+        "error_propagation"
+      ],
+      "message": "Discarded call result requires explicit propagation or ignore-policy evidence.",
+      "fingerprint": "sha256:5fa46643bb656faefd7ffb1d3c4bfe377fa64f167837f2448f76ebfb23b8b5ad",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1096,
+        "end_line": 1096
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:4016d96ab619cc870239a13eba7f9decc43f4e8fdf6cf2ebd9b670ee5dccf1f2",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1096,
+        "end_line": 1096
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:4016d96ab619cc870239a13eba7f9decc43f4e8fdf6cf2ebd9b670ee5dccf1f2",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1102,
+        "end_line": 1102
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:a21e502d4e6f235dd027a2df38711c9111859b1a42ebc795c739829dcbb16bfd",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1389,
+        "end_line": 1389
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:1290ad3e4f8927c6c2fbc405839a6c8460169311768d5e2e179309020957cbbd",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1393,
+        "end_line": 1393
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:02167113a52b711ef1fafe5353fe09ebfb323cdb471f2c7e78415c93075ca982",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1415,
+        "end_line": 1415
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:34403afa67ec549d08d46d94d77cf1f98b07b9ff962869798ab67c933fb81b25",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1435,
+        "end_line": 1435
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:43bcbab7465ffbe58929c0c343ad4b2dd618d51c66b9e37e35cf22463548f52d",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1456,
+        "end_line": 1456
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:3ab87240fc5e112e146fb1e061b0cb9bf0b2e198d039071e59360de27bf1fabe",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1466,
+        "end_line": 1466
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:fbe04fc079e49aeafc035f233ad8e040269edb1b332acc3dcc2356b8801e885a",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    },
+    {
+      "schema_version": "proof.code_signals.v1",
+      "provider": "opengrep",
+      "provider_rule_id": "go.error-handling.bare-call",
+      "signal_id": "go.bare_call",
+      "artifact": "parser.go",
+      "span": {
+        "start_line": 1468,
+        "end_line": 1468
+      },
+      "confidence": "low",
+      "tags": [
+        "cross_module_consistency",
+        "missing_error_recovery"
+      ],
+      "message": "Call without error check",
+      "fingerprint": "sha256:4fd829cfb29b7df75e211b894f80f8789bef36762cee72ef38c7f6684300f422",
+      "source_hash": "sha256:d0ce0fc2151ce26d76a7ef3ce411eab6ce0c41b93a05a623d351ea9925ad0ea0"
+    }
+  ]
+}

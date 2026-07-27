@@ -36,6 +36,17 @@ var nativeFuzzSeeds = []string{
 	`,""{"test":0}`,
 	`{"name":"x","order":1,"nested":{"a":1,"b":2,"nested3":{"b":3}},"nested2":{"a":4},"arr":[{"b":5},{"b":6}],"arrInt":[0,1,2,3,4,5,6]}`,
 	"",
+	// --- Deeply-nested seeds (closes Dimension 5 for the OSS-Fuzz harness) ---
+	// The previous seed set had ZERO deeply-nested inputs, so the native
+	// fuzz harnesses never exercised stack-overflow / runaway-recursion
+	// paths on the OSS-Fuzz surface. These seeds target that blind spot.
+	strings.Repeat("[", 10000),                       // unclosed deep array
+	strings.Repeat("[", 1)+strings.Repeat("]", 1),    // minimal closed array
+	strings.Repeat("[", 1000) + "1" + strings.Repeat("]", 1000), // closed deep array
+	strings.Repeat("{", 100) + `"a":1` + strings.Repeat("}", 100), // closed deep object
+	strings.Repeat("[", 100000),                      // very deep unclosed
+	`{"a":"` + strings.Repeat("x", 100000) + `"}`,   // very long string value
+	`{"\u`,                                          // truncated unicode escape
 }
 
 func addSeeds(f *testing.F) {

@@ -1,0 +1,76 @@
+schema_version: 1
+id: DEFECT-260727-T7P7
+title: Set on top-level array-index beyond length returns KeyPathNotFoundError (SYS-REQ-110 contract gap)
+introduced_in: inception
+source:
+    type: audit_finding
+classification:
+    surface: data_integrity
+    severity: medium
+disposition:
+    status: covered_by_known_issue
+    owner: human:buger
+    reviewer: human:buger
+    reviewed_at: "2026-07-27T07:08:00Z"
+    requirements:
+        - SYS-REQ-110
+    known_issues:
+        - KI-4
+    review_due: "2026-08-15"
+    next_action: |
+        Decide whether to (a) narrow SYS-REQ-110's description to exclude
+        top-level arrays from the append-at-end contract, or (b) extend
+        parser.go:Set to handle top-level array append. Option (b) preferred
+        for user safety; option (a) lower-risk. Block: requires lead-engineer
+        sign-off on the behavioral change.
+    reason: |
+        Unfixed — requires a behavioral decision. SYS-REQ-110 unconditionally
+        requires append-at-end for [N] where N >= len(array), but the code's
+        top-level (depth=0, endOffset==-1) branch explicitly excludes the
+        matching array+array-index case ("intentionally unsupported at the
+        top level"). Either:
+        (a) narrow SYS-REQ-110's description to exclude top-level arrays, OR
+        (b) extend Set to handle top-level array append.
+        Option (b) is the user-safety-preferred path; option (a) is the
+        lower-risk path. Filed as open until the design call is made.
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-110
+    notes: |
+        Top-level array beyond-length is a documented contract gap, not a
+        regression risk. The nested-array partition is locked by
+        TestSetBeyondLengthScalarArrayPreservesElements_SYS110.
+impact_analysis:
+    affected_requirements:
+        - SYS-REQ-110
+affects:
+    - SYS-REQ-110
+evidence:
+    reproduction: |
+        Set([]byte(`[1,2,3]`), []byte(`99`), "[5]")
+        ACTUAL:   ("", KeyPathNotFoundError)
+        SYS-REQ-110 expects: ("[1,2,3,99]", nil) — append at end
+    also_fails:
+        - Set([]byte(`[]`), []byte(`99`), "[0]")         → KeyPathNotFoundError
+        - Set([]byte(`[1]`), []byte(`99`), "[1]")        → KeyPathNotFoundError
+    note: nested-array beyond-length was fixed (DEFECT-260727-WWWY); this
+          defect is specifically the top-level (no parent key) partition.
+root_cause:
+    missing_requirement: true
+    missing_test_partition: false
+    missing_mcdc_variable: false
+    notes: |
+        parser.go:Set, endOffset==-1 branch: the code path for "path not found
+        at all" only handles (pathIsIndex && dataIsObject) and (pathIsObjectKey
+        && dataIsArray) cross-type coercions; the matching (pathIsIndex &&
+        dataIsArray) case is explicitly rejected with KeyPathNotFoundError.
+        SYS-REQ-110 does not carve out this exception, so it is a spec/code
+        divergence that requires either narrowing the spec or extending Set.
+history:
+    - at: "2026-07-27T06:32:00Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-27T06:35:00Z"
+      by: human:buger
+      action: triaged
+      reason: Open — behavioral decision required (narrow SYS-REQ-110 vs. extend Set).

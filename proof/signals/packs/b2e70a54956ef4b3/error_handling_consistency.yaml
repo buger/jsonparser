@@ -1,0 +1,102 @@
+# Cross-module error-handling consistency - Go two-phase OpenGrep signal rules.
+#
+# Sibling of data/solidity/error_handling_consistency.yaml. Replaces the
+# Go-only `cross_module_pattern_consistency` workflow check with a
+# signal-based, multi-language design (issue: SEC-25 follow-up).
+#
+# The check is split into two complementary signals:
+#   Phase 1 (wrapped_call) - records calls co-located with an inline error
+#     check (`if err := ...; err != nil`). Establishes the "safe pattern".
+#   Phase 2 (bare_call) - inventories receiver.method calls outside that
+#     inline guard. It is a broad review set, not a defect verdict.
+#
+# Cross-reference: if the same receiver.method appears in BOTH signal sets,
+# one module checks the error and another doesn't - investigate the bare site.
+#
+# INVENTORY contract: breadth is intentional. The bare rule has low confidence
+# and no obligations anchor, so it remains reported-only for hunt-rank review.
+# Its fixtures prove only bare-versus-wrapped separation: broad bare calls fire,
+# while calls in the sibling wrapped_call shapes stay out of the bare set.
+# Fixtures: data/go/fixtures/<signal_id>/{positive,negative}/ - validated by
+# `proof signals validate --signal <id> --strict`.
+rules:
+  - id: go.error-handling.wrapped-call
+    message: Call with inline error check
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: go.wrapped_call
+        provider: opengrep
+        tags: [error_recovery_pattern, cross_module_consistency]
+        # No obligations anchor: this rule cannot support obligation
+        # ownership at its precision. OpenGrep cannot express "the second
+        # return value is discarded" (see notes), so the pattern fires on any
+        # matching call statement. Sampling this repository's own corpus, the
+        # matches are dominated by calls that cannot return an error at all -
+        # fmt.Sprintf, fmt.Errorf, strings.*, filepath.Join, sort.Slice,
+        # time.Now, cobra Flags().StringVar - plus lines that already capture
+        # err. Proposing a catalog obligation from that would record heuristic
+        # noise as governance data. The rule stays a REPORTED signal for
+        # hunt-rank review, which is its stated purpose.
+        confidence: high
+    pattern-either:
+      - pattern: if $ERR := $RECEIVER.$METHOD(...); $ERR != nil { ... }
+      - pattern: if _, $ERR := $RECEIVER.$METHOD(...); $ERR != nil { ... }
+
+  - id: go.error-handling.bare-call
+    message: Call without error check
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: go.bare_call
+        provider: opengrep
+        tags: [missing_error_recovery, cross_module_consistency]
+        # No obligations anchor: this rule cannot support obligation
+        # ownership at its precision. OpenGrep cannot express "the second
+        # return value is discarded" (see notes), so the pattern fires on any
+        # matching call statement. Sampling this repository's own corpus, the
+        # matches are dominated by calls that cannot return an error at all -
+        # fmt.Sprintf, fmt.Errorf, strings.*, filepath.Join, sort.Slice,
+        # time.Now, cobra Flags().StringVar - plus lines that already capture
+        # err. Proposing a catalog obligation from that would record heuristic
+        # noise as governance data. The rule stays a REPORTED signal for
+        # hunt-rank review, which is its stated purpose.
+        confidence: low
+        notes: |
+          Heuristic for "error return ignored". OpenGrep cannot directly express
+          "the second return value is underscored", so this rule fires on any
+          method-call statement that is NOT inside an `if ...; err != nil`
+          guard. The reviewer is expected to filter obvious false positives
+          (logging, side-effect-only calls).
+    patterns:
+      - pattern: $RECEIVER.$METHOD(...)
+      - pattern-inside: |
+          func $F(...) {
+            ...
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            ...
+            if $ERR := $RECEIVER.$METHOD(...); $ERR != nil {
+              ...
+            }
+            ...
+          }
+      - pattern-not-inside: |
+          if $ERR := ...; $ERR != nil {
+            ...
+          }
+      - pattern-not-inside: |
+          func $F(...) {
+            ...
+            if _, $ERR := $RECEIVER.$METHOD(...); $ERR != nil {
+              ...
+            }
+            ...
+          }
+      - pattern-not-inside: |
+          if _, $ERR := ...; $ERR != nil {
+            ...
+          }

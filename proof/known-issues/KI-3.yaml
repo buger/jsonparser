@@ -1,0 +1,85 @@
+id: KI-3
+title: Set with array-index path component under an object parent produces malformed JSON output
+description: 'When Set is called with a key path that contains an array-index component ([N]) whose parent in the addressed JSON is an OBJECT rather than an array, the implementation emits malformed JSON output and returns it with a nil error. Examples (all currently produce invalid JSON, err=nil):  Set({"a":{"b":1}}, 9, "a", "[5]") -> {"a":{"b":1,9}}  Set({"a":{"b":1}}, 9, "a", "[0]", "x") -> {"a":{"b":1,{"x":9}}}  Set({"a":1}, 9, "[0]") -> {"a":1,9}. Root cause: createInsertComponent (parser.go:756) with isIndex=true, comma=true, object=false emits only ",<value>" (no quoted object key), so the value is spliced into the object body where JSON requires a "key":value pair. Set (parser.go:1018-1038) does not reject the cross-type path before invoking createInsertComponent.'
+affected_requirements:
+    - SYS-REQ-009
+    - SYS-REQ-110
+    - SYS-REQ-112
+commands:
+    - go test -v -run TestSetArrayIndexUnderObjectMalformedJSON_KI3 ./...
+evidence_manifests:
+    - proof/evidence/ki3-set-array-index-under-object.yaml
+severity: high
+severity_basis: reproducer
+risk: data_integrity
+cve_surface: unlikely
+affected_api: Set
+attacker_input: caller-supplied key path containing [N] component under an object parent (variadic ...string keys argument)
+sanitizer: audit:hazard-sweep
+reproducer_command: go test -v -run TestSetArrayIndexUnderObjectMalformedJSON_KI3 ./...
+tripwire_mutation: Add a type-mismatch guard in parser.go:Set (around lines 1018-1038) that returns KeyPathNotFoundError when the trailing path component is an array-index ([N]) but the resolved subpath parent is an object; set_spec_test.go:TestSetArrayIndexUnderObjectMalformedJSON_KI3 flips from PASS (output fails json.Unmarshal) to FAIL (Set returns a typed error), at which point KI-3 must be re-classified as fixed.
+introduced_in: inception
+disclosure: public
+minimization_status: minimized
+mitigation: No mitigation in code; users must avoid mixing array-index path components ([N]) with object-typed parents in Set key paths. Validation in upstream callers (e.g. JSON-Schema validators) can reject such paths before they reach jsonparser.Set.
+remediation: 'Add a type-mismatch guard in parser.go:Set (around lines 1018-1038): when the resolved subpath parent is an object and the trailing key is an array-index (or vice-versa), return KeyPathNotFoundError instead of invoking createInsertComponent. Alternative: reject in createInsertComponent when isIndex mismatches the parent context.'
+owner: human:buger
+review_date: "2026-07-26"
+release_disposition: ship_with_known_issue
+status: fixed
+fix: parser.go:Set (auto-coerce container type, parser.go:1045-1130); regression tests set_spec_test.go:TestSetAutoCoerce_KI3, TestSetArrayIndexUnderObjectMalformedJSON_KI3 (flipped to assert valid JSON)
+fixed_behavior: |
+    AUTO-COERCE container type. When a path component expects one container
+    type but the existing structure is the other, Set replaces the mismatched
+    container at that position with a fresh container of the type the path
+    expects, then proceeds with the normal (append/replace) insertion logic.
+      * Path [N] (array index) under an OBJECT parent -> the object is replaced
+        with an array; e.g. Set({}, 9, "[5]") -> [9]; Set({"a":{}}, 9, "a", "[5]") -> {"a":[9]}.
+      * Path key (object key) under an ARRAY parent -> the array is replaced
+        with an object; e.g. Set([], 9, "key") -> {"key":9}; Set({"a":[]}, 9, "a", "key") -> {"a":{"key":9}}.
+    Behavior for type-MATCHING paths is unchanged. The degenerate empty-string
+    key on a non-object root still returns KeyPathNotFoundError (SYS-REQ-111
+    no-path outcome preserved). The output of every non-erroring Set call is
+    valid JSON (json.Valid == true). Witnessed by TestSetAutoCoerce_KI3 and by
+    flipping TestSetArrayIndexUnderObjectMalformedJSON_KI3 to assert valid
+    output. FuzzJSONStructureAware (Set output-validity gate) passes with 0
+    crashes over 2.27M execs.
+history:
+    - at: "2026-07-26T19:37:11Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T19:37:53Z"
+      by: human:buger
+      action: edit
+      detail: add-evidence-manifest
+    - at: "2026-07-26T19:41:20Z"
+      by: human:buger
+      action: edit
+      detail: set-severity-basis=reproducer,set-tripwire-mutation
+    - at: "2026-07-26T19:45:33Z"
+      by: human:buger
+      action: review
+      detail: reviewer=human:buger,new_review_date=2026-07-26
+    - at: "2026-07-26T19:57:44Z"
+      by: human:buger
+      action: edit
+      detail: add-requirement=SYS-REQ-112 (auto-synced from --defer-obligation --ki)
+    - at: "2026-07-27T00:00:00Z"
+      by: human:buger
+      action: fix
+      detail: status=fixed; auto-coerce container type on cross-type Set paths in parser.go:Set (parser.go:1045-1130); added TestSetAutoCoerce_KI3; flipped TestSetArrayIndexUnderObjectMalformedJSON_KI3 tripwire to assert valid JSON; FuzzJSONStructureAware 0 crashes / 2.27M execs
+poc_quality:
+    real_infrastructure: true
+    quantitative_impact: true
+    control_test: true
+    untrusted_attacker: true
+    current_deployment_relevance: true
+    honest_severity: true
+    attacker_profitability: true
+    reproducible: true
+    no_inflation: true
+    operational_path_verified: true
+    notes: |
+        real_infrastructure: set_spec_test.go:TestSetArrayIndexUnderObjectMalformedJSON_KI3
+        control_test: set_spec_test.go:TestSet (positive)
+        operational_path_verified: set_spec_test.go:TestSet

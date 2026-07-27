@@ -1,6 +1,6 @@
 id: SYS-REQ-006
 version: 1
-status: review
+status: approved
 priority: shall
 category: functional
 req_type: guarantee
@@ -37,14 +37,28 @@ verification:
     formalization_status: valid
     review:
         status: approved
-        reviewer: human:leonidbugaev
-        reviewed_at: "2026-04-23T00:00:00Z"
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T06:53:14Z"
+        comment: 'Re-approved after ArrayEach non-array-root fix (DEFECT-260727-ARR1): root-type guard prevents spurious callback on non-array input.'
+        fingerprint: sha256:45d23e6eb3587670d876d1b2b1ac2b683c7e27b1b71f3d1081d0ce882aedafdb
         ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-ARR1
+        motivation_history:
+            - kind: defect
+              ref: DEFECT-260727-ARR1
+              rationale: ArrayEach on a non-array root emitted a spurious callback before erroring (DEFECT-260727-ARR1); the ordered-iteration contract on SYS-REQ-006 is affected because the spurious callback violated encounter-order semantics on non-array input. Fixed in parser.go:ArrayEach root-type guard.
+              superseded_at: "2026-07-27T06:53:14Z"
+              superseded_by: human:buger
 history:
     created_by: human:cli
     created_at: "2026-04-13T17:10:56Z"
-    last_modified_by: human:cli
-    last_modified_at: "2026-07-26T14:54:13Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T06:53:14Z"
 obligation_checklist:
     - determinism
 obligation_hazards:

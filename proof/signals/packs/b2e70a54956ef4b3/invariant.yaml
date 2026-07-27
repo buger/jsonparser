@@ -1,0 +1,43 @@
+# pack: go/invariant
+# language: go
+# domain: memory-safety
+#
+# Runtime-invariant signal pack. Surfaces the "offset-in-buffer" bug class:
+# a struct carries an integer offset/index that MUST stay within a companion
+# buffer field on the same receiver (0 <= offset <= len(buf) <= cap(buf)),
+# and the field can be corrupted at runtime by a write that does not
+# originate in the field's own code path -- cross-object OOB, use-after-free,
+# or buffer-pool backing-array aliasing.
+#
+# Static match precision matters more than recall here: the emitted worklist
+# is the set of sites a dynamic invariant probe (Arm 2, future) must bind
+# a runtime assertion to. INFO severity keeps the pack default-on without
+# forcing every match to be resolved before a build lands.
+#
+# Attribution limit worth documenting for readers who ship a probe from
+# these findings: a software probe names the *victim* at check-time, not
+# the *culprit's* stack at write-time. Write-time attribution needs a
+# debugger hardware watchpoint or an mprotect page-guard + SIGSEGV handler.
+rules:
+  - id: go.invariant.stored-offset-subslice
+    message: >
+      A struct-held offset/index is used to subslice or bound-write into a
+      companion buffer field on the same receiver. This is the offset<=cap
+      invariant site whose violation panics with 'slice bounds out of range'
+      under concurrent load. Any change here must preserve
+      0 <= offset <= len(buf) <= cap(buf); bind it to a runtime-invariant
+      probe rather than trusting the local write path alone.
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: invariant.stored_offset_subslice
+        provider: opengrep
+        tags: [boundary, concurrent, panic_safety]
+        obligations: [invariant_preservation, overflow_safety]
+        confidence: high
+    pattern-either:
+      - pattern: copy($W.$BUF[$W.$OFF:], $SRC)
+      - pattern: copy($DST, $W.$BUF[$W.$OFF:])
+      - pattern: $W.$CONN.Write($W.$BUF[:$W.$OFF])
+      - pattern: $W.$BUF[$W.$R:$W.$W]

@@ -22,9 +22,9 @@ variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-07-26T13:25:50.813386Z"
+    reviewed_at: "2026-07-26T18:15:15.670369Z"
     reviewed_by: human:buger
-    reviewed_fingerprint: sha256:af46796446d7582c6a186af8c41c1101f6ff4baaf45d880ce5ea22a2afab7926
+    reviewed_fingerprint: sha256:95663682962eaf7ec841c6acca47a56b1358126e69592183dc869c2b592ff984
 verification:
     assurance_level: E
     formalization_status: none
@@ -142,6 +142,8 @@ stakeholder:
             - SYS-REQ-068
             - SYS-REQ-069
             - SYS-REQ-070
+            - SYS-REQ-110
+            - SYS-REQ-111
         - id: AC-2
           text: A caller can delete an addressed JSON value through Delete and receive either the expected mutated payload, the unchanged original payload for a missing addressed target in otherwise usable input, or the unchanged original payload for malformed, truncated, or otherwise unusable input, without process crash or panic.
           verification_method: test

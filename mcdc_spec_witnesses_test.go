@@ -2809,18 +2809,30 @@ func TestMCDC_SYS_REQ_061_Row1_TriggerFalse(t *testing.T) {
 
 // Verifies: SYS-REQ-061
 // MCDC SYS-REQ-061: raw_string_has_missing_low_surrogate=T, returns_error_for_missing_low_surrogate=F => FALSE
+// Per DEFECT-260727-SNGT, a lone high surrogate is malformed and now matches
+// encoding/json (U+FFFD substitution, no error) rather than returning an error.
 func TestMCDC_SYS_REQ_061_Row2_InvariantViolation(t *testing.T) {
-	// High surrogate followed by non-surrogate: missing low surrogate.
-	if _, err := ParseString([]byte(`\uD800x`)); err == nil {
-		t.Fatal("expected error on missing low surrogate, got nil")
+	// High surrogate followed by non-surrogate: lone high → U+FFFD, no error.
+	got, err := ParseString([]byte(`\uD800x`))
+	if err != nil {
+		t.Fatalf("expected no error on lone high surrogate (U+FFFD substitution), got %v", err)
+	}
+	if got != "\uFFFDx" {
+		t.Fatalf("ParseString(`\\uD800x`) = %q, want %q", got, "\uFFFDx")
 	}
 }
 
 // Verifies: SYS-REQ-061
-// MCDC SYS-REQ-061: raw_string_has_missing_low_surrogate=T, returns_error_for_missing_low_surrogate=T => TRUE
+// MCDC SYS-REQ-061: raw_string_has_missing_low_surrogate=T, returns_error_for_missing_low_surrogate=F
+// Lone high surrogate → U+FFFD substitution (DEFECT-260727-SNGT supersedes the
+// error-return obligation).
 func TestMCDC_SYS_REQ_061_Row3_MissingLowSurrogateError(t *testing.T) {
-	if _, err := ParseString([]byte(`\uD800x`)); err == nil {
-		t.Fatal("expected error on missing low surrogate, got nil")
+	got, err := ParseString([]byte(`\uD800x`))
+	if err != nil {
+		t.Fatalf("expected no error on lone high surrogate (U+FFFD substitution), got %v", err)
+	}
+	if got != "\uFFFDx" {
+		t.Fatalf("ParseString(`\\uD800x`) = %q, want %q", got, "\uFFFDx")
 	}
 }
 
@@ -2837,19 +2849,32 @@ func TestMCDC_SYS_REQ_062_Row1_TriggerFalse(t *testing.T) {
 }
 
 // Verifies: SYS-REQ-062
-// MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=T, returns_error_for_invalid_low_surrogate=F => FALSE
+// MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=T, returns_error_for_invalid_low_surrogate=F
+// Per DEFECT-260727-SNGT, a high surrogate followed by an out-of-range second
+// escape is a lone high surrogate → U+FFFD + U+FFFD (the second escape is itself
+// a lone high), matching encoding/json (no error).
 func TestMCDC_SYS_REQ_062_Row2_InvariantViolation(t *testing.T) {
-	// High surrogate followed by an out-of-range low surrogate.
-	if _, err := ParseString([]byte(`\uD800\uD800`)); err == nil {
-		t.Fatal("expected error on invalid low surrogate, got nil")
+	// High surrogate followed by another high surrogate: both become U+FFFD.
+	got, err := ParseString([]byte(`\uD800\uD800`))
+	if err != nil {
+		t.Fatalf("expected no error on high+high surrogates (U+FFFD substitution), got %v", err)
+	}
+	if got != "\uFFFD\uFFFD" {
+		t.Fatalf("ParseString(`\\uD800\\uD800`) = %q, want %q", got, "\uFFFD\uFFFD")
 	}
 }
 
 // Verifies: SYS-REQ-062
-// MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=T, returns_error_for_invalid_low_surrogate=T => TRUE
+// MCDC SYS-REQ-062: raw_string_has_invalid_low_surrogate=T, returns_error_for_invalid_low_surrogate=F
+// Lone high surrogate → U+FFFD substitution (DEFECT-260727-SNGT supersedes the
+// error-return obligation).
 func TestMCDC_SYS_REQ_062_Row3_InvalidLowSurrogateError(t *testing.T) {
-	if _, err := ParseString([]byte(`\uD800\uD800`)); err == nil {
-		t.Fatal("expected error on invalid low surrogate, got nil")
+	got, err := ParseString([]byte(`\uD800\uD800`))
+	if err != nil {
+		t.Fatalf("expected no error on high+high surrogates (U+FFFD substitution), got %v", err)
+	}
+	if got != "\uFFFD\uFFFD" {
+		t.Fatalf("ParseString(`\\uD800\\uD800`) = %q, want %q", got, "\uFFFD\uFFFD")
 	}
 }
 

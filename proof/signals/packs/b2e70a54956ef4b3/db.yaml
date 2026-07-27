@@ -1,0 +1,74 @@
+rules:
+  - id: go.sql.open-database
+    message: Database handle creation requires connection lifetime, migration, and failure-observation evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: database.dependency
+        provider: opengrep
+        tags: [db_read, db_write]
+        confidence: medium
+    pattern: sql.Open(...)
+
+  - id: go.sql.read-api
+    message: Database read API use requires parameterization, timeout, consistency, and error-propagation evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: database.read_dependency
+        provider: opengrep
+        tags: [db_read]
+        confidence: medium
+    pattern-either:
+      - pattern: $DB.Query(...)
+      - pattern: $DB.QueryContext(...)
+      - pattern: $DB.QueryRow(...)
+      - pattern: $DB.QueryRowContext(...)
+
+  - id: go.sql.write-api
+    message: Database write or transaction API use requires transactional, timeout, and error-propagation evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: database.write_dependency
+        provider: opengrep
+        tags: [db_write]
+        confidence: medium
+    pattern-either:
+      - pattern: $DB.Exec(...)
+      - pattern: $DB.ExecContext(...)
+      - pattern: $DB.Begin(...)
+      - pattern: $DB.BeginTx(...)
+
+  - id: go.sql.formatted-read-query
+    message: SQL read query string is dynamically formatted; require parameterization evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: sql.formatted_read_query
+        provider: opengrep
+        obligations: [parameterized_only_read]
+        confidence: high
+    pattern-either:
+      - pattern: $DB.Query(fmt.Sprintf(...), ...)
+      - pattern: $DB.QueryRow(fmt.Sprintf(...), ...)
+      - pattern: $TX.Query(fmt.Sprintf(...), ...)
+      - pattern: $TX.QueryRow(fmt.Sprintf(...), ...)
+
+  - id: go.sql.formatted-write-exec
+    message: SQL write statement is dynamically formatted; require parameterization evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: sql.formatted_write_exec
+        provider: opengrep
+        obligations: [parameterized_only_write]
+        confidence: high
+    pattern-either:
+      - pattern: $DB.Exec(fmt.Sprintf(...), ...)
+      - pattern: $TX.Exec(fmt.Sprintf(...), ...)
