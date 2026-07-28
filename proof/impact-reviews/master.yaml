@@ -1,0 +1,942 @@
+schema_version: 1
+branch: master
+generated_at: "2026-07-28T08:52:10Z"
+reviews:
+    - requirement: SYS-REQ-001
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:8db772e89c0b48046445c10a5082f4fe9c8c6e4dd428584beaba084f272e7de0
+      approval_fingerprint: sha256:af8de3c65df6be6169449cc55c1e7a0c6f00e44973c8f8f2097f1bb7aee4fb46
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-002
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:3d4ecf0f84cb0d49a28b82f7c67320c39eb1ffff0c325f32c7247f853183ea0a
+      approval_fingerprint: sha256:c109620f0b7345297356e5308edd298153970edac1f1073dc294dc91f4037854
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-003
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:0510c117515e4f43e27abb7707a6211d9e414b078b33624be62e97853ff8a83b
+      approval_fingerprint: sha256:7c30340009bb06d505d71fb75acb31ab6dc9bd15c5ac4fd896b954289f22ba8d
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-004
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:5edd64991911eef692da392a2acc7fe21f01cdfd8d39eccd221ee323f43d3db0
+      approval_fingerprint: sha256:80fc309537a96394234ac4026bdcb9632e72a676b8f2cba1d800d78ff562223e
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-005
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:78c99b2667bc19b9e1676df26c486878cafe21d1622d6f0e56cd5c5328d07730
+      approval_fingerprint: sha256:a9c904b76d60f47bf9a5130ec93ea3884d36ce00d4f9932a0f223c30e492055c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-006
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:1eaf7dbae3f4dcbaa849611c02e538f4d65b87ae034debf4256015eeba0370d5
+      approval_fingerprint: sha256:45d23e6eb3587670d876d1b2b1ac2b683c7e27b1b71f3d1081d0ce882aedafdb
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-007
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:2e5712bda661f70ca2a07e980f58d5b71684ce538ff4e4938be684f06d2f22be
+      approval_fingerprint: sha256:3b569bb14eaba38f9351331397b9c686f8f7633c1553c9f0ad81702e506e2fdd
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-008
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:8adf7c728588f2843516c9aacb92dd5349cc391f9d2ab1c4dda4f05ef7a0e86f
+      approval_fingerprint: sha256:e37f05ffcc4636a4d82b8b1be5177bfb01bbadf000d6f4b60e562cc42827aa94
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-009
+      artifact: escape.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:78b70cd065f8507a7e57a6f699e0a0aedc89c2177a000970fb0484625a3aa5c0
+      approval_fingerprint: sha256:b8118f9142c23f5503a1a0d98229ffe5f2a049089e50079db62dd114e8a3bd66
+      artifact_fingerprint: sha256:cbfdddffbb1107514f78212fa65bb8a76c3626e067c00816981f6140495930d2
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-009
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:78b70cd065f8507a7e57a6f699e0a0aedc89c2177a000970fb0484625a3aa5c0
+      approval_fingerprint: sha256:b8118f9142c23f5503a1a0d98229ffe5f2a049089e50079db62dd114e8a3bd66
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-010
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:48869aa415dce9d409117e40ab3bc1df1f38351f9798553d36aeb55fe2971556
+      approval_fingerprint: sha256:329895adb060c250d735fb3c50cf5dd5838f9304c3a47bb5358544c740998700
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-011
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:537f998de52976ee4f4ff8621d5930490644d8274c502e60fb0cb90283fecdf6
+      approval_fingerprint: sha256:218e445b36c903557dbbd828bd7a5ac3aee0c367c96875fa09196256a8665ec2
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-012
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:2e754622f94d4b6651ef5982fa41a8e694d54f4bec8d6e6bf308c9224e385f95
+      approval_fingerprint: sha256:1c1388175d7b26491fd083360b088d7c1a484c3b26a259011429660782b21885
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-013
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:bd23a6a5eec2a7327f96c142c888c155251d0c07df2b9f59f8560e07f7468a7e
+      approval_fingerprint: sha256:a3a0e461906385a8fe946f189d349e354c531b94ec2700ce403f7ff46efc2321
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-014
+      artifact: escape.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:faad0620808b98f7e6eca800bf2140cb337f7db47be6ab7f1c7f36fe06b71397
+      approval_fingerprint: sha256:6625d92fc2c1e1310bb4beed62026539b1db99f58c27bb6fe174ba836d5f2a79
+      artifact_fingerprint: sha256:cbfdddffbb1107514f78212fa65bb8a76c3626e067c00816981f6140495930d2
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-014
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:faad0620808b98f7e6eca800bf2140cb337f7db47be6ab7f1c7f36fe06b71397
+      approval_fingerprint: sha256:6625d92fc2c1e1310bb4beed62026539b1db99f58c27bb6fe174ba836d5f2a79
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-015
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:f65b1b873abadd37d89b945220959de5c93b025d98d6da29f7f7a2458a622a31
+      approval_fingerprint: sha256:8d0a8e11578d3a959412c7c1c5498aa9c6e3125c266c4eebbe5daaf832c29c65
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-016
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:315ee16df8a0c8e9131c443fff9cf2417df299f910b61ab053105a899e567a92
+      approval_fingerprint: sha256:3e38073cb4b97e65e4e90d2d38a4631fe3abd4afcf1fbf11650d26b6ce1a45d2
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-017
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:1127dc35a4277176a80d07f8813e52a1dd6d3d83b0c9adbd9516a1b360b1b79d
+      approval_fingerprint: sha256:67ebf60515d4c5fe740eebad77921ebdd9ad5f75f0fc02a478ae63dc02182abb
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-018
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:90e87f5e0df009abfb581619f91c87eb5731f5e99161d9616ab374b3906cc251
+      approval_fingerprint: sha256:10ddda2b1af92d494f6ca970ea7222deae9fffe5739c72eac8241af993ab1f5d
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-019
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:dfdf4b296527e62289fcc8cf590e4fb59991cd4d237e7fbedf3c71f58a2759e3
+      approval_fingerprint: sha256:9aa95f8b49fb740ac3cc646737ad836c3796a96170e6bd58f9dbcd12e9b8bc2c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-020
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:d727c89e1a696e52a16d0ecd745e417838a4781f08d3cd731113beb87d6c5cc7
+      approval_fingerprint: sha256:7b8fab457b700c721ef43c807fcc4ab2810af0f9256518bd19fb70efdd1d5377
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-021
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:1b9a39adbd5e939087988ea9d3e9738a2914726ca2f05930bb7228ef19ec4b18
+      approval_fingerprint: sha256:8128ecc56fe2a063f42ed0fded2aad91cd0cba31fcaa81bab56774ae7811bd1e
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-022
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:c7fbf6db74443324e045b813e80cdf7aa1e6ead056dfc5b0e4263fa666cdf749
+      approval_fingerprint: sha256:a5e276eea3cff30a468371961a93d1089005dafe879e5c9555d944392b2a6c10
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-023
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:b71fdbd721fed88507cf0580c6321016bdf7fc483a48672ce2dec5e28c0d4ece
+      approval_fingerprint: sha256:abfe40149e81cb74346d0b37b781dfad12c2cab8e1d2a9ac6e5c32e8a6c9fb53
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-024
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:bb5aad150427cf8815b713fecc1660564844acac3a480adf43733275780102f6
+      approval_fingerprint: sha256:94d1c5a92eb9cc8a739626c5ee8aaf4fa9e58c55ff6580e338ba9c266bbb8ba0
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-025
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:ba33be12db988f81547894258f89e5924ecc82d50eea1f2033534660e8f72de0
+      approval_fingerprint: sha256:09215e72c0b3ad6927f5906a41b137f147d73de38a2647ca7c166c494b3ca1d6
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-026
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:ba4f21d85d67a0d7e1b391e971cf31a8737d0f4b4453b4940f617c82f07ab074
+      approval_fingerprint: sha256:3b9c4e723d3ddf77cf056a42830d54a640257bb92cce0e5ab46bd98ba6a8a72a
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-027
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:6b19cfb58bedfde5e4fbfa79b54b19cac9e38ba7a821a4ad2e93149ffe19c023
+      approval_fingerprint: sha256:bc981396e40abedd99455b6623b2e50f06e9fbd4563243ffe2b72c56278ee288
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-028
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:611a0f4ee7e7b4d6201b5ea05fa8c3f570986415bf0769113dbc94896fbf0d1e
+      approval_fingerprint: sha256:e9a8f7f4a2e47231031b876bb6fda79b8140210dc8e521780d58662886fb58d6
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-029
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:10dcfedda67ca1847d9802d862f1c13b3b08295cced2d3b8bd1c789371b7262f
+      approval_fingerprint: sha256:cfff5e9e689f40472654082c5afbdb39fe35d4d77082a2b33dff5612fbb57b6c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-030
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:24eda55f7b711f6d192565d03dd48ab164b5a8c9ae995cc281123dfe279013df
+      approval_fingerprint: sha256:f6106edd3aee4fd615a5a692572bec5fb4a650bf963f473d8aeb685e40c02a18
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-031
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:fa3a62c5a47e1bad98b29ff8a91036802c8e1e9c4080fa0abd7b87793c1dde73
+      approval_fingerprint: sha256:b3cf3c5a629afbe3172aaa6089802c9c2dac5a4974a76c213f0c060df8718d79
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-032
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:bc41c7446b28c1787f449bceeefe5baee0c30f236642a3cc19ee2e0d4a7e48ce
+      approval_fingerprint: sha256:957f4b27926d7dd5fa068b5148f2851f8f42d8b285963f239792428130974885
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-033
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:b3935319c0477856c1c9d46d8cb9b9266eacc34ed0672e14831a52eb7d0f0f1a
+      approval_fingerprint: sha256:3f124bb9ff7c3c42928e56c2b8e588845d1b94c77285b4bb8c09ccaea5bd597c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-034
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:d23acb4c95dca4a4045a4e0c09776d049c18153bb356b088253db825b028a6c9
+      approval_fingerprint: sha256:7ea0931ef554487390c34409c360561b45011de19f1ae29c361c9cb0f8b010f8
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-035
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:ddc2c6888d4f30cf390c4e86c065980a8488cca6586fe6e1a76bf6aa94e4433b
+      approval_fingerprint: sha256:38139609702fe234f2e52b0941c4b5903c3367770b0f1d08cb8c106cb23e1ec4
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-036
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:b09a065ebccdbf8f18dc044d390dcf6c707ad5dc568fac05880aab234804eaee
+      approval_fingerprint: sha256:ada5ce8e8e79ae625bac04626ed14d7ae57f7ea2f2412b53ba3ce9ded37f96a2
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-037
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:c459ed21e9de228ac073149be2648d495b975381bbdeaff5b19c3afe777d10fe
+      approval_fingerprint: sha256:5a9eb8c2f78f6fe206190dd967b45838c495c75cc0a4a469d1713e5ea8f5d94f
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-038
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:d60613452d780110a5c1c9c50a53108d7383b3748b2b69d88d722692045248b7
+      approval_fingerprint: sha256:0635a798ed887b9e9bb26a3e1fa4fb787de6091a47d6d8f131508fc6855ed5af
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-039
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:cf40b3268f556fa8f6ae4dbb443504b6367f376c7a51ecc6a936d29870c4d71e
+      approval_fingerprint: sha256:53271999100d58280f639f33aa4dff45a86bf876cf46abf0ed24aab63c7dab3c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-040
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:3452299929f04834610f0ed8a1542ad82f8747f648b08a6e03443748d4530f1f
+      approval_fingerprint: sha256:32949aea09b563223f8ba4d6a76c363622e34e048022da903ab59f0cbe842b95
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-041
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:ecf0b277ea3616a957f69c0b2dd5852ca1609733bfd7704c72f0e38ab82d5e99
+      approval_fingerprint: sha256:2155b769faae2bc868a77ae34bd241319a42ede7802a107b3840ce3edaa118c4
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-042
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:7480e9f1fa061cf964d3437dadd0e0adb7812057a8f448a844a591f570361c97
+      approval_fingerprint: sha256:ffc2914d489665cbb079e992e635429b4c082964539e8cf38e8a53f586886e76
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-043
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:df3ef2c96d4188f1146fac6d92be1fb8887fa382a2946f575e976a20a2780f7b
+      approval_fingerprint: sha256:55533dc1ef9dfd76f9342a7a517b0688577a14cd6054a768e1509d6d26aec3bc
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-044
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:4daa8ac7f43d65357e89b97df2635a010fc5eee4edd2522738ace8e3a2f602a8
+      approval_fingerprint: sha256:01b9295df6f86d27415249d8125fe4ce338367f672a7ca3e9fb7e742fb613916
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-045
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:d816d692812a732c2f1a6e4b28dd50110940d18c55b990100b93bfbcd2d5e0bb
+      approval_fingerprint: sha256:86fd75e2dff7b2e869b0507fb9ee102acbe2ff71e695f88739991d194594ed5b
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-046
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:aadf31df00d48f029d9d4dbe6c2337971833f1bd1e06138d04f43acb33b92283
+      approval_fingerprint: sha256:f7a1f926848f0c5f198180625e9eab8ddf2a94635f026138c6af5892cfe3d5c8
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-047
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:ee838a13d2f70f929bdf4ae33f4d54989f4d8cb4f00f7367cd5270ce9a71a443
+      approval_fingerprint: sha256:c24fcbe19af0a38f86b7fcd511610c382940e71916847a16d7703c56af1a410f
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-048
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:2a07d9d2f3ea14ee9abbdc94adfdb893c25fc6e491e665d4085edcaed9a993af
+      approval_fingerprint: sha256:cead15e7c5ea76ecc11c81fa9f4ec03d107c4b1571530d532de6b72acc2d3127
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-049
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:39ed8e83c7925419ad30ded2bccea50d9fd79218a9e29dd902bb2e44f1c356f2
+      approval_fingerprint: sha256:bfee0fd305f0b1c8a025a36cfd6a98bea0e387e6e881fde2ee5f15d8cacd3ba3
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-050
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:bdddb061dcc7eb3aa9b7d398a10866528dfd67b190b0a3e9cdf8296566f6328f
+      approval_fingerprint: sha256:d76800aa9f75e977b94a7f55efdaffe6d8ccc56f0d1a8779fdec7aabd4b35929
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-051
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:2a3ed40a8543fe3cc67de3edfb2e82d81ee7605d0c22e42a368b2e28e29ff1a5
+      approval_fingerprint: sha256:ec674b14d7bf7b775832bb441a1678e6aedc2e7414ce5b4a84f1d1645a425581
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-052
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:1b68e0d0e8e1995127c73367904756751e4bb7b15ffd27fe32f17527d5195ac1
+      approval_fingerprint: sha256:25b6fa3137e1d2895785f5a7275ae07e2edc0e0cc9f03fdef5adf89bf1eec04c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-053
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:aec0bb24dccd362ec97407a28b0891656a7df2c1beadb9899fff379d40ec6cce
+      approval_fingerprint: sha256:84fedc4d62013b27d40ca172596d0b2ad5664bb0daa4679bb67ba921f7916f3e
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-054
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:37c25437a456fca16dfb641e777029593012ca91118a9a25d260733f1dad4c96
+      approval_fingerprint: sha256:f143c58b2c06bbe1e86e491c9550260b750bda20c4eec6f3239ae5ad831ee81f
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-055
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:6e3c484863db13722b086c6205bcf0a1fc0ff60e9bb26121b52b89536e7448e1
+      approval_fingerprint: sha256:e81616b973911e6a8f7fba69bece5179b264ad2a031a12fe5e860ceab63cdfc5
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-056
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:e36611af132d6e2aa6d6273b13c38127afb4b5bd6a014cb7e4c3daf79d4460c6
+      approval_fingerprint: sha256:4e7c4173f7abf0ab73010e97ec64d3161e89b01d4893329030ab427636c654c4
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-057
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:0b8a77c009cab425d44779cc2f45bd76c62b0471c128549d2684be2b822dbfc0
+      approval_fingerprint: sha256:64c126b28c8aaac56fc7b3c5eca12341ac0f0d76eed39d1a6ec85ae7361009f1
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-058
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:ed9600010ce16123c7c5d51375af68cb4dfd75a9c2bca7dd0c4b71165d37feac
+      approval_fingerprint: sha256:c02a8e81107efa857fb4ac165e86d6290fd6b8205099f3b52405b0d844ede51d
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-059
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:52db75aaa6aaba6d6453acea1b7ab232174b8885b423f58c4453e14155ac5fa5
+      approval_fingerprint: sha256:beb5ccd93b4ac2dc0fd1050fa4e26999ffc60521c24d36ac98fd443922770465
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-060
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:de0a2029fa92ce13b466b1fc69c78ac02274a77c98c0e25c07643f6f88cdb088
+      approval_fingerprint: sha256:27c1bf577f637c2323c7424c644f130c6999445be52d942d17529cda8663acf8
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-063
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:4e55e840af996538ef8d4c9b822e4924718cf58f1a81f2b856c50d33c83c12e4
+      approval_fingerprint: sha256:d4b45c95b68df394563a81de04a6985118e16ac43e28d4b49b37a128604e1ed6
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-064
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:505a75469324192f3b7592d94dafc4b837006fcc7eda7c83a69633023e7cb1ea
+      approval_fingerprint: sha256:fdc579e8a92c93d177059c20f44e58bd8e73d8acb4111de13546e6875fbdd22c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-065
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:3a5cca59af6a6226904971d5624bc346782595bc4476cc283294ffb2d6922150
+      approval_fingerprint: sha256:4dad9c67fa3dbe0cb220863ec3a97cad146a95c8958a288780b8310da455a44b
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-066
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:5c96085eff6c04434401054b894d0b4d7e366baa5647fee24468358f86461a8e
+      approval_fingerprint: sha256:84b961ced53b8db30db97c024fd8a3f72a899504869e5eb0fe3b1cf0c89e3ccd
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-067
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:282d24cf2984e828c6d87e9b1827f63cc632125544f4ce9cee336d7dd53f9407
+      approval_fingerprint: sha256:6a07fc7f703ac1fd02977499bc1b35758be93d18c0dd4e5b423b26100e90f68a
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-068
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:f3d2063a4358e73c46f4f05c59413f43ef8493c36ea37346a31faf604ac39eb8
+      approval_fingerprint: sha256:306480b053e682f4a0bb8826e6ec4a5d7daa31ce3b43667f59692f643e1afa0e
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-069
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:c41a7a81ec674f6abee224fca70ddbe1bc8c5af1f9e75ee1eb5ba33e544bfa44
+      approval_fingerprint: sha256:b79f405715e78d49edef94cff6051da3f5c5164cad854bc67f6b07cb02e788a0
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-070
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:11f799322cfd1e7aad70b46d519716d4b22af4c810e7e13d78b499bb3ebbe475
+      approval_fingerprint: sha256:51af6561a2fcd414bc6052f9547fb20c6d40746a790ca3adef92abb0422d3bf9
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-071
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:1730c36a2db46b4ef23c5ac2b2397f97287128fba664a3ed8fcfb8bfbcdcc071
+      approval_fingerprint: sha256:31b28248dd1ade50007dd502caca8ae1aece8f9e4ff8662c46f4220d39d7729c
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-072
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:e5719da4a2d96cca8696d4159f34d892988cb075407be91eb2892c1b12a899b5
+      approval_fingerprint: sha256:b0e9e721ecbe99632cd8094f5b5b66b06337bae7753501900bc7a962545975e8
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-073
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:7ff7abaf78a16d9fc1fd6dbd25006edbbe2d210fa41480c55a16c2445b195b80
+      approval_fingerprint: sha256:0294f8b2e1663354492b26afa0a9e082b6bdfe219da1df37da161039abf0efb7
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-074
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:270aacd67d5393980bf30b20458b116f4a4e52bfbe24edd2a9ce4be7c7fa4afc
+      approval_fingerprint: sha256:2a0ca1da51b1c4cd0d38302ae58a4a4aeaa6b3305312bed67f6dead7a4be90fb
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-075
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:59698d94cb1ad900840ee452901767f78e30fd88f6f63fbb4a58d7f419a585ad
+      approval_fingerprint: sha256:fd309837f2012056a2b29087a3fef48e6b7b882a0a2e4e2cef1f331245271eb3
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-076
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:f3fa20ee9e828571856a127b3c1fe25e6ae1aba9759d6808be1a1d576bca9292
+      approval_fingerprint: sha256:2f8d6332505e830407ae50d85d7ee5e1e746219b849ba745b998fa0727ceefce
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-077
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:2aa788941b60180d067eb58a72a63bdde7330c2469ee70895332c6e0ec92055c
+      approval_fingerprint: sha256:8059e4b47bc34327e56d822f4836121e57edac771de93d455697a42eaa6c9f6b
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-078
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:4364a89c7309a285a648c839618078e42e8425ca7f3bfe162879a6d504fbfcba
+      approval_fingerprint: sha256:1a4a142584bc4d36cb5b126cbbcaf01a37556be70c843ed119aaafc7dd4a535e
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-079
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:6e47513c4dc817384c10cef0fdab422dba73d0a09c9e36be1a91f81c505e31cd
+      approval_fingerprint: sha256:9da57392905bfe05a22f92a1a83c1b962d4cd6cc5ba8525651ef1660ba7cc12a
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-080
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:0a15bf911b002f8c56996b9758a185ac8c2dee30d277b6ddb8b14a0040652d32
+      approval_fingerprint: sha256:2772d6209a414515c076d7de7902146135a8d76923b3a7f091871f81c5d7ead5
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-081
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:b916f48f54b3507d4c134f470430afb09479ba46f0988328e31418dfcc7db955
+      approval_fingerprint: sha256:665bfc6cf3e824339bb322307534da302473672d39ed61641053d9788c8ce8aa
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-082
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:af267e89b6633081c79cada1bd494ef936b897560a9d136c9d8810eeca3a3710
+      approval_fingerprint: sha256:c95414b5c0c3bcdb53efcaf3ac4566c3fe64dee898dabe4c364eb68b54a05b58
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-083
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:9b0c5cf012eafe838a3b1f683cf34b2223791dec527cdc9d4a09410eb9e9d220
+      approval_fingerprint: sha256:2b5a664b5d773bcaecf975bfb082ede12ddccbc7db443f18120f52fc0038e6d1
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-084
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:f4aee70e8e9a01af010fdf449cd17a535204b49917dedcf0faef7e80fec0c695
+      approval_fingerprint: sha256:c642f7a1272592d52a0bff492674aee19117b77ee3b3f2837ffbb26598ca30ce
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-085
+      artifact: parser.go
+      decision: no-authored-change
+      reviewer: buger
+      reason: v1.4.0 added new exported surface to parser.go; the existing parser.go behaviors governed by these reqs were not changed. Reviewed; no authored requirement update needed.
+      base: origin/master
+      requirement_fingerprint: sha256:17e4fe7dfa7cd1110a558abcc33853c7be6c796a16dccf8a30c9f4743cf0eb2b
+      approval_fingerprint: sha256:0188a023b7e87d4b57da756f6e1a9e7c58d2cdd70aa4faff2c635c9d9903fa35
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:52:10Z"
+    - requirement: SYS-REQ-110
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:b498bd567cc5ffee007bbd61cb194d3fe754bfa87ca4a50bd620bc2d02030a3e
+      approval_fingerprint: sha256:52827854518417e4fe1f1f947da168176665208b5b1d8c52fb213e1813188ae1
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-111
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:b9018b0e63a7ef2906454bb3a9ea7f9a714daf542762652d5be19ea102ad8f66
+      approval_fingerprint: sha256:175fdf248a05770dcc77334662ef8faf1b3c39e5f97f3830a78c0bafc52bea94
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-112
+      artifact: parser.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:ba46abcaeb570dff9ae0ba6e3dbc9a6fddede60b21a54c7b825be4a8d647f6a3
+      approval_fingerprint: sha256:8016fa45a43e9e9393c30f4923f581b88b4ccbe79ecc95cdda11c49ba07cd3de
+      artifact_fingerprint: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-113
+      artifact: wildcard.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:be77d56d8eb7059b17e4147519d1c24656b3051d67e51936292424183de5004b
+      approval_fingerprint: sha256:2d08a80ac370b6871ff7feb7886a3abdea925406da9966695bbc523e29e6f89b
+      artifact_fingerprint: sha256:81675593d88d61916ee9a30a6072619c8a90df50a00bcf1e301c5f79bf14e3fa
+      reviewed_at: "2026-07-28T08:34:05Z"
+    - requirement: SYS-REQ-114
+      artifact: path_compiler.go
+      decision: no-authored-change
+      change_type: feature
+      change_ref: CHG-260728-RKTS
+      reviewer: buger
+      reason: 'v1.4.0: new exported API surface traced to SYS-REQ-003/004/008/009/010/014/112/113/114 via code annotations'
+      base: origin/master
+      requirement_fingerprint: sha256:14ba6da131a193cf53563d2cd4ad8c2c93413dc5ca79984d63ec61d35d5af606
+      approval_fingerprint: sha256:ff9f8826efe7f3e6d617fd2c25eb64b3df8476ae7505a7421c0e892f85fc4231
+      artifact_fingerprint: sha256:e2bfbe33fddb8ab56090b129c5fb2968e970bf96f43f8b2018438eedcd347600
+      reviewed_at: "2026-07-28T08:34:05Z"

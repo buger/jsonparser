@@ -196,6 +196,53 @@ func unescapeToUTF8(in, out []byte) (inLen int, outLen int) {
 	return -1, -1
 }
 
+const lowerHex = "0123456789abcdef"
+
+// Escape returns in as a JSON string literal, including the surrounding
+// quotation marks.
+// SYS-REQ-014
+func Escape(in string) []byte {
+	var stackbuf [unescapeStackBufSize]byte
+	out := stackbuf[:0]
+	out = append(out, '"')
+
+	start := 0
+	for i := 0; i < len(in); i++ {
+		c := in[i]
+		if c >= 0x20 && c != '"' && c != '\\' {
+			continue
+		}
+
+		out = append(out, in[start:i]...)
+		switch c {
+		case '"', '\\':
+			out = append(out, '\\', c)
+		case '\b':
+			out = append(out, '\\', 'b')
+		case '\f':
+			out = append(out, '\\', 'f')
+		case '\n':
+			out = append(out, '\\', 'n')
+		case '\r':
+			out = append(out, '\\', 'r')
+		case '\t':
+			out = append(out, '\\', 't')
+		default:
+			out = append(out, '\\', 'u', '0', '0', lowerHex[c>>4], lowerHex[c&0x0f])
+		}
+		start = i + 1
+	}
+
+	out = append(out, in[start:]...)
+	return append(out, '"')
+}
+
+// SetString replaces the value at keys with val encoded as a JSON string.
+// SYS-REQ-009
+func SetString(data []byte, val string, keys ...string) ([]byte, error) {
+	return Set(data, Escape(val), keys...)
+}
+
 // unescape unescapes the string contained in 'in' and returns it as a slice.
 // If 'in' contains no escaped characters:
 //   Returns 'in'.

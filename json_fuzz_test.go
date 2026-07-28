@@ -29,9 +29,9 @@
 // matching the convention in path_fuzz_test.go).
 //
 // Verifies: SYS-REQ-035 (no-panic on malformed/adversarial input).
-// reqproof:proptest Get, Set, Delete, GetString, GetInt, GetFloat,
-//           GetBoolean, GetUnsafeString, ArrayEach, ObjectEach, EachKey,
-//           ParseInt, ParseFloat
+// reqproof:proptest parser.Get, parser.Set, parser.Delete, parser.GetString, parser.GetInt, parser.GetFloat,
+//           parser.GetBoolean, parser.GetUnsafeString, parser.ArrayEach, parser.ObjectEach, parser.EachKey,
+//           parser.ParseInt, parser.ParseFloat
 package jsonparser
 
 import (
@@ -1503,9 +1503,9 @@ func looksLikeJSON(data []byte) bool {
 // classes, empty-key, OOB index) so they are exercised on every run.
 //
 // Verifies: SYS-REQ-035 [no-panic on malformed input]
-// reqproof:proptest Get, Set, Delete, GetString, GetInt, GetFloat,
-//           GetBoolean, GetUnsafeString, ArrayEach, ObjectEach, EachKey,
-//           ParseInt, ParseFloat
+// reqproof:proptest parser.Get, parser.Set, parser.Delete, parser.GetString, parser.GetInt, parser.GetFloat,
+//           parser.GetBoolean, parser.GetUnsafeString, parser.ArrayEach, parser.ObjectEach, parser.EachKey,
+//           parser.ParseInt, parser.ParseFloat
 func FuzzJSONStructureAware(f *testing.F) {
 	// Seed with known-dangerous corpora (the actual bugs we've found).
 	for _, s := range structureAwareSeeds {

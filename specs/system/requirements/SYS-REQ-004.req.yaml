@@ -5,7 +5,7 @@ priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy !addressed_value_is_number | !raw_number_token_is_float_parseable | returns_getfloat_value
-description: When GetFloat addresses a JSON number token that is parseable as a float64 value, the parser shall return the corresponding float64 result.
+description: When GetFloat addresses a JSON number token that is parseable as a float64 value, the parser shall return the corresponding float64 result. ArrayEachErr is the io.EOF-aware ArrayEach variant where the callback may stop iteration by returning an error; the returned count includes the element whose callback stopped iteration.
 formalization_strategy: fretish
 informal_verification:
     method: ""

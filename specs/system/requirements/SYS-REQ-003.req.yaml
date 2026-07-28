@@ -5,7 +5,7 @@ priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy !addressed_value_is_number | !raw_number_token_is_integer_parseable | returns_getint_value
-description: When GetInt addresses a JSON number token that is parseable as an int64 value, the parser shall return the corresponding int64 result.
+description: "When GetInt addresses a JSON number token that is parseable as an int64 value, the parser shall return the corresponding int64 result. GetUint64 is the uint64-typed variant of GetInt: when the addressed JSON number token is parseable as a uint64 (non-negative, magnitude within uint64 range), GetUint64 returns the corresponding uint64 result, returning OverflowIntegerError when the magnitude exceeds uint64 range and MalformedValueError when the addressed value is not a non-negative integer."
 formalization_strategy: fretish
 informal_verification:
     method: ""

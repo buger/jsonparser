@@ -1084,6 +1084,34 @@ variables:
         merge: last_wins
         commutative: true
         idempotent: true
+    - name: addressed_container_is_array_or_object
+      type: bool
+      direction: input
+      description: True when the value addressed by the GetArrayLen/GetObjectLen key path is a JSON array (GetArrayLen) or object (GetObjectLen) container rather than a scalar or missing path.
+    - name: returns_container_element_count
+      type: bool
+      direction: output
+      description: True when GetArrayLen returns the number of elements in the addressed array (0 for an empty array) or GetObjectLen returns the number of key-value pairs in the addressed object (0 for an empty object), with no caller callback invoked.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: wildcard_path_resolves_to_every_matched_element
+      type: bool
+      direction: output
+      description: True when EachKeyWildcard/ArrayEachWildcard/SetWildcard fan out over every element matched by [*] components in document order (EachKeyWildcard one callback per matched combination, SetWildcard applies to every expanded concrete path), returning MalformedArrayError for a non-array container and treating an empty matched array as a no-op.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: compiled_jsonpath_resolves_to_same_result_as_equivalent_key_path
+      type: bool
+      direction: output
+      description: True when ParsePath converts a JSONPath-style string ($.dot, [N], [*], "quoted") into the path-component slice accepted by Get/Set/Delete/ArrayEach/EachKey and CompiledPath methods are observationally equivalent to invoking the matching top-level function with the parsed components, with errEmptyPath for empty input and errMalformedPath for non-conforming syntax.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
 independence:
     declared: true
     reason: jsonparser requirements govern a single pure-function parser (Get and its typed/walking/mutation helpers) over untrusted byte input; each guarantee constrains a distinct output variable representing one observational outcome of the same parse (e.g. returns_existing_path_lookup_result, returns_missing_path_result_for_well_formed_lookup, returns_parse_error_for_incomplete_lookup). The output vocabulary is intentionally disjoint per behavioral outcome across 118 output variables, so the connected-component decomposition over shared output variables places each requirement in a singleton component and cross-requirement consistency contradictions are not solver-checkable via shared outputs. The input preconditions are mutually exclusive (well-formed/existing-path vs missing-path vs incomplete/truncated vs empty vs malformed), so the distinct outputs cannot simultaneously hold for one parse and do not actually conflict.

@@ -32,7 +32,7 @@
 //       of PR #286 (Set silently producing `[9]` from `[1,2]`).
 //
 // Verifies: SYS-REQ-035 (no-panic on malformed/adversarial input).
-// reqproof:proptest Get, Set, Delete, GetString, GetInt, GetFloat, GetBoolean, ArrayEach, ObjectEach, EachKey
+// reqproof:proptest parser.Get, parser.Set, parser.Delete, parser.GetString, parser.GetInt, parser.GetFloat, parser.GetBoolean, parser.ArrayEach, parser.ObjectEach, parser.EachKey
 package jsonparser
 
 import (
@@ -161,7 +161,7 @@ func runPathOp(target string, data, path []byte, fn func()) (ok bool) {
 // now fixed) and which today surfaces the still-open D9 site.
 //
 // Verifies: SYS-REQ-035 [no-panic on malformed input]
-// reqproof:proptest Get, Set, Delete, GetString, GetInt, GetFloat, GetBoolean, ArrayEach, ObjectEach, EachKey
+// reqproof:proptest parser.Get, parser.Set, parser.Delete, parser.GetString, parser.GetInt, parser.GetFloat, parser.GetBoolean, parser.ArrayEach, parser.ObjectEach, parser.EachKey
 func FuzzPathMutation(f *testing.F) {
 	// Seed corpus: a mix of valid JSON + non-empty paths, AND adversarial
 	// path shapes (empty, trailing-slash, array-index-then-empty). The
@@ -531,7 +531,7 @@ func assertAfterStep(t *testing.T, label string, state []byte, path []string, ch
 // FuzzSequence runs multi-operation sequences against a single JSON document.
 //
 // Verifies: SYS-REQ-035 (no-panic on sequences of operations).
-// reqproof:proptest Set, Delete, Get
+// reqproof:proptest parser.Set, parser.Delete, parser.Get
 func FuzzSequence(f *testing.F) {
 	// Seed with valid JSON + valid-shape paths so the sequences have a
 	// well-defined starting state.

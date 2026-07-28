@@ -5,7 +5,7 @@ priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy delete_path_is_provided | delete_returns_empty_document_without_path
-description: When Delete is called without a path, the parser shall return an empty document.
+description: "When Delete is called without a path, the parser shall return an empty document. DeleteFound is the explicit-found variant of Delete: DeleteFound(data, keys...) returns (result, found) where result is the post-deletion document (or the original input when the path is missing) and found is true iff the addressed value was located and removed."
 formalization_strategy: fretish
 informal_verification:
     method: ""

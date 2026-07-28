@@ -449,7 +449,7 @@ func setPathSemanticallyValid(v interface{}, path []string) bool {
 // Property 1: Get round-trip — jsonparser.Get matches encoding/json.
 // ---------------------------------------------------------------------------
 
-// reqproof:proptest Get
+// reqproof:proptest parser.Get
 // Verifies: SYS-REQ-001 [property]
 func TestOracleGetRoundTrip(t *testing.T) {
 	r := oracleNewRNG(oracleSeed)
@@ -505,7 +505,7 @@ func oracleSetValue(r *mathrand.Rand) []byte {
 	return b
 }
 
-// reqproof:proptest Set
+// reqproof:proptest parser.Set
 // Verifies: SYS-REQ-009 [property]
 func TestOracleSetRoundTrip(t *testing.T) {
 	r := oracleNewRNG(oracleSeed + 1)
@@ -616,7 +616,7 @@ func TestOracleSetRoundTrip(t *testing.T) {
 // same class — it returns {"a":[9]} (the [1,2] is destroyed). We document
 // the open bug via t.Logf so the test stays green while the bug stays visible.
 //
-// reqproof:proptest Set
+// reqproof:proptest parser.Set
 // Verifies: SYS-REQ-009 [property]
 func TestOracleSetPr286Regression(t *testing.T) {
 	cases := []struct {
@@ -700,7 +700,7 @@ func TestOracleSetPr286Regression(t *testing.T) {
 // structure is valid JSON (no corruption).
 // ---------------------------------------------------------------------------
 
-// reqproof:proptest Delete
+// reqproof:proptest parser.Delete
 // Verifies: SYS-REQ-034 [property]
 func TestOracleDeleteCorrectness(t *testing.T) {
 	r := oracleNewRNG(oracleSeed + 2)

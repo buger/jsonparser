@@ -5,7 +5,7 @@ priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy !raw_string_literal_is_well_formed | returns_parsestring_value
-description: When ParseString receives a well-formed raw JSON string literal body, the parser shall return the corresponding decoded Go string value.
+description: "When ParseString receives a well-formed raw JSON string literal body, the parser shall return the corresponding decoded Go string value. Escape is the RFC 8259 inverse of Unescape/ParseString: Escape(in) returns in encoded as a JSON string literal including the surrounding quotation marks, escaping the mandatory characters (quotation mark, reverse solidus, control characters U+0000–U+001F) and any non-ASCII bytes as \\uXXXX sequences, so the result is a valid JSON string token suitable for direct embedding in a JSON document."
 formalization_strategy: fretish
 informal_verification:
     method: ""

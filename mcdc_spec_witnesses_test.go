@@ -3530,3 +3530,126 @@ func TestMCDC_SYS_REQ_109_Row2_InvariantViolation(t *testing.T) {
 		t.Fatalf("expected int64 min, got %d", v)
 	}
 }
+
+// -----------------------------------------------------------------------------
+// SYS-REQ-112 (GetArrayLen / GetObjectLen)
+// -----------------------------------------------------------------------------
+
+// Verifies: SYS-REQ-112
+// MCDC SYS-REQ-112: addressed_container_is_array_or_object=F, returns_container_element_count=F => TRUE [no-action: GetArrayLen returns 0 and non-nil error, no count emitted]
+func TestMCDC_SYS_REQ_112_Row1_TriggerFalse(t *testing.T) {
+	got, err := GetArrayLen([]byte(`{"values":1}`), "values")
+	if err == nil {
+		t.Fatal("expected error when GetArrayLen targets non-array, got nil")
+	}
+	if got != 0 {
+		t.Fatalf("expected zero (no count action), got %d", got)
+	}
+}
+
+// Verifies: SYS-REQ-112
+// MCDC SYS-REQ-112: addressed_container_is_array_or_object=T, returns_container_element_count=F => FALSE
+func TestMCDC_SYS_REQ_112_Row2_InvariantViolation(t *testing.T) {
+	// Invariant-violation row: addressed value IS a valid array but the
+	// function fails to return a count. Logically unreachable in correct code;
+	// the test below drives the positive path and asserts the count IS emitted
+	// so any regression that breaks the count surfaces here.
+	got, err := GetArrayLen([]byte(`[1,2,3]`))
+	if err != nil {
+		t.Fatalf("GetArrayLen returned error: %v", err)
+	}
+	if got != 3 {
+		t.Fatalf("expected count 3, got %d", got)
+	}
+}
+
+// Verifies: SYS-REQ-112
+// MCDC SYS-REQ-112: addressed_container_is_array_or_object=T, returns_container_element_count=T => TRUE
+func TestMCDC_SYS_REQ_112_Row3_Nominal(t *testing.T) {
+	got, err := GetObjectLen([]byte(`{"a":1,"b":2,"c":3}`))
+	if err != nil {
+		t.Fatalf("GetObjectLen returned error: %v", err)
+	}
+	if got != 3 {
+		t.Fatalf("expected count 3, got %d", got)
+	}
+}
+
+// -----------------------------------------------------------------------------
+// SYS-REQ-113 (EachKeyWildcard / ArrayEachWildcard / SetWildcard)
+// -----------------------------------------------------------------------------
+
+// Verifies: SYS-REQ-113
+// MCDC SYS-REQ-113: wildcard_path_resolves_to_every_matched_element=F => FALSE
+func TestMCDC_SYS_REQ_113_Row1_InvariantViolation(t *testing.T) {
+	// Invariant-violation row: wildcard addresses a valid array but the parser
+	// fails to fan out. Logically unreachable; the test drives the positive
+	// fan-out path and asserts document-order delivery so any regression that
+	// breaks fan-out surfaces here.
+	calls := 0
+	err := EachKeyWildcard([]byte(`[1,2,3]`), func(_ int, _ []byte, _ ValueType, _ error) {
+		calls++
+	}, "[*]")
+	if err != nil {
+		t.Fatalf("EachKeyWildcard returned error: %v", err)
+	}
+	if calls != 3 {
+		t.Fatalf("expected 3 fan-out callbacks, got %d", calls)
+	}
+}
+
+// Verifies: SYS-REQ-113
+// MCDC SYS-REQ-113: wildcard_path_resolves_to_every_matched_element=T => TRUE
+func TestMCDC_SYS_REQ_113_Row2_Nominal(t *testing.T) {
+	out, err := SetWildcard([]byte(`{"items":[{"id":1},{"id":2}]}`), []byte(`true`), "items", "[*]", "flag")
+	if err != nil {
+		t.Fatalf("SetWildcard returned error: %v", err)
+	}
+	got, _, _, err := Get(out, "items", "[0]", "flag")
+	if err != nil {
+		t.Fatalf("Get returned error: %v", err)
+	}
+	if string(got) != "true" {
+		t.Fatalf("expected flag=true after SetWildcard fan-out, got %q", got)
+	}
+}
+
+// -----------------------------------------------------------------------------
+// SYS-REQ-114 (ParsePath / CompilePath / CompiledPath)
+// -----------------------------------------------------------------------------
+
+// Verifies: SYS-REQ-114
+// MCDC SYS-REQ-114: compiled_jsonpath_resolves_to_same_result_as_equivalent_key_path=F => FALSE
+func TestMCDC_SYS_REQ_114_Row1_InvariantViolation(t *testing.T) {
+	// Invariant-violation row: compiled path diverges from top-level API.
+	// Logically unreachable; the test drives both paths and asserts equality so
+	// any regression that diverges them surfaces here.
+	data := []byte(`{"user":{"name":"Alice"}}`)
+	compiled, err := CompilePath("$.user.name")
+	if err != nil {
+		t.Fatalf("CompilePath returned error: %v", err)
+	}
+	cVal, _, _, cErr := compiled.Get(data)
+	tVal, _, _, tErr := Get(data, "user", "name")
+	if (cErr == nil) != (tErr == nil) || !bytes.Equal(cVal, tVal) {
+		t.Fatalf("compiled path diverged: compiled=(%q, %v) top-level=(%q, %v)", cVal, cErr, tVal, tErr)
+	}
+}
+
+// Verifies: SYS-REQ-114
+// MCDC SYS-REQ-114: compiled_jsonpath_resolves_to_same_result_as_equivalent_key_path=T => TRUE
+func TestMCDC_SYS_REQ_114_Row2_Nominal(t *testing.T) {
+	parts, err := ParsePath(`$.items[0].id`)
+	if err != nil {
+		t.Fatalf("ParsePath returned error: %v", err)
+	}
+	want := []string{"items", "[0]", "id"}
+	if len(parts) != len(want) {
+		t.Fatalf("expected %d parts, got %d (%v)", len(want), len(parts), parts)
+	}
+	for i, p := range parts {
+		if p != want[i] {
+			t.Fatalf("part %d = %q, want %q", i, p, want[i])
+		}
+	}
+}

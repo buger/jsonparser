@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 )
 
@@ -740,6 +741,237 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 	return -1
 }
 
+// EachKeyErr finds the requested paths and allows the callback to stop
+// iteration by returning an error. io.EOF stops iteration gracefully.
+// SYS-REQ-008
+func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err error) error, paths ...[]string) error {
+	var x struct{}
+	var level, pathsMatched, i int
+	ln := len(data)
+
+	pathFlags := make([]bool, stackArraySize)[:]
+	if len(paths) > cap(pathFlags) {
+		pathFlags = make([]bool, len(paths))[:]
+	}
+	pathFlags = pathFlags[0:len(paths)]
+
+	var maxPath int
+	for _, p := range paths {
+		if len(p) > maxPath {
+			maxPath = len(p)
+		}
+	}
+
+	pathsBuf := make([]string, stackArraySize)[:]
+	if maxPath > cap(pathsBuf) {
+		pathsBuf = make([]string, maxPath)[:]
+	}
+	pathsBuf = pathsBuf[0:maxPath]
+
+	for i < ln {
+		switch data[i] {
+		case '"':
+			i++
+			keyBegin := i
+
+			strEnd, keyEscaped := stringEnd(data[i:])
+			if strEnd == -1 {
+				return nil
+			}
+			i += strEnd
+
+			keyEnd := i - 1
+
+			valueOffset := nextToken(data[i:])
+			if valueOffset == -1 {
+				return nil
+			}
+
+			i += valueOffset
+
+			if data[i] == ':' {
+				match := -1
+				key := data[keyBegin:keyEnd]
+
+				var keyUnesc []byte
+				if !keyEscaped {
+					keyUnesc = key
+				} else {
+					var stackbuf [unescapeStackBufSize]byte
+					if ku, unescapeErr := Unescape(key, stackbuf[:]); unescapeErr != nil {
+						return nil
+					} else {
+						keyUnesc = ku
+					}
+				}
+
+				if maxPath >= level {
+					if level < 1 {
+						callbackErr := cb(-1, nil, Unknown, MalformedJsonError)
+						if callbackErr != nil && !errors.Is(callbackErr, io.EOF) {
+							return callbackErr
+						}
+						return nil
+					}
+
+					pathsBuf[level-1] = bytesToString(&keyUnesc)
+					for pi, p := range paths {
+						if len(p) != level || pathFlags[pi] || !equalStr(&keyUnesc, p[level-1]) || !sameTree(p, pathsBuf[:level]) {
+							continue
+						}
+
+						match = pi
+
+						pathsMatched++
+						pathFlags[pi] = true
+
+						v, dt, _, parseErr := Get(data[i+1:])
+						if callbackErr := cb(pi, v, dt, parseErr); callbackErr != nil {
+							if errors.Is(callbackErr, io.EOF) {
+								return nil
+							}
+							return callbackErr
+						}
+
+						if pathsMatched == len(paths) {
+							break
+						}
+					}
+					if pathsMatched == len(paths) {
+						return nil
+					}
+				}
+
+				if match == -1 {
+					tokenOffset := nextToken(data[i+1:])
+					i += tokenOffset
+				}
+
+				switch data[i] {
+				case '{', '}', '[', '"':
+					i--
+				}
+			} else {
+				i--
+			}
+		case '{':
+			level++
+		case '}':
+			level--
+		case '[':
+			var ok bool
+			arrIdxFlags := make(map[int]struct{})
+
+			pIdxFlags := make([]bool, stackArraySize)[:]
+			if len(paths) > cap(pIdxFlags) {
+				pIdxFlags = make([]bool, len(paths))[:]
+			}
+			pIdxFlags = pIdxFlags[0:len(paths)]
+
+			if level < 0 {
+				callbackErr := cb(-1, nil, Unknown, MalformedJsonError)
+				if callbackErr != nil && !errors.Is(callbackErr, io.EOF) {
+					return callbackErr
+				}
+				return nil
+			}
+
+			for pi, p := range paths {
+				if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+					continue
+				}
+
+				indexComponent := p[level]
+				if len(indexComponent) < 3 || indexComponent[len(indexComponent)-1] != ']' {
+					continue
+				}
+				aIdx, parseErr := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
+				if parseErr != nil {
+					continue
+				}
+				arrIdxFlags[aIdx] = x
+				pIdxFlags[pi] = true
+			}
+
+			if len(arrIdxFlags) > 0 {
+				level++
+
+				var curIdx int
+				var callbackErr error
+				var stopped bool
+				arrOff, _, _ := arrayEachErr(data[i:], func(value []byte, dataType ValueType, offset int, parseErr error) error {
+					if _, ok = arrIdxFlags[curIdx]; ok {
+						for pi, p := range paths {
+							if !pIdxFlags[pi] || pathFlags[pi] {
+								continue
+							}
+
+							indexComponent := p[level-1]
+							aIdx, indexErr := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
+							if indexErr != nil || curIdx != aIdx {
+								continue
+							}
+
+							if level == len(p) {
+								pathsMatched++
+								pathFlags[pi] = true
+								callbackErr = cb(pi, value, dataType, parseErr)
+								if callbackErr != nil {
+									stopped = true
+									return callbackErr
+								}
+								continue
+							}
+
+							of := searchKeys(value, p[level:]...)
+							if of == -1 {
+								continue
+							}
+
+							v, dt, _, getErr := Get(value[of:])
+							pathsMatched++
+							pathFlags[pi] = true
+							callbackErr = cb(pi, v, dt, getErr)
+							if callbackErr != nil {
+								stopped = true
+								return callbackErr
+							}
+						}
+					}
+
+					curIdx++
+					return nil
+				})
+
+				if stopped {
+					if errors.Is(callbackErr, io.EOF) {
+						return nil
+					}
+					return callbackErr
+				}
+
+				if pathsMatched == len(paths) {
+					return nil
+				}
+
+				i += arrOff - 1
+			} else {
+				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
+					return nil
+				} else {
+					i += arraySkip - 1
+				}
+			}
+		case ']':
+			level--
+		}
+
+		i++
+	}
+
+	return nil
+}
+
 // Data types available in valid JSON data.
 type ValueType int
 
@@ -815,7 +1047,7 @@ func createInsertComponent(keys []string, setValue []byte, comma, object bool) [
 			offset += WriteToBuffer(buffer[offset:], "\":")
 		}
 	}
-	offset += WriteToBuffer(buffer[offset:], string(setValue))
+	offset += copy(buffer[offset:], setValue)
 	for i := len(keys) - 1; i > 0; i-- {
 		// guard: empty key component — treat as object key, not array index.
 		if len(keys[i]) > 0 && string(keys[i][0]) == "[" {
@@ -892,11 +1124,19 @@ Returns:
 */
 // SYS-REQ-010, SYS-REQ-033, SYS-REQ-034, SYS-REQ-035, SYS-REQ-048, SYS-REQ-049, SYS-REQ-050, SYS-REQ-056
 func Delete(data []byte, keys ...string) []byte {
+	result, _ := DeleteFound(data, keys...)
+	return result
+}
+
+// DeleteFound removes the value addressed by keys and reports whether the
+// value was found and removed. When found is false, result is data unchanged.
+// SYS-REQ-010
+func DeleteFound(data []byte, keys ...string) (result []byte, found bool) {
 	lk := len(keys)
 	if lk == 0 {
 		// Deleting the root produces an empty document whose backing array
 		// must not alias the caller's input.
-		return make([]byte, 0)
+		return make([]byte, 0), true
 	}
 
 	array := false
@@ -912,20 +1152,20 @@ func Delete(data []byte, keys ...string) []byte {
 			_, _, startOffset, endOffset, err = internalGet(data, keys[:lk-1]...)
 			if err != nil {
 				// problem parsing the data
-				return data
+				return data, false
 			}
 		}
 
 		keyOffset, err = findKeyStart(data[startOffset:endOffset], keys[lk-1])
 		if err == KeyPathNotFoundError {
 			// problem parsing the data
-			return data
+			return data, false
 		}
 		keyOffset += startOffset
 		var subEndOffset int
 		_, _, _, subEndOffset, err = internalGet(data[startOffset:endOffset], keys[lk-1])
 		if err != nil {
-			return data
+			return data, false
 		}
 		endOffset = startOffset + subEndOffset
 		tokEnd := tokenEnd(data[endOffset:])
@@ -933,7 +1173,7 @@ func Delete(data []byte, keys ...string) []byte {
 
 		if endOffset+tokEnd >= len(data) {
 			// tokenEnd sentinel: no delimiter found, input is truncated
-			return data
+			return data, false
 		}
 
 		// guard: tokenEnd sentinel may return -1 on truncated input; bounds-check before deref.
@@ -962,7 +1202,7 @@ func Delete(data []byte, keys ...string) []byte {
 		_, _, keyOffset, endOffset, err = internalGet(data, keys...)
 		if err != nil {
 			// problem parsing the data
-			return data
+			return data, false
 		}
 
 		tokEnd := tokenEnd(data[endOffset:])
@@ -970,7 +1210,7 @@ func Delete(data []byte, keys ...string) []byte {
 
 		if endOffset+tokEnd >= len(data) {
 			// tokenEnd sentinel: no delimiter found, input is truncated
-			return data
+			return data, false
 		}
 
 		// guard: tokenEnd sentinel may return -1 on truncated input; bounds-check before deref.
@@ -1020,11 +1260,11 @@ func Delete(data []byte, keys ...string) []byte {
 
 	// Allocate the exact result size so neither the copy operation nor later
 	// appends to the returned slice can write into the input backing array.
-	value := make([]byte, newOffset+len(data)-endOffset)
-	copy(value, data[:newOffset])
-	copy(value[newOffset:], data[endOffset:])
+	result = make([]byte, newOffset+len(data)-endOffset)
+	copy(result, data[:newOffset])
+	copy(result[newOffset:], data[endOffset:])
 
-	return value
+	return result, true
 }
 
 /*
@@ -1384,6 +1624,106 @@ func ArrayEach(data []byte, cb func(value []byte, dataType ValueType, offset int
 	return offset, nil
 }
 
+// ArrayEachErr is used when iterating arrays and allows the callback to stop
+// iteration by returning an error. io.EOF stops iteration without returning an
+// error. The returned count includes the element whose callback stopped the
+// iteration.
+// SYS-REQ-004
+func ArrayEachErr(data []byte, cb func(value []byte, dataType ValueType, offset int, err error) error, keys ...string) (count int, err error) {
+	_, count, err = arrayEachErr(data, cb, keys...)
+	return count, err
+}
+
+// arrayEachErr also returns ArrayEach's closing-bracket offset for use by
+// EachKeyErr while traversing array-index paths.
+// SYS-REQ-004
+func arrayEachErr(data []byte, cb func(value []byte, dataType ValueType, offset int, err error) error, keys ...string) (offset, count int, err error) {
+	if len(data) == 0 {
+		return -1, 0, MalformedObjectError
+	}
+
+	nT := nextToken(data)
+	if nT == -1 {
+		return -1, 0, MalformedJsonError
+	}
+
+	if len(keys) == 0 && data[nT] != '[' {
+		return -1, 0, MalformedArrayError
+	}
+
+	offset = nT + 1
+
+	if len(keys) > 0 {
+		if offset = searchKeys(data, keys...); offset == -1 {
+			return offset, 0, KeyPathNotFoundError
+		}
+
+		nO := nextToken(data[offset:])
+		if nO == -1 {
+			return offset, 0, MalformedJsonError
+		}
+
+		offset += nO
+
+		if data[offset] != '[' {
+			return offset, 0, MalformedArrayError
+		}
+
+		offset++
+	}
+
+	nO := nextToken(data[offset:])
+	if nO == -1 {
+		return offset, 0, MalformedJsonError
+	}
+
+	offset += nO
+
+	if data[offset] == ']' {
+		return offset, 0, nil
+	}
+
+	for {
+		v, t, o, parseErr := Get(data[offset:])
+
+		if o == 0 {
+			return offset, count, parseErr
+		}
+
+		count++
+		if callbackErr := cb(v, t, offset+o-len(v), parseErr); callbackErr != nil {
+			if errors.Is(callbackErr, io.EOF) {
+				return offset, count, nil
+			}
+			return offset, count, callbackErr
+		}
+
+		if parseErr != nil {
+			return offset, count, parseErr
+		}
+
+		offset += o
+
+		skipToToken := nextToken(data[offset:])
+		if skipToToken == -1 {
+			return offset, count, MalformedArrayError
+		}
+		offset += skipToToken
+
+		if data[offset] == ']' {
+			break
+		}
+
+		if data[offset] != ',' {
+			return offset, count, MalformedArrayError
+		}
+
+		offset++
+	}
+
+	return offset, count, nil
+}
+
 // SYS-REQ-007, SYS-REQ-030, SYS-REQ-031, SYS-REQ-032, SYS-REQ-054, SYS-REQ-084
 // ObjectEach iterates over the key-value pairs of a JSON object, invoking a given callback for each such entry
 func ObjectEach(data []byte, callback func(key []byte, value []byte, dataType ValueType, offset int) error, keys ...string) (err error) {
@@ -1641,4 +1981,369 @@ func ParseInt(b []byte) (int64, error) {
 	} else {
 		return v, nil
 	}
+}
+
+// GetArrayLen returns the number of elements in the addressed JSON array.
+// It scans the array without invoking a callback.
+// SYS-REQ-112
+func GetArrayLen(data []byte, keys ...string) (int, error) {
+	offset, err := containerStart(data, '[', keys...)
+	if err != nil {
+		return 0, err
+	}
+
+	return scanContainerLen(data, offset, '[')
+}
+
+// GetObjectLen returns the number of key-value pairs in the addressed JSON
+// object. It scans the object without invoking a callback.
+// SYS-REQ-112
+func GetObjectLen(data []byte, keys ...string) (int, error) {
+	offset, err := containerStart(data, '{', keys...)
+	if err != nil {
+		return 0, err
+	}
+
+	return scanContainerLen(data, offset, '{')
+}
+
+// GetUint64 returns the value retrieved by internalGet, cast to a uint64 if
+// possible. Negative values and malformed integers return MalformedValueError;
+// values larger than uint64 return OverflowIntegerError.
+// SYS-REQ-003
+func GetUint64(data []byte, keys ...string) (uint64, error) {
+	v, t, _, _, err := internalGet(data, keys...)
+	if err != nil {
+		return 0, err
+	}
+
+	if t != Number {
+		if t == Null {
+			return 0, NullValueError
+		}
+		return 0, fmt.Errorf("Value is not a number: %s", string(v))
+	}
+
+	if n, ok, _ := parseInt(v); ok {
+		if n < 0 {
+			return 0, MalformedValueError
+		}
+		return uint64(n), nil
+	}
+
+	n, parseErr := strconv.ParseUint(string(v), 10, 64)
+	if parseErr == nil {
+		return n, nil
+	}
+
+	var numErr *strconv.NumError
+	if errors.As(parseErr, &numErr) && numErr.Err == strconv.ErrRange {
+		return 0, OverflowIntegerError
+	}
+	return 0, MalformedValueError
+}
+
+// SYS-REQ-112
+func containerStart(data []byte, open byte, keys ...string) (int, error) {
+	offset := 0
+	if len(keys) > 0 {
+		offset = searchKeys(data, keys...)
+		if offset == -1 {
+			return -1, KeyPathNotFoundError
+		}
+	}
+
+	tokenOffset := nextToken(data[offset:])
+	if tokenOffset == -1 {
+		return -1, KeyPathNotFoundError
+	}
+	offset += tokenOffset
+
+	if data[offset] != open {
+		return -1, KeyPathNotFoundError
+	}
+	return offset, nil
+}
+
+// SYS-REQ-112
+func scanContainerLen(data []byte, offset int, open byte) (int, error) {
+	const (
+		scanArrayValue = iota
+		scanArrayPrimitive
+		scanArrayDelimiter
+		scanObjectKey
+		scanObjectColon
+		scanObjectValue
+		scanObjectPrimitive
+		scanObjectDelimiter
+	)
+
+	close := byte(']')
+	malformedErr := MalformedArrayError
+	state := scanArrayValue
+	if open == '{' {
+		close = '}'
+		malformedErr = MalformedObjectError
+		state = scanObjectKey
+	}
+
+	var fixedStack [32]byte
+	stack := fixedStack[:1]
+	stack[0] = close
+
+	count := 0
+	primitiveStart := -1
+
+	for i := offset + 1; i < len(data); i++ {
+		c := data[i]
+
+		// Only delimiters at the addressed container's top level affect its
+		// length. Strings and nested containers are skipped structurally.
+		if len(stack) > 1 {
+			switch c {
+			case '"':
+				stringLength, _ := stringEnd(data[i+1:])
+				if stringLength == -1 {
+					return 0, malformedErr
+				}
+				i += stringLength
+			case '[':
+				stack = append(stack, ']')
+			case '{':
+				stack = append(stack, '}')
+			case ']', '}':
+				if c != stack[len(stack)-1] {
+					return 0, malformedErr
+				}
+				stack = stack[:len(stack)-1]
+			}
+			continue
+		}
+
+		switch state {
+		case scanArrayValue:
+			if isContainerWhitespace(c) {
+				continue
+			}
+			if c == close {
+				if count == 0 {
+					return 0, nil
+				}
+				return 0, malformedErr
+			}
+			if c == ',' || c == '}' || c == ':' {
+				return 0, malformedErr
+			}
+
+			count++
+			switch c {
+			case '"':
+				stringLength, _ := stringEnd(data[i+1:])
+				if stringLength == -1 {
+					return 0, malformedErr
+				}
+				i += stringLength
+				state = scanArrayDelimiter
+			case '[':
+				stack = append(stack, ']')
+				state = scanArrayDelimiter
+			case '{':
+				stack = append(stack, '}')
+				state = scanArrayDelimiter
+			default:
+				primitiveStart = i
+				state = scanArrayPrimitive
+			}
+
+		case scanArrayPrimitive:
+			switch c {
+			case ',':
+				if !validContainerPrimitive(data[primitiveStart:i]) {
+					return 0, malformedErr
+				}
+				state = scanArrayValue
+			case ']':
+				if !validContainerPrimitive(data[primitiveStart:i]) {
+					return 0, malformedErr
+				}
+				return count, nil
+			case '}':
+				return 0, malformedErr
+			}
+
+		case scanArrayDelimiter:
+			if isContainerWhitespace(c) {
+				continue
+			}
+			switch c {
+			case ',':
+				state = scanArrayValue
+			case ']':
+				return count, nil
+			default:
+				return 0, malformedErr
+			}
+
+		case scanObjectKey:
+			if isContainerWhitespace(c) {
+				continue
+			}
+			if c == close {
+				if count == 0 {
+					return 0, nil
+				}
+				return 0, malformedErr
+			}
+			if c != '"' {
+				return 0, malformedErr
+			}
+
+			stringLength, _ := stringEnd(data[i+1:])
+			if stringLength == -1 {
+				return 0, malformedErr
+			}
+			i += stringLength
+			state = scanObjectColon
+
+		case scanObjectColon:
+			if isContainerWhitespace(c) {
+				continue
+			}
+			if c != ':' {
+				return 0, malformedErr
+			}
+			state = scanObjectValue
+
+		case scanObjectValue:
+			if isContainerWhitespace(c) {
+				continue
+			}
+			if c == ',' || c == '}' || c == ']' || c == ':' {
+				return 0, malformedErr
+			}
+
+			count++
+			switch c {
+			case '"':
+				stringLength, _ := stringEnd(data[i+1:])
+				if stringLength == -1 {
+					return 0, malformedErr
+				}
+				i += stringLength
+				state = scanObjectDelimiter
+			case '[':
+				stack = append(stack, ']')
+				state = scanObjectDelimiter
+			case '{':
+				stack = append(stack, '}')
+				state = scanObjectDelimiter
+			default:
+				primitiveStart = i
+				state = scanObjectPrimitive
+			}
+
+		case scanObjectPrimitive:
+			switch c {
+			case ',':
+				if !validContainerPrimitive(data[primitiveStart:i]) {
+					return 0, malformedErr
+				}
+				state = scanObjectKey
+			case '}':
+				if !validContainerPrimitive(data[primitiveStart:i]) {
+					return 0, malformedErr
+				}
+				return count, nil
+			case ']':
+				return 0, malformedErr
+			}
+
+		case scanObjectDelimiter:
+			if isContainerWhitespace(c) {
+				continue
+			}
+			switch c {
+			case ',':
+				state = scanObjectKey
+			case '}':
+				return count, nil
+			default:
+				return 0, malformedErr
+			}
+		}
+	}
+
+	return 0, malformedErr
+}
+
+// SYS-REQ-112
+func isContainerWhitespace(c byte) bool {
+	return c == ' ' || c == '\n' || c == '\r' || c == '\t'
+}
+
+// SYS-REQ-112
+func validContainerPrimitive(value []byte) bool {
+	for len(value) > 0 && isContainerWhitespace(value[len(value)-1]) {
+		value = value[:len(value)-1]
+	}
+	if len(value) == 0 {
+		return false
+	}
+
+	if bytes.Equal(value, trueLiteral) || bytes.Equal(value, falseLiteral) || bytes.Equal(value, nullLiteral) {
+		return true
+	}
+	return validJSONNumber(value)
+}
+
+// SYS-REQ-112
+func validJSONNumber(value []byte) bool {
+	i := 0
+	if value[i] == '-' {
+		i++
+		if i == len(value) {
+			return false
+		}
+	}
+
+	if value[i] == '0' {
+		i++
+		if i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			return false
+		}
+	} else {
+		if value[i] < '1' || value[i] > '9' {
+			return false
+		}
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			i++
+		}
+	}
+
+	if i < len(value) && value[i] == '.' {
+		i++
+		start := i
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			i++
+		}
+		if i == start {
+			return false
+		}
+	}
+
+	if i < len(value) && (value[i] == 'e' || value[i] == 'E') {
+		i++
+		if i < len(value) && (value[i] == '+' || value[i] == '-') {
+			i++
+		}
+		start := i
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			i++
+		}
+		if i == start {
+			return false
+		}
+	}
+
+	return i == len(value)
 }

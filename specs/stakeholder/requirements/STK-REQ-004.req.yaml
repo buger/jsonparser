@@ -23,9 +23,9 @@ variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-07-26T13:25:50.798306Z"
+    reviewed_at: "2026-07-28T08:49:16.537662Z"
     reviewed_by: human:buger
-    reviewed_fingerprint: sha256:f08c49882a94cffe3b2287107eec8f63c9c9deea43716b8c1b63f4b1f747e3ec
+    reviewed_fingerprint: sha256:4c8a01dc4ac974acc93ed7e04822401dedd9b3fa1500435b20bd89cafe39ef41
 verification:
     assurance_level: E
     formalization_status: none
@@ -174,6 +174,8 @@ stakeholder:
             - SYS-REQ-053
             - SYS-REQ-055
             - SYS-REQ-083
+            - SYS-REQ-112
+            - SYS-REQ-113
         - id: AC-2
           text: A caller can iterate an addressed JSON object and receive the correct key, value, and value type tuples for well-formed entries, no entries for well-formed empty objects, propagated callback errors, and an error for malformed or otherwise unusable object input.
           verification_method: test
@@ -184,6 +186,7 @@ stakeholder:
             - SYS-REQ-032
             - SYS-REQ-054
             - SYS-REQ-084
+            - SYS-REQ-112
         - id: AC-3
           text: A caller can request multiple key paths from one payload scan and receive the correct found or missing-path behavior for each requested path.
           verification_method: test

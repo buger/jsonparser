@@ -166,7 +166,7 @@ func assertInputUnchanged(t *testing.T, data []byte, fn func()) {
 // Property: Get round-trips on encoding/json-marshaled scalars
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest Get
+// reqproof:proptest parser.Get
 // Verifies: SYS-REQ-001 [property]
 func TestPropertyGetRoundTrip(t *testing.T) {
 	r := newRNG(jsonSeed)
@@ -206,7 +206,7 @@ func TestPropertyGetRoundTrip(t *testing.T) {
 // Property: typed accessors agree with encoding/json on typed leaves
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest GetString, GetInt, GetFloat, GetBoolean, GetUnsafeString
+// reqproof:proptest parser.GetString, parser.GetInt, parser.GetFloat, parser.GetBoolean, parser.GetUnsafeString
 // Verifies: SYS-REQ-002 [property]
 func TestPropertyTypedAccessorsRoundTrip(t *testing.T) {
 	r := newRNG(jsonSeed + 1)
@@ -342,7 +342,7 @@ func TestPropertyParseReferenceOracle(t *testing.T) {
 // Property: ArrayEach visits every element exactly once
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest ArrayEach
+// reqproof:proptest parser.ArrayEach
 // Verifies: SYS-REQ-006 [property]
 func TestPropertyArrayEachCompleteness(t *testing.T) {
 	r := newRNG(jsonSeed + 2)
@@ -402,7 +402,7 @@ func TestPropertyObjectEachCompleteness(t *testing.T) {
 // Property: EachKey dispatches to matching paths without panic
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest EachKey
+// reqproof:proptest parser.EachKey
 // Verifies: SYS-REQ-008 [property]
 func TestPropertyEachKeyDispatch(t *testing.T) {
 	r := newRNG(jsonSeed + 4)
@@ -466,7 +466,7 @@ func randomExistingJSONPath(r *mathrand.Rand, value interface{}) []string {
 }
 
 // Verifies: SYS-REQ-008
-// reqproof:proptest EachKey, Get
+// reqproof:proptest parser.EachKey, parser.Get
 func TestApiConsistencyEachKeyMatchesGet(t *testing.T) {
 	r := newRNG(jsonSeed + 17)
 	const iterations = 2000
@@ -524,7 +524,7 @@ func TestApiConsistencyEachKeyMatchesGet(t *testing.T) {
 // Property: Set then Get returns the set value (round-trip)
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest Set
+// reqproof:proptest parser.Set
 // Verifies: SYS-REQ-009 [property]
 func TestPropertySetRoundTrip(t *testing.T) {
 	r := newRNG(jsonSeed + 5)
@@ -556,7 +556,7 @@ func TestPropertySetRoundTrip(t *testing.T) {
 // Property: Delete is idempotent (Delete twice == Delete once)
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest Delete
+// reqproof:proptest parser.Delete
 // Verifies: SYS-REQ-034 [property]
 func TestPropertyDeleteIdempotent(t *testing.T) {
 	r := newRNG(jsonSeed + 6)
@@ -1009,7 +1009,7 @@ func safeCall(fn func([]byte) int, in []byte) int {
 // surface. Any byte sequence — valid JSON, truncated JSON, hostile bytes —
 // must not cause a panic.
 //
-// reqproof:proptest Get
+// reqproof:proptest parser.Get
 // Verifies: SYS-REQ-035 [property]
 func TestPropertyNoPanicOnArbitraryBytes(t *testing.T) {
 	r := newRNG(jsonSeed + 15)
@@ -1057,7 +1057,7 @@ func TestPropertyNoPanicOnArbitraryBytes(t *testing.T) {
 // The parser must be safe for concurrent use (no shared mutable state). This
 // stress-tests that invariant by hammering every accessor from many goroutines.
 //
-// reqproof:proptest Get
+// reqproof:proptest parser.Get
 // Verifies: SYS-REQ-001 [property]
 func TestPropertyConcurrentReadsSafe(t *testing.T) {
 	r := newRNG(jsonSeed + 16)

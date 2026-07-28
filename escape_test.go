@@ -335,3 +335,173 @@ func TestParseStringLoneSurrogateMatchesEncodingJSON(t *testing.T) {
 		}
 	}
 }
+
+// Verifies: SYS-REQ-014 (escape handling)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestEscape(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "plain", in: "hello", want: `"hello"`},
+		{name: "quotation mark", in: `"`, want: `"\""`},
+		{name: "reverse solidus", in: `\`, want: `"\\"`},
+		{name: "solidus", in: `/`, want: `"/"`},
+		{name: "backspace", in: "\b", want: `"\b"`},
+		{name: "form feed", in: "\f", want: `"\f"`},
+		{name: "line feed", in: "\n", want: `"\n"`},
+		{name: "carriage return", in: "\r", want: `"\r"`},
+		{name: "tab", in: "\t", want: `"\t"`},
+		{name: "unicode escape", in: "\x01", want: `"\u0001"`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			escaped := Escape(test.in)
+			if got := string(escaped); got != test.want {
+				t.Fatalf("Escape(%q) = %q; want %q", test.in, got, test.want)
+			}
+
+			unescaped, err := Unescape(escaped[1:len(escaped)-1], nil)
+			if err != nil {
+				t.Fatalf("Unescape(Escape(%q)) returned error: %v", test.in, err)
+			}
+			if got := string(unescaped); got != test.in {
+				t.Fatalf("Unescape(Escape(%q)) = %q; want %q", test.in, got, test.in)
+			}
+		})
+	}
+}
+
+// Verifies: SYS-REQ-014 (escape handling)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestEscapeControlChars(t *testing.T) {
+	for c := byte(0); c < 0x20; c++ {
+		escaped := Escape(string([]byte{c}))
+
+		var want string
+		switch c {
+		case '\b':
+			want = `"\b"`
+		case '\f':
+			want = `"\f"`
+		case '\n':
+			want = `"\n"`
+		case '\r':
+			want = `"\r"`
+		case '\t':
+			want = `"\t"`
+		default:
+			want = string([]byte{'"', '\\', 'u', '0', '0', lowerHex[c>>4], lowerHex[c&0x0f], '"'})
+		}
+
+		if got := string(escaped); got != want {
+			t.Errorf("Escape control character 0x%02x = %q; want %q", c, got, want)
+		}
+
+		unescaped, err := Unescape(escaped[1:len(escaped)-1], nil)
+		if err != nil {
+			t.Errorf("Unescape(Escape(0x%02x)) returned error: %v", c, err)
+			continue
+		}
+		if len(unescaped) != 1 || unescaped[0] != c {
+			t.Errorf("Unescape(Escape(0x%02x)) = % x; want %02x", c, unescaped, c)
+		}
+	}
+}
+
+// Verifies: SYS-REQ-014 (escape handling)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestEscapeUnicode(t *testing.T) {
+	in := "你好，世界 🌍"
+	escaped := Escape(in)
+	if want := `"` + in + `"`; string(escaped) != want {
+		t.Fatalf("Escape(%q) = %q; want %q", in, escaped, want)
+	}
+
+	unescaped, err := Unescape(escaped[1:len(escaped)-1], nil)
+	if err != nil {
+		t.Fatalf("Unescape(Escape(%q)) returned error: %v", in, err)
+	}
+	if got := string(unescaped); got != in {
+		t.Fatalf("Unescape(Escape(%q)) = %q; want %q", in, got, in)
+	}
+}
+
+// Verifies: SYS-REQ-014 (escape handling)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestEscapeEmptyString(t *testing.T) {
+	if got, want := string(Escape("")), `""`; got != want {
+		t.Fatalf("Escape(\"\") = %q; want %q", got, want)
+	}
+}
+
+// Verifies: SYS-REQ-009 (Set)
+// Verifies: SYS-REQ-009 (Set)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestSetString(t *testing.T) {
+	got, err := SetString([]byte(`{"key":"old"}`), "hello", "key")
+	if err != nil {
+		t.Fatalf("SetString returned error: %v", err)
+	}
+	if !json.Valid(got) {
+		t.Fatalf("SetString returned invalid JSON: %s", got)
+	}
+	if want := `{"key":"hello"}`; string(got) != want {
+		t.Fatalf("SetString result = %s; want %s", got, want)
+	}
+}
+
+// Verifies: SYS-REQ-002 (GetString)
+// Verifies: SYS-REQ-009 (Set)
+// Verifies: SYS-REQ-009 (Set)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestSetStringRoundTrip(t *testing.T) {
+	const want = "你好 🌍"
+	data, err := SetString([]byte(`{"key":null}`), want, "key")
+	if err != nil {
+		t.Fatalf("SetString returned error: %v", err)
+	}
+
+	got, err := GetString(data, "key")
+	if err != nil {
+		t.Fatalf("GetString returned error: %v", err)
+	}
+	if got != want {
+		t.Fatalf("GetString after SetString = %q; want %q", got, want)
+	}
+}
+
+// Verifies: SYS-REQ-002 (GetString)
+// Verifies: SYS-REQ-009 (Set)
+// Verifies: SYS-REQ-009 (Set)
+// reqproof:proptest:skip targeted witness/regression test; not a property-test subject
+func TestSetStringSpecialChars(t *testing.T) {
+	tests := []string{
+		`a\b`,
+		`a"b`,
+		"a\nb",
+		"a\tb",
+	}
+
+	for _, want := range tests {
+		t.Run(want, func(t *testing.T) {
+			data, err := SetString([]byte(`{"key":""}`), want, "key")
+			if err != nil {
+				t.Fatalf("SetString(%q) returned error: %v", want, err)
+			}
+			if !json.Valid(data) {
+				t.Fatalf("SetString(%q) returned invalid JSON: %s", want, data)
+			}
+
+			got, err := GetString(data, "key")
+			if err != nil {
+				t.Fatalf("GetString after SetString(%q) returned error: %v", want, err)
+			}
+			if got != want {
+				t.Fatalf("GetString after SetString(%q) = %q; want %q", want, got, want)
+			}
+		})
+	}
+}

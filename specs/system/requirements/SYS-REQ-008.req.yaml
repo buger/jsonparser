@@ -5,7 +5,7 @@ priority: shall
 category: functional
 req_type: guarantee
 fretish: the parser shall always satisfy !multipath_requests_are_provided | eachkey_callback_receives_found_values | missing_multipath_request_does_not_emit_callback | eachkey_malformed_input_returns_error | eachkey_completes_requested_scan
-description: When EachKey is called with one or more requested key paths, the parser shall emit callback results for found paths, omit found-value callbacks for missing paths, surface malformed-input errors, and complete the requested multi-path scan.
+description: When EachKey is called with one or more requested key paths, the parser shall emit callback results for found paths, omit found-value callbacks for missing paths, surface malformed-input errors, and complete the requested multi-path scan. EachKeyErr is the io.EOF-aware EachKey variant where the callback may stop iteration by returning an error; io.EOF stops iteration gracefully while any other non-nil error stops iteration and is propagated to the caller.
 formalization_strategy: fretish
 informal_verification:
     method: ""
