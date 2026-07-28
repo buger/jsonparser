@@ -1112,6 +1112,22 @@ variables:
         merge: last_wins
         commutative: true
         idempotent: true
+    - name: config_lenient_modes_are_opt_in_and_default_remains_strict
+      type: bool
+      direction: output
+      description: True when Config accepts single-quoted strings only with AllowSingleQuotes, passes unknown escape bytes through literally only with AllowUnknownEscapes, and the zero/default Config plus package-level functions retain strict RFC 8259 behavior.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
+    - name: reader_parser_provides_incremental_stream_access
+      type: bool
+      direction: output
+      description: True when ReaderParser resolves paths and iterates root arrays from an io.Reader while retaining only the active sliding window or value and reporting empty or malformed streams without panicking or looping.
+      properties:
+        merge: last_wins
+        commutative: true
+        idempotent: true
 independence:
     declared: true
     reason: jsonparser requirements govern a single pure-function parser (Get and its typed/walking/mutation helpers) over untrusted byte input; each guarantee constrains a distinct output variable representing one observational outcome of the same parse (e.g. returns_existing_path_lookup_result, returns_missing_path_result_for_well_formed_lookup, returns_parse_error_for_incomplete_lookup). The output vocabulary is intentionally disjoint per behavioral outcome across 118 output variables, so the connected-component decomposition over shared output variables places each requirement in a singleton component and cross-requirement consistency contradictions are not solver-checkable via shared outputs. The input preconditions are mutually exclusive (well-formed/existing-path vs missing-path vs incomplete/truncated vs empty vs malformed), so the distinct outputs cannot simultaneously hold for one parse and do not actually conflict.

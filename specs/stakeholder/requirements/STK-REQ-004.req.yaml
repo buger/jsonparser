@@ -23,9 +23,9 @@ variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-07-28T08:49:16.537662Z"
+    reviewed_at: "2026-07-28T14:04:02.595972Z"
     reviewed_by: human:buger
-    reviewed_fingerprint: sha256:4c8a01dc4ac974acc93ed7e04822401dedd9b3fa1500435b20bd89cafe39ef41
+    reviewed_fingerprint: sha256:260d3606a0335986e0ced1f21667006a6fb8c84c12bf3601cdb1cc8521d9f9c8
 verification:
     assurance_level: E
     formalization_status: none
@@ -176,6 +176,8 @@ stakeholder:
             - SYS-REQ-083
             - SYS-REQ-112
             - SYS-REQ-113
+            - SYS-REQ-115
+            - SYS-REQ-116
         - id: AC-2
           text: A caller can iterate an addressed JSON object and receive the correct key, value, and value type tuples for well-formed entries, no entries for well-formed empty objects, propagated callback errors, and an error for malformed or otherwise unusable object input.
           verification_method: test

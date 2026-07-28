@@ -375,7 +375,7 @@ func TestPropertyArrayEachCompleteness(t *testing.T) {
 // Property: ObjectEach visits every key-value pair exactly once
 // ---------------------------------------------------------------------------
 //
-// reqproof:proptest ObjectEach
+// reqproof:proptest parser.ObjectEach
 // Verifies: SYS-REQ-007 [property]
 func TestPropertyObjectEachCompleteness(t *testing.T) {
 	r := newRNG(jsonSeed + 3)

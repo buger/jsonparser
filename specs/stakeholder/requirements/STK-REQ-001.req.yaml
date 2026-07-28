@@ -21,9 +21,9 @@ variables: []
 traces:
     documented_by_extra:
         - README.md
-    reviewed_at: "2026-07-28T08:49:16.235018Z"
+    reviewed_at: "2026-07-28T14:04:02.385538Z"
     reviewed_by: human:buger
-    reviewed_fingerprint: sha256:5581e6073a6d3c03cf31dfcd0145d45679348f6ef46427b96494da1b6909038d
+    reviewed_fingerprint: sha256:f91b50cddf6abd1f1a9b6c69ff3f1abbcb75551291e080ede0089779ab273112
 verification:
     assurance_level: E
     formalization_status: none
@@ -207,6 +207,8 @@ stakeholder:
             - SYS-REQ-088
             - SYS-REQ-089
             - SYS-REQ-114
+            - SYS-REQ-115
+            - SYS-REQ-116
 lifecycle:
     change_history:
         - date: "2026-04-13T16:25:24Z"
