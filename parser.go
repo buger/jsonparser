@@ -298,21 +298,25 @@ func stringEnd(data []byte) (int, bool) {
 
 // SYS-REQ-115
 func stringEndConfig(_ Config, data []byte, quote byte) (int, bool) {
-	// Fast path: SIMD-scan for the first matching quote or '\'. If no '\'
+	// Fast path: SIMD-scan for the first matching quote. If no '\'
 	// precedes the first quote (the overwhelmingly common case for strings),
 	// the quote is unescaped and we return directly — skipping the per-byte
-	// escape-tracking loop. Bound: bytes.IndexByte finds the first match in
-	// either direction, so firstBackslash > firstQuote (or == -1) is exactly
-	// the condition "no backslash precedes the closing quote", which is
-	// equivalent to the slow loop's `escaped == false` state at the quote.
+	// escape-tracking loop.
+	//
+	// Optimization: the second scan (for backslash) is BOUNDED to
+	// data[:firstQuote] rather than the whole slice. In the old code this
+	// was `bytes.IndexByte(data, '\\')` which, when no backslash existed,
+	// walked the ENTIRE remaining parent slice (often tens of KB inside
+	// deeply nested blockEndConfig calls). The bound is exact: any
+	// backslash at position >= firstQuote cannot precede the quote, so it
+	// cannot make this quote escaped.
 	firstQuote := bytes.IndexByte(data, quote)
 	if firstQuote == -1 {
 		// Slow path's tail semantics: return -1 with escaped flag true iff
 		// at least one '\' was encountered before end-of-input.
 		return -1, bytes.IndexByte(data, '\\') != -1
 	}
-	firstBackslash := bytes.IndexByte(data, '\\')
-	if firstBackslash == -1 || firstBackslash > firstQuote {
+	if bytes.IndexByte(data[:firstQuote], '\\') == -1 {
 		return firstQuote + 1, false
 	}
 	// Slow path: at least one '\' precedes the first quote — the per-byte
