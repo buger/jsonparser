@@ -538,7 +538,9 @@ func TestOracleSetRoundTrip(t *testing.T) {
 						raw, path, setVal, rec)
 				}
 			}()
-			out, serr = Set(raw, setVal, path...)
+			assertInputUnchanged(t, raw, func() {
+				out, serr = Set(raw, setVal, path...)
+			})
 		}()
 
 		if panicked {
@@ -645,7 +647,9 @@ func TestOracleSetPr286Regression(t *testing.T) {
 						t.Fatalf("Set panicked: in=%q path=%v val=%q: %v", doc, tc.path, tc.val, rec)
 					}
 				}()
-				out, err = Set(doc, []byte(tc.val), tc.path...)
+				assertInputUnchanged(t, doc, func() {
+					out, err = Set(doc, []byte(tc.val), tc.path...)
+				})
 			}()
 
 			if err != nil {
@@ -720,7 +724,9 @@ func TestOracleDeleteCorrectness(t *testing.T) {
 					t.Fatalf("Delete panicked on input %q path=%v: %v", raw, path, rec)
 				}
 			}()
-			deleted = Delete(raw, path...)
+			assertInputUnchanged(t, raw, func() {
+				deleted = Delete(raw, path...)
+			})
 		}()
 
 		// Property 3a: if the result is non-empty, it MUST be valid JSON

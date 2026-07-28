@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	mathrand "math/rand"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -145,6 +146,20 @@ func recoverNoPanic(fn func()) (ok bool) {
 	}()
 	fn()
 	return true
+}
+
+func assertInputUnchanged(t *testing.T, data []byte, fn func()) {
+	t.Helper()
+
+	snapshot := append([]byte(nil), data...)
+	capSnapshot := append([]byte(nil), data[:cap(data)]...)
+	fn()
+	if !bytes.Equal(data, snapshot) {
+		t.Errorf("input data was mutated by the operation")
+	}
+	if !bytes.Equal(data[:cap(data)], capSnapshot) {
+		t.Errorf("input backing array was mutated by the operation")
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -417,6 +432,94 @@ func TestPropertyEachKeyDispatch(t *testing.T) {
 	}
 }
 
+func randomExistingJSONPath(r *mathrand.Rand, value interface{}) []string {
+	var path []string
+	current := value
+
+	for len(path) < 16 {
+		switch node := current.(type) {
+		case map[string]interface{}:
+			if len(node) == 0 || (len(path) > 0 && r.Intn(4) == 0) {
+				return path
+			}
+			keys := make([]string, 0, len(node))
+			for key := range node {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			key := keys[r.Intn(len(keys))]
+			path = append(path, key)
+			current = node[key]
+		case []interface{}:
+			if len(node) == 0 || (len(path) > 0 && r.Intn(4) == 0) {
+				return path
+			}
+			index := r.Intn(len(node))
+			path = append(path, fmt.Sprintf("[%d]", index))
+			current = node[index]
+		default:
+			return path
+		}
+	}
+
+	return path
+}
+
+// Verifies: SYS-REQ-008
+// reqproof:proptest EachKey, Get
+func TestApiConsistencyEachKeyMatchesGet(t *testing.T) {
+	r := newRNG(jsonSeed + 17)
+	const iterations = 2000
+
+	for i := 0; i < iterations; i++ {
+		payload := randomJSONValue(r, 3)
+		terminalArray := []interface{}{
+			randomJSONValue(r, 2),
+			randomJSONValue(r, 2),
+		}
+		document := map[string]interface{}{
+			"payload":       payload,
+			"terminalArray": terminalArray,
+		}
+		raw, err := json.Marshal(document)
+		if err != nil {
+			t.Fatalf("json.Marshal generated corpus item: %v", err)
+		}
+
+		var path []string
+		if i%4 == 0 {
+			// Guarantee broad coverage of the issue #232 class: an array
+			// index is the terminal path component.
+			path = []string{"terminalArray", fmt.Sprintf("[%d]", r.Intn(len(terminalArray)))}
+		} else {
+			path = append([]string{"payload"}, randomExistingJSONPath(r, payload)...)
+		}
+
+		getValue, getType, _, getErr := Get(raw, path...)
+
+		var eachValue []byte
+		var eachType ValueType
+		var eachErr error
+		callbacks := 0
+		EachKey(raw, func(index int, value []byte, valueType ValueType, err error) {
+			callbacks++
+			if index != 0 {
+				t.Errorf("EachKey callback index = %d, want 0; input=%q path=%v", index, raw, path)
+			}
+			eachValue, eachType, eachErr = value, valueType, err
+		}, path)
+
+		if callbacks != 1 {
+			t.Fatalf("EachKey callback count = %d, want 1; input=%q path=%v Get=(%q,%v,%v)",
+				callbacks, raw, path, getValue, getType, getErr)
+		}
+		if !bytes.Equal(eachValue, getValue) || eachType != getType || eachErr != getErr {
+			t.Fatalf("EachKey and Get disagree; input=%q path=%v EachKey=(%q,%v,%v) Get=(%q,%v,%v)",
+				raw, path, eachValue, eachType, eachErr, getValue, getType, getErr)
+		}
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Property: Set then Get returns the set value (round-trip)
 // ---------------------------------------------------------------------------
@@ -431,7 +534,11 @@ func TestPropertySetRoundTrip(t *testing.T) {
 		base := []byte(`{}`)
 		key := randKey(r)
 		setVal := []byte(strconv.FormatInt(r.Int63(), 10))
-		out, err := Set(base, setVal, key)
+		var out []byte
+		var err error
+		assertInputUnchanged(t, base, func() {
+			out, err = Set(base, setVal, key)
+		})
 		if err != nil {
 			t.Fatalf("Set errored on key=%q val=%q base=%q: %v", key, setVal, base, err)
 		}
@@ -464,8 +571,14 @@ func TestPropertyDeleteIdempotent(t *testing.T) {
 		if key == "" {
 			continue
 		}
-		once := Delete(raw, key)
-		twice := Delete(once, key)
+		var once []byte
+		assertInputUnchanged(t, raw, func() {
+			once = Delete(raw, key)
+		})
+		var twice []byte
+		assertInputUnchanged(t, once, func() {
+			twice = Delete(once, key)
+		})
 		if !bytes.Equal(once, twice) {
 			t.Fatalf("Delete not idempotent on input %q key=%q: once=%q twice=%q", raw, key, once, twice)
 		}
@@ -920,8 +1033,16 @@ func TestPropertyNoPanicOnArbitraryBytes(t *testing.T) {
 		_ = recoverNoPanic(func() {
 			EachKey(raw, func(idx int, value []byte, vt ValueType, err error) {}, keys)
 		})
-		_ = recoverNoPanic(func() { _ = Delete(raw, keys...) })
-		_ = recoverNoPanic(func() { _, _ = Set(raw, []byte(`"x"`), keys...) })
+		_ = recoverNoPanic(func() {
+			assertInputUnchanged(t, raw, func() {
+				_ = Delete(raw, keys...)
+			})
+		})
+		_ = recoverNoPanic(func() {
+			assertInputUnchanged(t, raw, func() {
+				_, _ = Set(raw, []byte(`"x"`), keys...)
+			})
+		})
 		_ = recoverNoPanic(func() { _, _ = ParseInt(raw) })
 		_ = recoverNoPanic(func() { _, _ = ParseFloat(raw) })
 		_ = recoverNoPanic(func() { _, _ = ParseBoolean(raw) })

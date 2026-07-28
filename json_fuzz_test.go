@@ -1350,7 +1350,7 @@ func runStructureAwareGates(t *testing.T, data []byte, path []string) {
 	if len(path) > 0 {
 		setVal := []byte(`42`)
 		runOpNoPanic(t, "Set", data, path, func() {
-			// Defensive copy: Set may mutate its input slice in-place.
+			// Keep mutating fuzz operations isolated from one another.
 			dataCopy := make([]byte, len(data))
 			copy(dataCopy, data)
 			out, err := Set(dataCopy, setVal, path...)
@@ -1401,7 +1401,7 @@ func runStructureAwareGates(t *testing.T, data []byte, path []string) {
 	// --- OUTPUT-VALIDITY gate (Delete) ---
 
 	runOpNoPanic(t, "Delete", data, path, func() {
-		// Defensive copy: Delete may mutate its input slice in-place.
+		// Keep mutating fuzz operations isolated from one another.
 		dataCopy := make([]byte, len(data))
 		copy(dataCopy, data)
 		out := Delete(dataCopy, path...)

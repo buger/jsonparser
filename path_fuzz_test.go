@@ -229,14 +229,8 @@ func FuzzPathMutation(f *testing.F) {
 		// corruption in the output is attributable to the path, not the
 		// value.
 		//
-		// IMPORTANT: Set may mutate its input `data` slice in-place when
-		// the path doesn't exist (via `append(data[:startOffset], ...)`).
-		// To keep the fuzz body's observations independent across ops,
-		// we deep-copy `data` before each mutating call. This is itself
-		// a documented behavioral hazard (callers who reuse their input
-		// buffer after Set may see surprising modifications) but not one
-		// the fuzzer is designed to surface — the property tests in
-		// reference_oracle_test.go assert output correctness instead.
+		// Keep the fuzz body's observations independent across mutating ops.
+		// Set itself must preserve the original input backing array.
 		setVal := []byte(`"v"`)
 		runPathOp("Set", data, path, func() {
 			dataCopy := make([]byte, len(data))
@@ -343,7 +337,7 @@ func TestFuzzPathMutationSeedsClean(t *testing.T) {
 				}
 			}},
 			{"Set", func() {
-				// Defensive copy: Set may mutate its input slice in-place.
+				// Keep mutating fuzz operations isolated from one another.
 				dataCopy := make([]byte, len(tc.data))
 				copy(dataCopy, tc.data)
 				out, err := Set(dataCopy, setVal, components...)
@@ -356,7 +350,7 @@ func TestFuzzPathMutationSeedsClean(t *testing.T) {
 				}
 			}},
 			{"Delete", func() {
-				// Defensive copy: Delete may mutate its input slice in-place.
+				// Keep mutating fuzz operations isolated from one another.
 				dataCopy := make([]byte, len(tc.data))
 				copy(dataCopy, tc.data)
 				out := Delete(dataCopy, components...)

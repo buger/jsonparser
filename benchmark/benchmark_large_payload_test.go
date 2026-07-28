@@ -55,7 +55,7 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 // reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonStructLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var data LargePayload
+		var data encodingJSONLargePayload
 		json.Unmarshal(largeFixture, &data)
 
 		for _, u := range data.Users {

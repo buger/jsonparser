@@ -1,0 +1,15 @@
+id: api_consistency
+catalog_version: 1
+category: property
+order: 8011
+status: active
+name: api_consistency
+summary: Path-resolution APIs (Get, EachKey) shall resolve identical paths identically — every path that Get successfully extracts, EachKey shall also extract with the same value and type.
+description: |
+  Get and EachKey both resolve key paths against JSON documents, but they use
+  different internal scanners (searchKeys vs a separate indexer). When the two
+  scanners diverge, users see inconsistent behavior: Get works but EachKey
+  returns empty on the same path. This obligation asserts cross-API path
+  resolution consistency — for every path that Get resolves, EachKey must
+  return the same (value, type). Found by issue #232 where EachKey failed to
+  descend into terminal array-index paths that Get handled correctly.

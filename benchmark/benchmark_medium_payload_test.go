@@ -232,7 +232,7 @@ func BenchmarkJsonParserObjectEachStructMedium(b *testing.B) {
 // reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonStructMedium(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var data MediumPayload
+		var data encodingJSONMediumPayload
 		json.Unmarshal(mediumFixture, &data)
 
 		nothing(data.Person.Name.FullName, data.Person.Github.Followers, data.Company)

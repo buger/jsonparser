@@ -27,6 +27,21 @@ type SmallPayload struct {
 	V    int
 }
 
+// encodingJSONSmallPayload deliberately has no generated JSON methods. The
+// encoding/json benchmarks must exercise the standard library's reflection
+// implementation, while SmallPayload remains generated for ffjson/easyjson.
+type encodingJSONSmallPayload struct {
+	St   int
+	Sid  int
+	Tt   string
+	Gr   int
+	Uuid string
+	Ip   string
+	Ua   string
+	Tz   int
+	V    int
+}
+
 /*
 Medium payload (based on Clearbit API response)
 */
@@ -54,6 +69,35 @@ type CBPerson struct {
 
 type MediumPayload struct {
 	Person  *CBPerson
+	Company map[string]interface{}
+}
+
+// These types mirror the medium payload without inheriting the generated
+// MarshalJSON and UnmarshalJSON methods on the benchmark's primary types.
+type encodingJSONCBAvatar struct {
+	Url string
+}
+
+type encodingJSONCBGravatar struct {
+	Avatars []*encodingJSONCBAvatar
+}
+
+type encodingJSONCBGithub struct {
+	Followers int
+}
+
+type encodingJSONCBName struct {
+	FullName string
+}
+
+type encodingJSONCBPerson struct {
+	Name     *encodingJSONCBName
+	Github   *encodingJSONCBGithub
+	Gravatar *encodingJSONCBGravatar
+}
+
+type encodingJSONMediumPayload struct {
+	Person  *encodingJSONCBPerson
 	Company map[string]interface{}
 }
 
@@ -174,6 +218,26 @@ type DSTopicsList struct {
 type LargePayload struct {
 	Users  []*DSUser
 	Topics *DSTopicsList
+}
+
+// These types mirror the large payload without generated JSON methods.
+type encodingJSONDSUser struct {
+	Username string
+}
+
+type encodingJSONDSTopic struct {
+	Id   int
+	Slug string
+}
+
+type encodingJSONDSTopicsList struct {
+	Topics        []*encodingJSONDSTopic
+	MoreTopicsUrl string
+}
+
+type encodingJSONLargePayload struct {
+	Users  []*encodingJSONDSUser
+	Topics *encodingJSONDSTopicsList
 }
 
 var largeFixture []byte = []byte(`

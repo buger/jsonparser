@@ -37,6 +37,8 @@ project:
         - nil_safety
         - encoding_safety
         - edge_case
+        - no_input_mutation
+        - api_consistency
         - element_type_partition
         - non_array_root_no_callback
     commands:

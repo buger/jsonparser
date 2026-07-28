@@ -662,11 +662,17 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 					continue
 				}
-				if len(p[level]) >= 2 {
-					aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
-					arrIdxFlags[aIdx] = x
-					pIdxFlags[pi] = true
+
+				indexComponent := p[level]
+				if len(indexComponent) < 3 || indexComponent[len(indexComponent)-1] != ']' {
+					continue
 				}
+				aIdx, err := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
+				if err != nil {
+					continue
+				}
+				arrIdxFlags[aIdx] = x
+				pIdxFlags[pi] = true
 			}
 
 			if len(arrIdxFlags) > 0 {
@@ -676,21 +682,35 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
 					if _, ok = arrIdxFlags[curIdx]; ok {
 						for pi, p := range paths {
-							if pIdxFlags[pi] {
-								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
-
-								if curIdx == aIdx {
-									of := searchKeys(value, p[level:]...)
-
-									pathsMatched++
-									pathFlags[pi] = true
-
-									if of != -1 {
-										v, dt, _, e := Get(value[of:])
-										cb(pi, v, dt, e)
-									}
-								}
+							if !pIdxFlags[pi] || pathFlags[pi] {
+								continue
 							}
+
+							indexComponent := p[level-1]
+							aIdx, parseErr := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
+							if parseErr != nil || curIdx != aIdx {
+								continue
+							}
+
+							if level == len(p) {
+								// ArrayEach has already parsed the terminal value.
+								// In particular, string values do not include their
+								// quotes and therefore cannot be reparsed by Get.
+								pathsMatched++
+								pathFlags[pi] = true
+								cb(pi, value, dataType, err)
+								continue
+							}
+
+							of := searchKeys(value, p[level:]...)
+							if of == -1 {
+								continue
+							}
+
+							v, dt, _, e := Get(value[of:])
+							pathsMatched++
+							pathFlags[pi] = true
+							cb(pi, v, dt, e)
 						}
 					}
 
@@ -874,7 +894,9 @@ Returns:
 func Delete(data []byte, keys ...string) []byte {
 	lk := len(keys)
 	if lk == 0 {
-		return data[:0]
+		// Deleting the root produces an empty document whose backing array
+		// must not alias the caller's input.
+		return make([]byte, 0)
 	}
 
 	array := false
@@ -996,13 +1018,13 @@ func Delete(data []byte, keys ...string) []byte {
 		newOffset = 0
 	}
 
-	// We have to make a copy here if we don't want to mangle the original data, because byte slices are
-	// accessed by reference and not by value
-	dataCopy := make([]byte, len(data))
-	copy(dataCopy, data)
-	data = append(dataCopy[:newOffset], dataCopy[endOffset:]...)
+	// Allocate the exact result size so neither the copy operation nor later
+	// appends to the returned slice can write into the input backing array.
+	value := make([]byte, newOffset+len(data)-endOffset)
+	copy(value, data[:newOffset])
+	copy(value[newOffset:], data[endOffset:])
 
-	return data
+	return value
 }
 
 /*
@@ -1131,7 +1153,11 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 				startOffset = depthOffset
 			}
 		}
-		value = append(data[:startOffset], append(createInsertComponent(keys[depth:], setValue, comma, object), data[depthOffset:]...)...)
+		insertComponent := createInsertComponent(keys[depth:], setValue, comma, object)
+		value = make([]byte, startOffset+len(insertComponent)+len(data)-depthOffset)
+		offset := copy(value, data[:startOffset])
+		offset += copy(value[offset:], insertComponent)
+		copy(value[offset:], data[depthOffset:])
 	} else {
 		// path currently exists
 		startComponent := data[:startOffset]

@@ -240,7 +240,7 @@ func BenchmarkJsonParserDelSmall(b *testing.B) {
 // reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonStructSmall(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var data SmallPayload
+		var data encodingJSONSmallPayload
 		json.Unmarshal(smallFixture, &data)
 
 		nothing(data.Uuid, data.Tz, data.Ua, data.St)
