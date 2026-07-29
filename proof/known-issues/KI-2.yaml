@@ -35,8 +35,20 @@ minimization_status: minimized
 mitigation: 'No mitigation required for live input: parseInt is only reachable via a JSON Number ValueType already validated by the tokenizer, and the JSON grammar never emits a standalone `-` token. The bug is reachable only via direct caller misuse of the exported ParseInt.'
 remediation: 'One-line guard in parseInt (bytes.go): after stripping the sign byte, return (0, false, false) when len(bytes) == 0 so the caller surfaces MalformedValueError. Add a TestParseInt row covering ParseInt("-").'
 owner: human:buger
-release_disposition: ship_with_known_issue
-status: open
+release_disposition: fixed
+status: fixed
+fix: 'bytes.go:parseInt sign-only guard — after stripping the leading sign byte, return (0, false, false) when len(bytes) == 0 so ParseInt surfaces MalformedValueError. Regression test parser_test.go:TestParseIntSignOnly_KI2 asserts ParseInt("-") now errors.'
+fixed_behavior: |
+    parseInt (bytes.go) now guards the sign-only case. After the leading
+    '-' (or '+', if present) is consumed, an empty remainder returns
+    (0, false, false) instead of falling through the digit loop with zero
+    iterations. The public ParseInt therefore surfaces a malformed-value
+    error for input "-" rather than reporting a successful parse of 0.
+    The guard is one line: `if i == l { return 0, false, false }`
+    (bytes.go:21-23), inserted immediately after the sign strip. Inputs
+    with at least one digit are unaffected. Witnessed by
+    parser_test.go:TestParseIntSignOnly_KI2 (was failing pre-fix, passes
+    post-fix).
 history:
     - at: "2026-07-26T19:08:21Z"
       by: human:buger
@@ -49,3 +61,7 @@ history:
       by: human:buger
       action: edit
       detail: set-disclosure=public
+    - at: "2026-07-29T06:33:00Z"
+      by: human:buger
+      action: fix
+      detail: status=fixed; sign-only guard in bytes.go:parseInt (bytes.go:21-23); ParseInt("-") now returns error; regression test parser_test.go:TestParseIntSignOnly_KI2

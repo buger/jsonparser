@@ -11,15 +11,28 @@ risk: correctness
 cve_surface: none
 affected_api: Set
 attacker_input: Caller-controlled path [N] where N >= len(top-level array)
-reproducer_command: go test -v -run TestSetTopLevelArrayBeyondLength_KI4 -count=1 ./...
+reproducer_command: go test -v -run TestSetTopLevelArrayAppend_KI4 -count=1 ./...
 introduced_in: inception
 mitigation: Wrap the top-level array in an object (e.g. {"items":[...]}), or append manually by re-slicing.
 remediation: Extend parser.go:Set endOffset==-1 branch to handle (pathIsIndex && dataIsArray) top-level arrays, OR narrow SYS-REQ-110 to document the top-level exception.
 customer_impact: Set fails for a common use case (appending to a top-level JSON array); callers must wrap the array in an object.
 owner: human:buger
 review_date: "2026-08-15"
-release_disposition: ship_with_known_issue
-status: open
+release_disposition: fixed
+status: fixed
+fix: 'parser.go:Set endOffset==-1 branch now handles top-level (pathIsIndex && dataIsArray) paths: when a [N] index is missing on a top-level array, Set appends at the array end (and cleans a trailing comma if present), matching SYS-REQ-110 nested-array behavior. Regression test parser_test.go:TestSetTopLevelArrayAppend_KI4 covers append-beyond-length, append-to-empty, in-range replace, and trailing-comma cleanup.'
+fixed_behavior: |
+    Set (parser.go) now appends to a top-level array when the path is an
+    array-index ([N]) with N >= len(array), instead of returning
+    KeyPathNotFoundError. The endOffset==-1 branch detects
+    (pathIsIndex && dataIsArray) at the top level, computes the array
+    close bracket, and routes through the same insert/append machinery
+    used for nested arrays (parser.go:1407-1436). A trailing comma in a
+    malformed array (e.g. `[1,2,]`) is cleaned up during the append.
+    In-range index replacement ([0], [1] on a top-level array) is
+    unchanged. Witnessed by parser_test.go:TestSetTopLevelArrayAppend_KI4
+    (5 subtests: append beyond length, append to empty, replace index
+    zero, replace index one, append cleans trailing comma).
 poc_quality:
     real_infrastructure: true
     quantitative_impact: true
@@ -51,3 +64,7 @@ history:
       by: human:buger
       action: edit
       detail: add-evidence-manifest
+    - at: "2026-07-29T06:33:00Z"
+      by: human:buger
+      action: fix
+      detail: status=fixed; parser.go:Set endOffset==-1 branch handles top-level (pathIsIndex && dataIsArray) — appends at array end; regression test parser_test.go:TestSetTopLevelArrayAppend_KI4

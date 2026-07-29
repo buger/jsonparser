@@ -2376,9 +2376,7 @@ func TestParseInt(t *testing.T) {
 	//   suffix", "fractional token", and "empty input" rows below all assert
 	//   MalformedValueError is returned for tokens that do not conform to the
 	//   JSON Number grammar. (Note: the sign-only partition `ParseInt("-")`
-	//   is tracked separately under DEFECT-260726-3F95 / KI-2 — that partition
-	//   currently returns (0, nil) instead of MalformedValueError and is the
-	//   one malformed sub-case NOT covered here.)
+	//   is covered separately by TestParseIntSignOnly_KI2.)
 	tests := []struct {
 		name    string
 		in      string
@@ -2446,43 +2444,39 @@ func TestParseInt(t *testing.T) {
 	}
 }
 
-// TestParseInt_SignOnlyTripwire_KI2 reproduces the live failure mode tracked
-// as KnownIssue KI-2 / DEFECT-260726-3F95. It PASSES while the bug is present
-// (ParseInt("-") returns (0, nil)) and FAILS the moment the one-line guard
-// lands in bytes.go:parseInt, at which point KI-2 must be flipped to
-// status: fixed and this tripwire removed.
-//
-// Reproduces: KI-2
-func TestParseInt_SignOnlyTripwire_KI2(t *testing.T) {
-	v, err := ParseInt([]byte("-"))
-	// Tripwire: while the bug is present, the call returns (0, nil).
-	if err != nil {
-		t.Fatalf("KI-2 tripwire no longer reproduces: ParseInt(\"-\") err = %v (the bug has been FIXED — flip KI-2 to status: fixed and delete this tripwire)", err)
-	}
-	if v != 0 {
-		t.Fatalf("KI-2 tripwire no longer reproduces: ParseInt(\"-\") v = %d (the bug has been FIXED — flip KI-2 to status: fixed and delete this tripwire)", v)
-	}
-	// Also exercise the `+`-prefixed variant for documentation: parseInt does
-	// not treat `+` as a sign, so it hits the c < '0' branch and correctly
-	// returns MalformedValueError. This row pins the asymmetry so a future
-	// fix that accidentally widened the sign classifier surfaces here too.
-	if _, err := ParseInt([]byte("+")); err == nil {
-		t.Fatalf("ParseInt(\"+\") unexpectedly returned nil error — `+` is not a JSON number prefix")
+// Verifies: SYS-REQ-015
+func TestParseIntSignOnly_KI2(t *testing.T) {
+	if _, err := ParseInt([]byte("-")); err == nil {
+		t.Fatal(`ParseInt("-") returned nil error, want malformed-value error`)
 	}
 }
 
-// Reproduces: KI-4
-// TestSetTopLevelArrayBeyondLength_KI4 documents the open design gap
-// (DEFECT-260727-T7P7): Set on a top-level array-index beyond length
-// returns KeyPathNotFoundError instead of appending. SYS-REQ-110
-// unconditionally requires append-at-end, but the code's top-level
-// branch explicitly excludes matching array+array-index. This test
-// PASSES (asserts the current behavior) and will need to be updated
-// if the design decision is to extend Set.
-func TestSetTopLevelArrayBeyondLength_KI4(t *testing.T) {
-	_, err := Set([]byte(`[1,2,3]`), []byte(`99`), "[5]")
-	if err != KeyPathNotFoundError {
-		t.Fatalf("KI-4 no longer reproduces: Set([1,2,3], 99, [5]) err = %v, want KeyPathNotFoundError (if this changed, the design gap was resolved — flip KI-4 to fixed)", err)
+// Verifies: SYS-REQ-110
+func TestSetTopLevelArrayAppend_KI4(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     string
+		setValue string
+		key      string
+		want     string
+	}{
+		{name: "append beyond length", data: `[1,2,3]`, setValue: `4`, key: "[5]", want: `[1,2,3,4]`},
+		{name: "append to empty", data: `[]`, setValue: `1`, key: "[0]", want: `[1]`},
+		{name: "replace index zero", data: `[1,2]`, setValue: `9`, key: "[0]", want: `[9,2]`},
+		{name: "replace index one", data: `[1,2]`, setValue: `3`, key: "[1]", want: `[1,3]`},
+		{name: "append cleans trailing comma", data: `[1,2,]`, setValue: `3`, key: "[5]", want: `[1,2,3]`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := Set([]byte(test.data), []byte(test.setValue), test.key)
+			if err != nil {
+				t.Fatalf("Set(%s, %s, %q) returned error: %v", test.data, test.setValue, test.key, err)
+			}
+			if string(got) != test.want {
+				t.Fatalf("Set(%s, %s, %q) = %s, want %s", test.data, test.setValue, test.key, got, test.want)
+			}
+		})
 	}
 }
 

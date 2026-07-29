@@ -6,15 +6,15 @@ requirement: SYS-REQ-110
 requirements:
     - SYS-REQ-110
 artifact: parser_test.go
-command: go test -v -run TestSetTopLevelArrayBeyondLength_KI4 -count=1 ./...
+command: go test -v -run TestSetTopLevelArrayAppend_KI4 -count=1 ./...
 status: pass
-observed_result: known_issue_reproduced
-executed_at: "2026-07-29T05:55:04Z"
+observed_result: fix_confirmed
+executed_at: "2026-07-29T06:35:10Z"
 input_set:
     - parser_test.go
     - parser.go
 freshness_hashes:
-    parser.go: sha256:e7609e31c7fbde9e271690b091bca96e219af30f15f6b4bbf184b84f9f26b9a7
-    parser_test.go: sha256:e227985a32f862a5851ef37b7562e296598a816f126526ab4b8eece4303bcffe
+    parser.go: sha256:cb017d6e544b9f143da4770702a2885266e68161812976a150d8ec633b909990
+    parser_test.go: sha256:e1c83124a8990f0da9ec426f5b4ef8f74843d8fc70856ce1519c355dae730f6d
 known_issues:
     - KI-4

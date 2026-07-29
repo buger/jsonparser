@@ -1,0 +1,21 @@
+id: CHG-260729-YBAE
+type: feature
+title: 'v1.6.0: Append function + KI-2/3/4 fixes'
+intent: New Append API for clean array append. KI-2 (ParseInt sign-only), KI-3 (disposition), KI-4 (top-level array append) all resolved.
+requirements:
+    - SYS-REQ-009
+    - SYS-REQ-110
+    - SYS-REQ-015
+    - SYS-REQ-039
+    - SYS-REQ-058
+    - SYS-REQ-064
+readiness_policy:
+    require_requirements_reviewed: true
+    require_tests: false
+    require_docs: false
+    require_no_suspect_links: true
+status: draft
+history:
+    - at: "2026-07-29T06:35:30Z"
+      by: human:buger
+      action: created

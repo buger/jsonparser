@@ -25,7 +25,7 @@ mitigation: No mitigation in code; users must avoid mixing array-index path comp
 remediation: 'Add a type-mismatch guard in parser.go:Set (around lines 1018-1038): when the resolved subpath parent is an object and the trailing key is an array-index (or vice-versa), return KeyPathNotFoundError instead of invoking createInsertComponent. Alternative: reject in createInsertComponent when isIndex mismatches the parent context.'
 owner: human:buger
 review_date: "2026-07-26"
-release_disposition: ship_with_known_issue
+release_disposition: fixed
 status: fixed
 fix: parser.go:Set (auto-coerce container type, parser.go:1045-1130); regression tests set_spec_test.go:TestSetAutoCoerce_KI3, TestSetArrayIndexUnderObjectMalformedJSON_KI3 (flipped to assert valid JSON)
 fixed_behavior: |
