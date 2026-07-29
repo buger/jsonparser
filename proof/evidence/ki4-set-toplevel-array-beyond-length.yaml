@@ -9,12 +9,12 @@ artifact: parser_test.go
 command: go test -v -run TestSetTopLevelArrayBeyondLength_KI4 -count=1 ./...
 status: pass
 observed_result: known_issue_reproduced
-executed_at: "2026-07-28T08:38:17Z"
+executed_at: "2026-07-29T05:55:04Z"
 input_set:
     - parser_test.go
     - parser.go
 freshness_hashes:
-    parser.go: sha256:d375d709c6296f2cba8a178543bcc612d1c50e1799138c0a5caddf0c4e0789f8
-    parser_test.go: sha256:4eaaa41b9c4b22a61d678384b40d04b9f71d78efa61633a661c29e737b2f9bc1
+    parser.go: sha256:e7609e31c7fbde9e271690b091bca96e219af30f15f6b4bbf184b84f9f26b9a7
+    parser_test.go: sha256:e227985a32f862a5851ef37b7562e296598a816f126526ab4b8eece4303bcffe
 known_issues:
     - KI-4

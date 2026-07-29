@@ -13,3 +13,5 @@ require (
 	github.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7
 	github.com/ugorji/go v1.1.4
 )
+
+replace github.com/buger/jsonparser => ../
