@@ -1,7 +1,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/buger/jsonparser)](https://goreportcard.com/report/github.com/buger/jsonparser) [![Audit](https://img.shields.io/badge/ReqProof-L3%20Assurance-success)](https://reqproof.com) ![License](https://img.shields.io/dub/l/vibe-d.svg)
-# Alternative JSON parser for Go (10x times faster standard library)
+# The fastests JSON parser for Go
 
 It does not require you to know the structure of the payload (eg. create structs), and allows accessing fields by providing the path to them. It is up to **6.5x faster** than standard `encoding/json` package (depending on payload size and usage), **allocates no memory**. See benchmarks below.
+
+[Project recently celebrated 10 years!](https://blog.reqproof.com/p/celebrating-ten-years-of-jsonparser)
 
 ---
 
