@@ -193,11 +193,11 @@ Receives data structure, and key path to extract value from.
 Returns:
 * `value` - Pointer to original data structure containing key value, or just empty slice if nothing found or error
 * `dataType` - 	Can be: `NotExist`, `String`, `Number`, `Object`, `Array`, `Boolean` or `Null`
-* `offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `ArrayEach` helper.
+* `offset` - Offset from provided data structure where key value ends. Used mostly internally, for example for `EachArray` helper.
 * `err` - If the key is not found or any other parsing issue, it should return error. If key not found it also sets `dataType` to `NotExist`
 
 Accepts multiple keys to specify path to JSON value (in case of quering nested structures).
-If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `ArrayEach` implementation.
+If no keys are provided it will try to extract the closest JSON value (simple ones or object/array), useful for reading streams or arrays, see `EachArray` implementation.
 
 Note that keys can be an array indexes: `jsonparser.GetInt("person", "avatars", "[0]", "url")`, pretty cool, yeah?
 
@@ -353,10 +353,10 @@ func SetString(data []byte, val string, keys ...string) ([]byte, error)
 data, _ = jsonparser.SetString(data, "hello", "key")  // produces {"key":"hello"}
 ```
 
-### **`EachKeyWildcard`**, **`ArrayEachWildcard`** and **`SetWildcard`**
+### **`EachKeyWildcard`**, **`EachArrayWildcard`** and **`SetWildcard`**
 ```go
 func EachKeyWildcard(data []byte, cb func(idx int, value []byte, vt ValueType, err error), path ...string) error
-func ArrayEachWildcard(data []byte, cb func(idx int, value []byte, vt ValueType, offset int, err error) error, keys ...string) (int, error)
+func EachArrayWildcard(data []byte, cb func(idx int, value []byte, vt ValueType, offset int, err error) error, keys ...string) (int, error)
 func SetWildcard(data []byte, setValue []byte, keys ...string) ([]byte, error)
 ```
 Wildcard path support using `[*]` to fan out across all array elements:
@@ -437,7 +437,7 @@ https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payloa
 | tidwall/gjson | 402 | 64 | 3 |
 | pquerna/ffjson | **632** | **520** | **10** |
 | mailru/easyjson | **237** | **216** | **7** |
-| buger/jsonparser (ObjectEach) | **205** | 64 | 2 |
+| buger/jsonparser (EachObject) | **205** | 64 | 2 |
 | buger/jsonparser (EachKey) | **227** | **0** | **0** |
 | buger/jsonparser (Get) | **339** | **0** | **0** |
 
@@ -492,7 +492,7 @@ This project uses [ReqProof](https://reqproof.com) for formal requirements verif
 
 ReqProof found **2 real bugs** during the verification process ([see PR #281](https://github.com/buger/jsonparser/pull/281)):
 1. `Delete` panic on truncated JSON input — bounds check missing after internal sentinel value
-2. `ArrayEach` callback silently swallowing parse errors — the callback's `err` parameter was always nil
+2. `EachArray` callback silently swallowing parse errors — the callback's `err` parameter was always nil
 
 It also identified and safely removed **7 dead code blocks** that MC/DC analysis proved unreachable from any input.
 
