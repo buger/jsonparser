@@ -316,6 +316,56 @@ Accepts multiple keys to specify path to JSON value (in case of updating or crea
 
 Note that keys can be an array indexes: `jsonparser.Delete(data, "person", "avatars", "[0]", "url")`
 
+### **`GetUint64`**
+```go
+func GetUint64(data []byte, keys ...string) (uint64, error)
+```
+Like `GetInt` but returns `uint64`. Use for large IDs, timestamps, or counters that exceed `int64`.
+
+### **`GetArrayLen`** and **`GetObjectLen`**
+```go
+func GetArrayLen(data []byte, keys ...string) (int, error)
+func GetObjectLen(data []byte, keys ...string) (int, error)
+```
+Returns the number of elements in the addressed array or object without invoking a callback. Single-pass count.
+
+### **`EachKeyErr`**
+```go
+func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err error) error, paths ...[]string) error
+```
+Like `EachKey` but the callback returns an `error`. Return `io.EOF` for graceful stop, any other error to abort iteration immediately.
+
+### **`DeleteFound`**
+```go
+func DeleteFound(data []byte, keys ...string) (result []byte, found bool)
+```
+Like `Delete` but also returns whether the key was found and removed.
+
+### **`Escape`** and **`SetString`**
+```go
+func Escape(in string) []byte
+func SetString(data []byte, val string, keys ...string) ([]byte, error)
+```
+`Escape` produces a JSON-quoted, RFC 8259-escaped string literal (the inverse of `Unescape`).
+`SetString` is a convenience wrapper that calls `Set` with the value pre-escaped and quoted — so you never get invalid JSON from forgetting quotes:
+```go
+// Instead of: Set(data, []byte("hello"), "key")  // produces invalid JSON
+data, _ = jsonparser.SetString(data, "hello", "key")  // produces {"key":"hello"}
+```
+
+### **`EachKeyWildcard`**, **`ArrayEachWildcard`** and **`SetWildcard`**
+```go
+func EachKeyWildcard(data []byte, cb func(idx int, value []byte, vt ValueType, err error), path ...string) error
+func ArrayEachWildcard(data []byte, cb func(idx int, value []byte, vt ValueType, offset int, err error) error, keys ...string) (int, error)
+func SetWildcard(data []byte, setValue []byte, keys ...string) ([]byte, error)
+```
+Wildcard path support using `[*]` to fan out across all array elements:
+```go
+// Set "active" on every user in the array
+jsonparser.SetWildcard(data, []byte("true"), "users", "[*]", "active")
+```
+
+
 ### **`Append`**
 ```go
 func Append(data []byte, value []byte, keys ...string) ([]byte, error)
@@ -330,8 +380,24 @@ behavior. Returns `MalformedArrayError` if the addressed value is not an array.
 data, _ = jsonparser.Append(data, []byte(`"new_item"`), "items")
 ```
 
+### **`ParsePath`** and **`CompilePath`**
+```go
+func ParsePath(jsonPath string) ([]string, error)
+func CompilePath(jsonPath string) (CompiledPath, error)
+```
+Parse JSONPath-style strings into jsonparser's `[]string` path format:
+```go
+path, _ := jsonparser.ParsePath("$.person.name.fullName")
+// path == []string{"person", "name", "fullName"}
+```
+`CompilePath` pre-compiles for reuse with `Get`, `Set`, `Delete`, etc:
+```go
+cp, _ := jsonparser.CompilePath("$.users[0].name")
+name, _ := cp.Get(data)     // reuse across calls
+data, _ = cp.Set(data, val)
+```
 
-## What makes it so fast?
+
 * It does not rely on `encoding/json`, `reflection` or `interface{}`, the only real package dependency is `bytes`.
 * Operates with JSON payload on byte level, providing you pointers to the original data structure: no memory allocation.
 * No automatic type conversions, by default everything is a []byte, but it provides you value type, so you can convert by yourself (there is few helpers included).
