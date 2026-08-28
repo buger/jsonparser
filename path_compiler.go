@@ -11,6 +11,19 @@ var (
 	errUnterminatedKey = errors.New("jsonparser: unterminated quoted key")
 )
 
+// maxPathHint bounds the capacity pre-allocated by ParsePath. Real paths have a
+// handful of components; the limit only stops an unvalidated path from sizing
+// the initial allocation.
+const maxPathHint = 512
+
+// pathHintCap clamps a pre-allocation hint to maxPathHint.
+func pathHintCap(n int) int {
+	if n > maxPathHint {
+		return maxPathHint
+	}
+	return n
+}
+
 // ParsePath converts a JSONPath-style path into the path components accepted
 // by Get, Set, Delete, ArrayEach, and EachKey.
 // SYS-REQ-114
@@ -37,7 +50,13 @@ func ParsePath(jsonPath string) ([]string, error) {
 	// A path component is either a dot-delimited key or bracket notation.
 	// Counting both separators gives an exact capacity for ordinary paths and
 	// a safe upper bound for quoted keys containing dots or brackets.
-	parts := make([]string, 0, 1+strings.Count(jsonPath, ".")+strings.Count(jsonPath, "["))
+	//
+	// The count is derived from the caller's string before any component has
+	// been validated, so it is clamped: a malformed path made up of separators
+	// would otherwise reserve memory proportional to its length and then be
+	// rejected on the first component. Capacity is only a hint to append, which
+	// still grows as needed, so clamping cannot change the parsed result.
+	parts := make([]string, 0, pathHintCap(1+strings.Count(jsonPath, ".")+strings.Count(jsonPath, "[")))
 
 	for pos := 0; pos < len(jsonPath); {
 		switch jsonPath[pos] {
