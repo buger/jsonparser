@@ -83,3 +83,48 @@ func TestParsePathHintDoesNotRegressDeepPaths(t *testing.T) {
 			"the pre-allocation hint is under-reserving and append is regrowing", n, allocs)
 	}
 }
+
+// TestParsePathHintClampsSeparatorRun is the test that fails without the clamp.
+//
+// The two tests above are deliberately clamp-agnostic: the first pins that
+// clamping changes no result, and the second guards against a *constant*
+// ceiling under-reserving valid deep paths. Neither one fails on unclamped
+// code, so neither actually holds the fix in place.
+//
+// This one does. A path that is nothing but separators is rejected on its first
+// component, but the capacity hint is computed from the caller's string before
+// any validation, so unclamped it reserves one slice slot per separator. The
+// clamp caps the reservation at len/2+1 slots, which for a pure separator run is
+// half of what the count asks for -- so the allocation must be strictly smaller
+// than the unclamped size while the rejection is unchanged.
+func TestParsePathHintClampsSeparatorRun(t *testing.T) {
+	const n = 100000
+	path := strings.Repeat(".", n)
+
+	// The path is still invalid: clamping must not turn a rejection into a pass.
+	if _, err := ParsePath(path); err == nil {
+		t.Fatalf("ParsePath on %d separators: expected an error", n)
+	}
+
+	var bytesPerOp uint64
+	res := testing.Benchmark(func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			ParsePath(path)
+		}
+	})
+	bytesPerOp = uint64(res.AllocedBytesPerOp())
+
+	// Unclamped, the hint is 1+count(".") == n+1 slots, i.e. 16*(n+1) bytes on a
+	// 64-bit build (a string header is 16 bytes). Clamped it is n/2+1 slots. Assert
+	// against a threshold between the two so the test is a real discriminator and
+	// not a restatement of the implementation.
+	const slotBytes = 16
+	unclamped := uint64(slotBytes * (n + 1))
+	threshold := unclamped * 3 / 4
+	if bytesPerOp >= threshold {
+		t.Errorf("ParsePath on a %d-separator run allocated %d B/op; want < %d B "+
+			"(unclamped would be about %d B). The capacity hint is not being clamped.",
+			n, bytesPerOp, threshold, unclamped)
+	}
+}
