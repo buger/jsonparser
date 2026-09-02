@@ -12,8 +12,10 @@
 //       either erroring or producing `[1,2,9]` — passed every existing
 //       fuzzer because the fuzzers only checked `recover() == nil`.
 //       TestOracleSetRoundTrip + TestOracleSetPr286Regression would have
-//       caught it: after a successful Set, Get on the same path MUST
-//       return the set value.
+//       caught it: after a successful in-range Set, Get on the same path
+//       MUST return the set value. Out-of-range indices append at the end
+//       (SYS-REQ-110), so Get uses the new last index rather than the
+//       original OOB path.
 //
 //   (2) Parse divergence where ParseInt/ParseFloat/ParseBoolean silently
 //       returns a wrong scalar. Tested against strconv on the same input.
@@ -58,18 +60,15 @@
 //       output via t.Logf; a strict round-trip is not asserted because the
 //       operation is semantically ill-defined.
 //
-//   D7. KNOWN BUG — Set with nested out-of-range array index silently
-//       corrupts the parent array: Set({"a":[1,2]}, 9, "a", "[99]") returns
-//       {"a":[9]} (the original [1,2] is destroyed). This is the same
-//       data-loss class as PR #286, but for the nested case the fix did
-//       not land. The TestOracleSetPr286Regression test explicitly exercises
-//       this case and documents it as a still-open bug via t.Logf so the
-//       test stays green while the bug stays visible. When the bug is
-//       fixed, the t.Logf branch becomes unreachable and can be replaced
-//       with a hard t.Fatalf.
+//   D7. Out-of-range array indices append at the end (SYS-REQ-110), they
+//       do not pad with nulls and they do not overwrite the array. After
+//       Set({"a":[1,2]}, 9, "a", "[99]") the document is {"a":[1,2,9]}.
+//       Get on the original OOB path fails; Get on the new last index
+//       returns the value. TestOracleSetPr286Regression asserts this.
+//       Strict same-path round-trip is still skipped for OOB paths.
 //
 //   D8. KNOWN BUG — Delete with array-index path on object value corrupts
-//       the surrounding object structure. Same root cause as D6/D7
+//       the surrounding object structure. Same root cause as D6
 //       (insufficient type-checking of path vs. container). The
 //       TestOracleDeleteCorrectness test only exercises semantically-valid
 //       paths (path-shape matches container-shape), avoiding this known
@@ -403,9 +402,10 @@ func compareGetToOracle(got []byte, dt ValueType, gerr error, expected interface
 // to a doc marshaled from `v` is well-defined: each array-index component
 // must address an array element of an existing array (in-range), each
 // object-key component must address an object field. Out-of-range indices
-// on nested arrays and array-index syntax on object roots are documented
-// known bugs (D6, D7, D8 in the file header) — callers should NOT assert
-// strict round-trip correctness on those paths.
+// append at the end (D7 / SYS-REQ-110), so the original path does not
+// round-trip. Array-index syntax on object roots is a documented known
+// bug (D6, D8). Callers should NOT assert strict same-path round-trip
+// correctness on those paths.
 func setPathSemanticallyValid(v interface{}, path []string) bool {
 	cur := v
 	for i, comp := range path {
@@ -433,7 +433,8 @@ func setPathSemanticallyValid(v interface{}, path []string) bool {
 				return false
 			}
 			if idx >= len(node) {
-				// D7: out-of-range index on nested array — known data-loss bug.
+				// D7: OOB index appends at end, so the original path does
+				// not round-trip to the same Get keys.
 				return false
 			}
 			cur = node[idx]
@@ -562,11 +563,10 @@ func TestOracleSetRoundTrip(t *testing.T) {
 		// for `Set([1,2], 9, "[5]")` — Set "succeeded" but the original
 		// [1,2] was silently destroyed.
 		//
-		// For semantically-INVALID paths (D6/D7/D8 — array-index on object
-		// root, nested OOB index, bracket-key on object), we soft-skip
-		// both assertions because the operation is ill-defined; those
-		// cases are documented in the file header and exercised for
-		// no-panic only via the path-mutation fuzzer in path_fuzz_test.go.
+		// For semantically-INVALID paths (D6/D7/D8: array-index on object
+		// root, OOB index that appends at end, bracket-key on object), we
+		// soft-skip same-path round-trip; those cases are documented in the
+		// file header. OOB append is covered by TestOracleSetPr286Regression.
 		if !semanticallyValid {
 			knownBugPaths++
 			// Still: log any invalid output so the bug stays visible.
@@ -607,34 +607,26 @@ func TestOracleSetRoundTrip(t *testing.T) {
 }
 
 // TestOracleSetPr286Regression is the explicit regression case for PR #286.
-// The bug: Set([1,2], 9, "[5]") silently produced [9] (data loss).
-// Correct behavior: either Set returns KeyPathNotFoundError (out-of-range
-// index) WITHOUT modifying the input, or Set succeeds and Get("[5]") returns 9.
-//
-// Top-level case (the original PR #286 repro) was FIXED. The nested case
-// (Set({"a":[1,2]}, 9, "a", "[99]")) is a STILL-OPEN data-loss bug of the
-// same class — it returns {"a":[9]} (the [1,2] is destroyed). We document
-// the open bug via t.Logf so the test stays green while the bug stays visible.
+// The original bug: Set([1,2], 9, "[5]") silently produced [9] (data loss).
+// SYS-REQ-110: an out-of-range array index appends at the end, so the value
+// is retrieved at the new last index, not at the original OOB path.
 //
 // reqproof:proptest parser.Set
 // Verifies: SYS-REQ-009 [property]
 func TestOracleSetPr286Regression(t *testing.T) {
 	cases := []struct {
-		name     string
-		doc      string
-		val      string
-		path     []string
-		fixed    bool   // true if this case is asserted strictly
-		knownBug string // non-empty if this case documents an open bug
+		name    string
+		doc     string
+		val     string
+		path    []string
+		want    string
+		getPath []string
 	}{
-		{"pr286-top-level-oob", `[1,2]`, `9`, []string{"[5]"}, true, ""},
-		{"pr286-top-level-far", `[1,2,3]`, `9`, []string{"[99]"}, true, ""},
-		{"pr286-top-level-len", `[1,2,3]`, `9`, []string{"[3]"}, true, ""},
-		{"pr286-empty-array-index", `[]`, `9`, []string{"[0]"}, true, ""},
-		// STILL-OPEN BUG: Set with nested OOB array index silently destroys
-		// the parent array. See divergence D7 in the file header.
-		{"pr286-nested-oob-OPEN-BUG", `{"a":[1,2]}`, `9`, []string{"a", "[99]"},
-			false, "Set({\"a\":[1,2]}, 9, \"a\", \"[99]\") returns {\"a\":[9]} (data loss)"},
+		{"pr286-top-level-oob", `[1,2]`, `9`, []string{"[5]"}, `[1,2,9]`, []string{"[2]"}},
+		{"pr286-top-level-far", `[1,2,3]`, `9`, []string{"[99]"}, `[1,2,3,9]`, []string{"[3]"}},
+		{"pr286-top-level-len", `[1,2,3]`, `9`, []string{"[3]"}, `[1,2,3,9]`, []string{"[3]"}},
+		{"pr286-empty-array-index", `[]`, `9`, []string{"[0]"}, `[9]`, []string{"[0]"}},
+		{"pr286-nested-oob", `{"a":[1,2]}`, `9`, []string{"a", "[99]"}, `{"a":[1,2,9]}`, []string{"a", "[2]"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -653,43 +645,24 @@ func TestOracleSetPr286Regression(t *testing.T) {
 			}()
 
 			if err != nil {
-				// Set rejected — contract satisfied. Verify original is intact.
-				if !json.Valid(doc) {
-					t.Fatalf("Set rejection corrupted original: doc=%q", doc)
-				}
-				if out != nil && !bytes.Equal(out, doc) {
-					t.Fatalf("Set rejected but mutated bytes: in=%q out=%q", doc, out)
-				}
-				return
+				t.Fatalf("Set returned error: in=%q path=%v val=%q err=%v", doc, tc.path, tc.val, err)
 			}
-			// Set succeeded — output MUST be valid JSON.
 			if !json.Valid(out) {
 				t.Fatalf("Set produced invalid JSON: in=%q path=%v val=%q out=%q",
 					doc, tc.path, tc.val, out)
 			}
+			if string(out) != tc.want {
+				t.Fatalf("Set append-at-end result = %s, want %s", out, tc.want)
+			}
 
-			// THE PR #286 INVARIANT: Get on the same path MUST return the
-			// set value. If it doesn't, Set silently lost data.
-			got, _, _, gerr := Get(out, tc.path...)
+			got, _, _, gerr := Get(out, tc.getPath...)
 			if gerr != nil {
-				if tc.knownBug != "" {
-					t.Logf("KNOWN BUG (open): %s. Path=%v, in=%q, out=%q. "+
-						"When this bug is fixed, replace this t.Logf with t.Fatalf.",
-						tc.knownBug, tc.path, doc, out)
-					return
-				}
-				t.Fatalf("Set succeeded but Get can't find path:\n  in=%q\n  path=%v\n  val=%q\n  out=%q\n  err=%v",
-					doc, tc.path, tc.val, out, gerr)
+				t.Fatalf("Get at appended index failed:\n  in=%q\n  setPath=%v\n  getPath=%v\n  out=%q\n  err=%v",
+					doc, tc.path, tc.getPath, out, gerr)
 			}
 			if string(got) != tc.val {
-				if tc.knownBug != "" {
-					t.Logf("KNOWN BUG (open): %s. Got=%q, want=%q. "+
-						"When this bug is fixed, replace this t.Logf with t.Fatalf.",
-						tc.knownBug, got, tc.val)
-					return
-				}
-				t.Fatalf("PR #286 regression: Set→Get data loss\n  in=%q\n  path=%v\n  set=%q\n  out=%q\n  got=%q",
-					doc, tc.path, tc.val, out, got)
+				t.Fatalf("PR #286 regression: Set->Get data loss\n  in=%q\n  setPath=%v\n  getPath=%v\n  set=%q\n  out=%q\n  got=%q",
+					doc, tc.path, tc.getPath, tc.val, out, got)
 			}
 		})
 	}
