@@ -754,8 +754,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 			level--
 		case '[':
 			arrIdxHeads := make(map[int]int)
-			var nextBuf [stackArraySize]int
-			next := nextBuf[:]
+			var next []int
 
 			if level < 0 {
 				cb(-1, nil, Unknown, MalformedJsonError)
@@ -777,7 +776,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				if err != nil {
 					continue
 				}
-				if len(paths) > len(next) {
+				if next == nil {
 					next = make([]int, len(paths))
 				}
 				// Prepending in reverse path order preserves ascending callback order.
@@ -962,8 +961,7 @@ func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err er
 			level--
 		case '[':
 			arrIdxHeads := make(map[int]int)
-			var nextBuf [stackArraySize]int
-			next := nextBuf[:]
+			var next []int
 
 			if level < 0 {
 				callbackErr := cb(-1, nil, Unknown, MalformedJsonError)
@@ -987,7 +985,7 @@ func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err er
 				if parseErr != nil {
 					continue
 				}
-				if len(paths) > len(next) {
+				if next == nil {
 					next = make([]int, len(paths))
 				}
 				// Prepending in reverse path order preserves ascending callback order.
