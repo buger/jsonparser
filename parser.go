@@ -655,6 +655,19 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		}
 	}
 
+	anyArrayPath := false
+	for _, p := range paths {
+		for _, c := range p {
+			if len(c) > 0 && c[0] == '[' {
+				anyArrayPath = true
+				break
+			}
+		}
+		if anyArrayPath {
+			break
+		}
+	}
+
 	pathsBuf := make([]string, stackArraySize)[:]
 	if maxPath > cap(pathsBuf) {
 		pathsBuf = make([]string, maxPath)[:]
@@ -753,79 +766,86 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 		case '}':
 			level--
 		case '[':
-			arrIdxHeads := make(map[int]int)
-			var next []int
-
 			if level < 0 {
 				cb(-1, nil, Unknown, MalformedJsonError)
 				return -1
 			}
 
-			for pi := len(paths) - 1; pi >= 0; pi-- {
-				p := paths[pi]
-				// guard: empty key component — skip this path (not an array index).
-				if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
-					continue
-				}
+			walked := false
+			if anyArrayPath {
+				var arrIdxHeads map[int]int32
+				var next []int32
 
-				indexComponent := p[level]
-				if len(indexComponent) < 3 || indexComponent[len(indexComponent)-1] != ']' {
-					continue
-				}
-				aIdx, err := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
-				if err != nil {
-					continue
-				}
-				if next == nil {
-					next = make([]int, len(paths))
-				}
-				// Prepending in reverse path order preserves ascending callback order.
-				next[pi] = arrIdxHeads[aIdx]
-				arrIdxHeads[aIdx] = pi + 1
-			}
-
-			if len(arrIdxHeads) > 0 {
-				level++
-
-				var curIdx int
-				arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
-					for link := arrIdxHeads[curIdx]; link != 0; link = next[link-1] {
-						pi := link - 1
-						if pathFlags[pi] {
-							continue
-						}
-						p := paths[pi]
-
-						if level == len(p) {
-							// ArrayEach has already parsed the terminal value.
-							// In particular, string values do not include their
-							// quotes and therefore cannot be reparsed by Get.
-							pathsMatched++
-							pathFlags[pi] = true
-							cb(pi, value, dataType, err)
-							continue
-						}
-
-						of := searchKeys(value, p[level:]...)
-						if of == -1 {
-							continue
-						}
-
-						v, dt, _, e := Get(value[of:])
-						pathsMatched++
-						pathFlags[pi] = true
-						cb(pi, v, dt, e)
+				for pi := len(paths) - 1; pi >= 0; pi-- {
+					p := paths[pi]
+					// guard: empty key component — skip this path (not an array index).
+					if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+						continue
 					}
 
-					curIdx += 1
-				})
-
-				if pathsMatched == len(paths) {
-					return i
+					indexComponent := p[level]
+					if len(indexComponent) < 3 || indexComponent[len(indexComponent)-1] != ']' {
+						continue
+					}
+					aIdx, err := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
+					if err != nil {
+						continue
+					}
+					if next == nil {
+						arrIdxHeads = make(map[int]int32)
+						next = make([]int32, len(paths))
+					}
+					// Prepending in reverse path order preserves ascending callback order.
+					next[pi] = arrIdxHeads[aIdx]
+					arrIdxHeads[aIdx] = int32(pi) + 1
 				}
 
-				i += arrOff - 1
-			} else {
+				if len(arrIdxHeads) > 0 {
+					level++
+					walked = true
+
+					var curIdx int
+					arrOff, _ := ArrayEach(data[i:], func(value []byte, dataType ValueType, offset int, err error) {
+						for link := arrIdxHeads[curIdx]; link != 0; link = next[link-1] {
+							pi := int(link) - 1
+							if pathFlags[pi] {
+								continue
+							}
+							p := paths[pi]
+
+							if level == len(p) {
+								// ArrayEach has already parsed the terminal value.
+								// In particular, string values do not include their
+								// quotes and therefore cannot be reparsed by Get.
+								pathsMatched++
+								pathFlags[pi] = true
+								cb(pi, value, dataType, err)
+								continue
+							}
+
+							of := searchKeys(value, p[level:]...)
+							if of == -1 {
+								continue
+							}
+
+							v, dt, _, e := Get(value[of:])
+							pathsMatched++
+							pathFlags[pi] = true
+							cb(pi, v, dt, e)
+						}
+
+						curIdx += 1
+					})
+
+					if pathsMatched == len(paths) {
+						return i
+					}
+
+					i += arrOff - 1
+				}
+			}
+
+			if !walked {
 				// Do not search for keys inside arrays
 				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
 					return -1
@@ -860,6 +880,19 @@ func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err er
 	for _, p := range paths {
 		if len(p) > maxPath {
 			maxPath = len(p)
+		}
+	}
+
+	anyArrayPath := false
+	for _, p := range paths {
+		for _, c := range p {
+			if len(c) > 0 && c[0] == '[' {
+				anyArrayPath = true
+				break
+			}
+		}
+		if anyArrayPath {
+			break
 		}
 	}
 
@@ -960,9 +993,6 @@ func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err er
 		case '}':
 			level--
 		case '[':
-			arrIdxHeads := make(map[int]int)
-			var next []int
-
 			if level < 0 {
 				callbackErr := cb(-1, nil, Unknown, MalformedJsonError)
 				if callbackErr != nil && !errors.Is(callbackErr, io.EOF) {
@@ -971,85 +1001,95 @@ func EachKeyErr(data []byte, cb func(idx int, value []byte, vt ValueType, err er
 				return nil
 			}
 
-			for pi := len(paths) - 1; pi >= 0; pi-- {
-				p := paths[pi]
-				if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
-					continue
+			walked := false
+			if anyArrayPath {
+				var arrIdxHeads map[int]int32
+				var next []int32
+
+				for pi := len(paths) - 1; pi >= 0; pi-- {
+					p := paths[pi]
+					if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
+						continue
+					}
+
+					indexComponent := p[level]
+					if len(indexComponent) < 3 || indexComponent[len(indexComponent)-1] != ']' {
+						continue
+					}
+					aIdx, parseErr := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
+					if parseErr != nil {
+						continue
+					}
+					if next == nil {
+						arrIdxHeads = make(map[int]int32)
+						next = make([]int32, len(paths))
+					}
+					// Prepending in reverse path order preserves ascending callback order.
+					next[pi] = arrIdxHeads[aIdx]
+					arrIdxHeads[aIdx] = int32(pi) + 1
 				}
 
-				indexComponent := p[level]
-				if len(indexComponent) < 3 || indexComponent[len(indexComponent)-1] != ']' {
-					continue
-				}
-				aIdx, parseErr := strconv.Atoi(indexComponent[1 : len(indexComponent)-1])
-				if parseErr != nil {
-					continue
-				}
-				if next == nil {
-					next = make([]int, len(paths))
-				}
-				// Prepending in reverse path order preserves ascending callback order.
-				next[pi] = arrIdxHeads[aIdx]
-				arrIdxHeads[aIdx] = pi + 1
-			}
+				if len(arrIdxHeads) > 0 {
+					level++
+					walked = true
 
-			if len(arrIdxHeads) > 0 {
-				level++
+					var curIdx int
+					var callbackErr error
+					var stopped bool
+					arrOff, _, _ := arrayEachErr(data[i:], func(value []byte, dataType ValueType, offset int, parseErr error) error {
+						for link := arrIdxHeads[curIdx]; link != 0; link = next[link-1] {
+							pi := int(link) - 1
+							if pathFlags[pi] {
+								continue
+							}
+							p := paths[pi]
 
-				var curIdx int
-				var callbackErr error
-				var stopped bool
-				arrOff, _, _ := arrayEachErr(data[i:], func(value []byte, dataType ValueType, offset int, parseErr error) error {
-					for link := arrIdxHeads[curIdx]; link != 0; link = next[link-1] {
-						pi := link - 1
-						if pathFlags[pi] {
-							continue
-						}
-						p := paths[pi]
+							if level == len(p) {
+								pathsMatched++
+								pathFlags[pi] = true
+								callbackErr = cb(pi, value, dataType, parseErr)
+								if callbackErr != nil {
+									stopped = true
+									return callbackErr
+								}
+								continue
+							}
 
-						if level == len(p) {
+							of := searchKeys(value, p[level:]...)
+							if of == -1 {
+								continue
+							}
+
+							v, dt, _, getErr := Get(value[of:])
 							pathsMatched++
 							pathFlags[pi] = true
-							callbackErr = cb(pi, value, dataType, parseErr)
+							callbackErr = cb(pi, v, dt, getErr)
 							if callbackErr != nil {
 								stopped = true
 								return callbackErr
 							}
-							continue
 						}
 
-						of := searchKeys(value, p[level:]...)
-						if of == -1 {
-							continue
-						}
+						curIdx++
+						return nil
+					})
 
-						v, dt, _, getErr := Get(value[of:])
-						pathsMatched++
-						pathFlags[pi] = true
-						callbackErr = cb(pi, v, dt, getErr)
-						if callbackErr != nil {
-							stopped = true
-							return callbackErr
+					if stopped {
+						if errors.Is(callbackErr, io.EOF) {
+							return nil
 						}
+						return callbackErr
 					}
 
-					curIdx++
-					return nil
-				})
-
-				if stopped {
-					if errors.Is(callbackErr, io.EOF) {
+					if pathsMatched == len(paths) {
 						return nil
 					}
-					return callbackErr
-				}
 
-				if pathsMatched == len(paths) {
-					return nil
+					i += arrOff - 1
 				}
+			}
 
-				i += arrOff - 1
-			} else {
+			if !walked {
 				if arraySkip := blockEnd(data[i:], '[', ']'); arraySkip == -1 {
 					return nil
 				} else {
