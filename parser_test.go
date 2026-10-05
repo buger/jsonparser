@@ -2662,6 +2662,22 @@ func TestEachKeyPathsSnapshotSemantics(t *testing.T) {
 	if len(got) != 2 || got[0] != "10" || got[1] != "10" {
 		t.Errorf("got %v, want both copies to receive element 0", got)
 	}
+
+	// The routing decision (whether any path targets an array) is likewise
+	// snapshotted, at call entry: converting a non-array component into an
+	// index from a callback that runs before the array is not observed.
+	// Callers must treat paths as immutable for the duration of the call.
+	paths2 := [][]string{{"trigger"}, {"arr", "not-an-index"}}
+	got = nil
+	EachKey([]byte(`{"trigger":1,"arr":[10,20]}`), func(idx int, value []byte, vt ValueType, err error) {
+		got = append(got, string(value))
+		if idx == 0 {
+			paths2[1][1] = "[0]"
+		}
+	}, paths2...)
+	if len(got) != 1 || got[0] != "1" {
+		t.Errorf("got %v, want only the pre-mutation match under immutable-paths contract", got)
+	}
 }
 
 func TestEachKeyErrArraySemantics(t *testing.T) {

@@ -365,7 +365,7 @@ func BenchmarkEachKeySparseArray(b *testing.B) {
 	}
 	buf.WriteByte(']')
 	data := buf.Bytes()
-	paths := [][]string{{"3"}, {"16380"}}
+	paths := [][]string{{"[3]"}, {"[16380]"}}
 	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -487,7 +487,7 @@ func BenchmarkEachKeySparseArrayObjects(b *testing.B) {
 	}
 	buf.WriteByte(']')
 	data := buf.Bytes()
-	paths := [][]string{{"3", "i"}, {"16380", "i"}}
+	paths := [][]string{{"[3]", "i"}, {"[16380]", "i"}}
 	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
 	b.ReportAllocs()
 	b.ResetTimer()
