@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 	"testing"
 )
@@ -2483,13 +2484,14 @@ func TestSetTopLevelArrayAppend_KI4(t *testing.T) {
 // Verifies: SYS-REQ-110 [boundary]
 // SYS-REQ-110:boundary:negative
 // SYS-REQ-110:element_type_partition:nominal
-//   Positive/nominal witness for the element_type_partition obligation: Set
-//   with a beyond-length array index on a non-empty nested array of SCALAR
-//   elements must append at end and preserve all existing elements. Before
-//   this fix, the condition `data[subObjOff] == '{'` limited append-behavior
-//   to arrays whose first element was an object; scalar arrays (numbers,
-//   strings, bools, nulls, nested arrays) were silently replaced with
-//   [value], destroying all data.
+//
+//	Positive/nominal witness for the element_type_partition obligation: Set
+//	with a beyond-length array index on a non-empty nested array of SCALAR
+//	elements must append at end and preserve all existing elements. Before
+//	this fix, the condition `data[subObjOff] == '{'` limited append-behavior
+//	to arrays whose first element was an object; scalar arrays (numbers,
+//	strings, bools, nulls, nested arrays) were silently replaced with
+//	[value], destroying all data.
 func TestSetBeyondLengthScalarArrayPreservesElements_SYS110(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -2523,12 +2525,13 @@ func TestSetBeyondLengthScalarArrayPreservesElements_SYS110(t *testing.T) {
 // Verifies: SYS-REQ-029 [malformed_input]
 // SYS-REQ-029:malformed_input:negative
 // SYS-REQ-029:non_array_root_no_callback:negative
-//   Negative witness: ArrayEach on a non-array root value (object, number,
-//   string, bool) must NOT invoke the callback at all and must return an
-//   error. Before this fix, ArrayEach emitted exactly one spurious callback
-//   with the first token of the non-array value (e.g. the object key parsed
-//   as a string element) before returning MalformedArrayError — a caller
-//   performing side effects in the callback observed a bogus invocation.
+//
+//	Negative witness: ArrayEach on a non-array root value (object, number,
+//	string, bool) must NOT invoke the callback at all and must return an
+//	error. Before this fix, ArrayEach emitted exactly one spurious callback
+//	with the first token of the non-array value (e.g. the object key parsed
+//	as a string element) before returning MalformedArrayError — a caller
+//	performing side effects in the callback observed a bogus invocation.
 func TestArrayEachNonArrayRootNoCallback_SYS029(t *testing.T) {
 	cases := []struct {
 		name string
@@ -2552,5 +2555,186 @@ func TestArrayEachNonArrayRootNoCallback_SYS029(t *testing.T) {
 				t.Fatalf("ArrayEach(%s) emitted %d callback(s) before erroring — non-array root must not invoke callback", c.data, callbacks)
 			}
 		})
+	}
+}
+
+func TestEachKeyDuplicatePaths(t *testing.T) {
+	var got []string
+	ret := EachKey([]byte(`{"a":1}`), func(idx int, value []byte, vt ValueType, err error) {
+		if idx != len(got) {
+			t.Fatalf("callback %d: idx=%d", len(got), idx)
+		}
+		if vt != Number || err != nil {
+			t.Fatalf("callback %d: type=%v err=%v", idx, vt, err)
+		}
+		got = append(got, string(value))
+	}, []string{"a"}, []string{"a"}, []string{"a"}, []string{"a"})
+	if ret < 0 || len(got) != 4 {
+		t.Fatalf("ret=%d callbacks=%v, want 4 callbacks and nonnegative ret", ret, got)
+	}
+	for i, v := range got {
+		if v != "1" {
+			t.Errorf("copy %d got %q, want \"1\"", i, v)
+		}
+	}
+}
+
+func TestEachKeyExtremeArrayIndex(t *testing.T) {
+	for _, idx := range []string{"[-1]", "[-2]", "[9223372036854775807]", "[99999999999999999999]"} {
+		t.Run(idx, func(t *testing.T) {
+			matches := 0
+			ret := EachKey([]byte(`{"array":[7,8],"after":1}`), func(i int, v []byte, vt ValueType, err error) {
+				matches++
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if i != 1 || vt != Number {
+					t.Errorf("callback %d: type=%v, want sibling path 1 (Number)", i, vt)
+				}
+				if string(v) != "1" {
+					t.Errorf("callback %d got %q, want sibling value 1", i, v)
+				}
+			}, []string{"array", idx}, []string{"after"})
+			if ret != -1 {
+				t.Errorf("ret=%d, want -1", ret)
+			}
+			if matches != 1 {
+				t.Errorf("matches=%d, want 1 (sibling only)", matches)
+			}
+		})
+	}
+}
+
+func TestEachKeyDenseArrayPaths(t *testing.T) {
+	for _, count := range []int{62, 63, 64, 127, 128, 129, 1024} {
+		t.Run(fmt.Sprint(count), func(t *testing.T) {
+			var buf bytes.Buffer
+			buf.WriteString(`{"array":[`)
+			paths := make([][]string, count)
+			for i := 0; i < count; i++ {
+				if i > 0 {
+					buf.WriteByte(',')
+				}
+				fmt.Fprintf(&buf, `{"v":%d}`, i)
+				paths[count-1-i] = []string{"array", fmt.Sprintf("[%d]", i), "v"}
+			}
+			buf.WriteString(`]}`)
+			seen := make([]bool, count)
+			cbs := 0
+			ret := EachKey(buf.Bytes(), func(idx int, value []byte, vt ValueType, err error) {
+				if want := count - 1 - cbs; idx != want {
+					t.Fatalf("callback %d: idx=%d, want %d (document order)", cbs, idx, want)
+				}
+				cbs++
+				if idx < 0 || idx >= count || seen[idx] {
+					t.Fatalf("unexpected callback index %d", idx)
+				}
+				seen[idx] = true
+				if want := fmt.Sprint(count - 1 - idx); string(value) != want || vt != Number || err != nil {
+					t.Errorf("path %d: got %s (%s, %v), want %s", idx, value, vt, err, want)
+				}
+			}, paths...)
+			if cbs != count || ret == -1 {
+				t.Errorf("cbs=%d ret=%d, want %d callbacks and nonnegative ret", cbs, ret, count)
+			}
+			for _, s := range seen {
+				if !s {
+					t.Error("not every path was matched")
+					break
+				}
+			}
+		})
+	}
+}
+
+func TestEachKeyPathsSnapshotSemantics(t *testing.T) {
+	// Array index membership is snapshotted when EachKey enters an array:
+	// mutating the paths slice from inside the callback does not redirect
+	// pending matches.
+	paths := [][]string{{"a", "[0]"}, {"a", "[0]"}}
+	var got []string
+	EachKey([]byte(`{"a":[10,20]}`), func(idx int, value []byte, vt ValueType, err error) {
+		got = append(got, string(value))
+		if idx == 0 {
+			paths[1][1] = "[1]"
+		}
+	}, paths...)
+	if len(got) != 2 || got[0] != "10" || got[1] != "10" {
+		t.Errorf("got %v, want both copies to receive element 0", got)
+	}
+
+	// The routing decision (whether any path targets an array) is likewise
+	// snapshotted, at call entry: converting a non-array component into an
+	// index from a callback that runs before the array is not observed.
+	// Callers must treat paths as immutable for the duration of the call.
+	paths2 := [][]string{{"trigger"}, {"arr", "not-an-index"}}
+	got = nil
+	EachKey([]byte(`{"trigger":1,"arr":[10,20]}`), func(idx int, value []byte, vt ValueType, err error) {
+		got = append(got, string(value))
+		if idx == 0 {
+			paths2[1][1] = "[0]"
+		}
+	}, paths2...)
+	if len(got) != 1 || got[0] != "1" {
+		t.Errorf("got %v, want only the pre-mutation match under immutable-paths contract", got)
+	}
+}
+
+func TestEachKeyErrArraySemantics(t *testing.T) {
+	data := []byte(`{"array":[{"a":1,"b":2},{"a":3,"b":4}]}`)
+
+	// Shared index across paths, values in path order.
+	values := make([]string, 4)
+	if err := EachKeyErr(data, func(idx int, v []byte, vt ValueType, e error) error {
+		values[idx] = string(v)
+		return nil
+	}, [][]string{{"array", "[0]", "a"}, {"array", "[0]", "b"}, {"array", "[1]", "a"}, {"array", "[1]", "b"}}...); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if want := []string{"1", "2", "3", "4"}; !reflect.DeepEqual(values, want) {
+		t.Errorf("values=%v, want %v", values, want)
+	}
+
+	// Terminal index delivers ArrayEach's pre-parsed value, quotes stripped.
+	var term []byte
+	var termType ValueType
+	if err := EachKeyErr([]byte(`["x","y"]`), func(idx int, v []byte, vt ValueType, e error) error {
+		term, termType = v, vt
+		return nil
+	}, []string{"[1]"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(term) != "y" || termType != String {
+		t.Errorf("terminal value=%q type=%v, want \"y\" (String)", term, termType)
+	}
+
+	// A missing trailing key fires no callback and reports no error.
+	called := false
+	if err := EachKeyErr(data, func(idx int, v []byte, vt ValueType, e error) error {
+		called = true
+		return nil
+	}, []string{"array", "[0]", "zzz"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if called {
+		t.Error("callback fired for a missing trailing key")
+	}
+
+	// An error from a callback stops iteration within the element and propagates.
+	sentinel := errors.New("stop")
+	stopped := 0
+	err := EachKeyErr(data, func(idx int, v []byte, vt ValueType, e error) error {
+		stopped++
+		return sentinel
+	}, []string{"array", "[0]", "a"}, []string{"array", "[0]", "b"})
+	if !errors.Is(err, sentinel) || stopped != 1 {
+		t.Errorf("err=%v stopped=%d, want sentinel after 1 callback", err, stopped)
+	}
+
+	// io.EOF stops iteration gracefully.
+	if err := EachKeyErr(data, func(idx int, v []byte, vt ValueType, e error) error {
+		return io.EOF
+	}, []string{"array", "[0]", "a"}, []string{"array", "[1]", "a"}); err != nil {
+		t.Errorf("err=%v, want nil for io.EOF stop", err)
 	}
 }

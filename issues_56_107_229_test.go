@@ -280,3 +280,218 @@ func createInsertComponentBuffered(keys []string, setValue []byte, comma, object
 
 	return buffer.Bytes()
 }
+
+var benchmarkEachKeyResult int
+var benchmarkEachKeyValue []byte
+
+func benchDenseArrayFixture(n int) ([]byte, [][]string) {
+	var buf bytes.Buffer
+	buf.WriteString(`{"array":[`)
+	paths := make([][]string, n)
+	for i := 0; i < n; i++ {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(`{"v":`)
+		buf.WriteString(strconv.Itoa(i))
+		buf.WriteByte('}')
+		paths[i] = []string{"array", "[" + strconv.Itoa(i) + "]", "v"}
+	}
+	buf.WriteString(`]}`)
+	return buf.Bytes(), paths
+}
+
+func benchIdleArraysFixture(fields int) ([]byte, [][]string) {
+	var buf bytes.Buffer
+	buf.WriteString(`{"o":{`)
+	paths := make([][]string, fields)
+	for i := 0; i < fields; i++ {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(`"k`)
+		buf.WriteString(strconv.Itoa(i))
+		buf.WriteString(`":[1,2,3,4,5]`)
+		paths[i] = []string{"o", "k" + strconv.Itoa(i)}
+	}
+	buf.WriteString(`}}`)
+	return buf.Bytes(), paths
+}
+
+func benchSharedTerminalFixture(n int) ([]byte, [][]string) {
+	paths := make([][]string, n)
+	for i := range paths {
+		paths[i] = []string{"array", "[0]"}
+	}
+	return []byte(`{"array":["x"]}`), paths
+}
+
+// BenchmarkEachKeyDenseArray measures bulk extraction of every element of an
+// array of objects by index, the core EachKey workload.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeyDenseArray128(b *testing.B) {
+	data, paths := benchDenseArrayFixture(128)
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeyDenseArray1024(b *testing.B) {
+	data, paths := benchDenseArrayFixture(1024)
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// BenchmarkEachKeySparseArray measures two wanted indexes inside a large array.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeySparseArray(b *testing.B) {
+	var buf bytes.Buffer
+	buf.WriteByte('[')
+	for i := 0; i < 16384; i++ {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(strconv.Itoa(i))
+	}
+	buf.WriteByte(']')
+	data := buf.Bytes()
+	paths := [][]string{{"[3]"}, {"[16380]"}}
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// BenchmarkEachKeyIdleArrays measures array-heavy documents whose paths never
+// target an array: every array must be skipped at minimal cost.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeyIdleArrays62(b *testing.B) {
+	data, paths := benchIdleArraysFixture(62)
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeyIdleArrays128(b *testing.B) {
+	data, paths := benchIdleArraysFixture(128)
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// BenchmarkEachKeySharedTerminal measures many identical terminal paths
+// requesting one index of a one-element array, the worst case for grouping
+// registration.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeySharedTerminal128(b *testing.B) {
+	data, paths := benchSharedTerminalFixture(128)
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeySharedTerminal1024(b *testing.B) {
+	data, paths := benchSharedTerminalFixture(1024)
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// BenchmarkEachKeyFlatObject measures the object branch alone, which must be
+// unaffected by array bookkeeping.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeyFlatObject62(b *testing.B) {
+	data, paths := benchIdleArraysFixture(0)
+	var buf bytes.Buffer
+	buf.WriteString(`{`)
+	paths = paths[:0]
+	for i := 0; i < 62; i++ {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(`"k`)
+		buf.WriteString(strconv.Itoa(i))
+		buf.WriteString(`":`)
+		buf.WriteString(strconv.Itoa(i))
+		paths = append(paths, []string{"k" + strconv.Itoa(i)})
+	}
+	buf.WriteByte('}')
+	data = buf.Bytes()
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
+
+// BenchmarkEachKeyErrDenseArray mirrors the dense workload for the erroring
+// variant.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeyErrDenseArray128(b *testing.B) {
+	data, paths := benchDenseArrayFixture(128)
+	cb := func(i int, v []byte, vt ValueType, e error) error { benchmarkEachKeyValue = v; return nil }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if err := EachKeyErr(data, cb, paths...); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkEachKeySparseArrayObjects mirrors the sparse workload with object
+// elements, the shape real payloads use.
+//
+// Verifies: SYS-REQ-008
+func BenchmarkEachKeySparseArrayObjects(b *testing.B) {
+	var buf bytes.Buffer
+	buf.WriteByte('[')
+	for i := 0; i < 16384; i++ {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(`{"i":`)
+		buf.WriteString(strconv.Itoa(i))
+		buf.WriteString(`,"s":"value"}`)
+	}
+	buf.WriteByte(']')
+	data := buf.Bytes()
+	paths := [][]string{{"[3]", "i"}, {"[16380]", "i"}}
+	cb := func(i int, v []byte, vt ValueType, e error) { benchmarkEachKeyValue = v }
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		benchmarkEachKeyResult = EachKey(data, cb, paths...)
+	}
+}
