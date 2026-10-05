@@ -107,7 +107,12 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 				if match == -1 {
 					tokenOffset := nextToken(data[i+1:])
 					i += tokenOffset
-					// i remains just before the value; the outer loop advances to it.
+					// Note: i is now at the character BEFORE the value (the colon
+					// when tokenOffset==0, or the last whitespace character otherwise).
+					// The former `if data[i] == '{'` block-skip was structurally dead
+					// code because i never reaches the opening brace — the outer loop's
+					// i++ advances to it on the next iteration.  Likewise, the former
+					// `if i < ln` guard was tautological since i remains within bounds.
 				}
 
 				switch data[i] {
@@ -134,7 +139,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 
 				for pi := len(paths) - 1; pi >= 0; pi-- {
 					p := paths[pi]
-					// Skip empty components and paths that do not target this array.
+					// guard: empty key component — skip this path (not an array index).
 					if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 						continue
 					}
@@ -325,7 +330,12 @@ func EachKeyErr(data []byte, cb func(int, []byte, ValueType, error) error, paths
 				if match == -1 {
 					tokenOffset := nextToken(data[i+1:])
 					i += tokenOffset
-					// i remains just before the value; the outer loop advances to it.
+					// Note: i is now at the character BEFORE the value (the colon
+					// when tokenOffset==0, or the last whitespace character otherwise).
+					// The former `if data[i] == '{'` block-skip was structurally dead
+					// code because i never reaches the opening brace — the outer loop's
+					// i++ advances to it on the next iteration.  Likewise, the former
+					// `if i < ln` guard was tautological since i remains within bounds.
 				}
 
 				switch data[i] {
@@ -355,7 +365,7 @@ func EachKeyErr(data []byte, cb func(int, []byte, ValueType, error) error, paths
 
 				for pi := len(paths) - 1; pi >= 0; pi-- {
 					p := paths[pi]
-					// Skip empty components and paths that do not target this array.
+					// guard: empty key component — skip this path (not an array index).
 					if len(p) < level+1 || pathFlags[pi] || len(p[level]) == 0 || p[level][0] != '[' || !sameTree(p, pathsBuf[:level]) {
 						continue
 					}
