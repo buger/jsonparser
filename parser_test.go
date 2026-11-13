@@ -264,6 +264,40 @@ var deleteTests = []DeleteTest{
 		path: []string{"test"},
 		data: `}`,
 	},
+	{
+		// The path is matched against the unescaped JSON key, as in Get.
+		desc: "Delete key with simple escape",
+		json: `{"a\\b":1,"c":2}`,
+		path: []string{"a\\b"},
+		data: `{"c":2}`,
+	},
+	{
+		desc: "Delete key with Unicode escape",
+		json: `{"c":2,"a\u00B0b":1}`,
+		path: []string{"a\u00B0b"},
+		data: `{"c":2}`,
+	},
+	{
+		// The backslash in the path must not make an earlier escaped key
+		// of the same length match: this used to delete everything from
+		// "\"q" to the end, "keep" included.
+		desc: "Delete escaped key must not match an earlier escaped key",
+		json: `{"\"q":1,"keep":0,"a\\b":2}`,
+		path: []string{"a\\b"},
+		data: `{"\"q":1,"keep":0}`,
+	},
+	{
+		desc: "Delete nested escaped key must not match an earlier escaped key",
+		json: `{"x":{"D:\\xyzw":1,"C:\\temp":2}}`,
+		path: []string{"x", "C:\\temp"},
+		data: `{"x":{"D:\\xyzw":1}}`,
+	},
+	{
+		desc: "Delete with a path that is only equal to the escaped form of a key",
+		json: `{"a\u00B0b":1}`,
+		path: []string{"a\\u00B0b"},
+		data: `{"a\u00B0b":1}`,
+	},
 }
 
 var setTests = []SetTest{

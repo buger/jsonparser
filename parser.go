@@ -109,11 +109,10 @@ func findKeyStartConfig(config Config, data []byte, key string) (int, error) {
 	if data[i] == '{' || data[i] == '[' {
 		i += 1
 	}
+	// key is compared as is against the unescaped JSON keys, the same way
+	// searchKeys matches the path for Get, Set and EachKey. It must not be
+	// unescaped itself, and must not share stackbuf with the JSON keys.
 	var stackbuf [unescapeStackBufSize]byte // stack-allocated array for allocation-free unescaping of small strings
-
-	if ku, err := unescapeConfig(config, StringToBytes(key), stackbuf[:]); err == nil {
-		key = bytesToString(&ku)
-	}
 
 	for i < ln {
 		switch data[i] {
