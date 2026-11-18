@@ -642,7 +642,13 @@ func (rp *ReaderParser) readMore() error {
 
 	oldLen := len(rp.buf)
 	if cap(rp.buf)-oldLen < readSize {
-		grown := make([]byte, oldLen, oldLen+readSize)
+		// Captured values may span many reads. Grow geometrically so retaining
+		// one does not copy its entire prefix for every read chunk.
+		newCap := 2 * cap(rp.buf)
+		if newCap < oldLen+readSize {
+			newCap = oldLen + readSize
+		}
+		grown := make([]byte, oldLen, newCap)
 		copy(grown, rp.buf)
 		rp.buf = grown
 	}
