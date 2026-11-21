@@ -326,19 +326,18 @@ func stringEndConfig(_ Config, data []byte, quote byte) (int, bool) {
 
 	i := 0
 	n := len(data)
-	for i+8 <= n {
+	escaped := uint64(0)
+	for ; i+8 <= n; i += 8 {
 		w := binary.LittleEndian.Uint64(data[i:])
 		xq := w ^ broadcastQuote
-		xb := w ^ broadcastBackslash
 		quoteHit := (xq - swarLsb) & ^xq & swarMsb
-		bsHit := (xb - swarLsb) & ^xb & swarMsb
-		if quoteHit|bsHit == 0 {
-			i += 8
-			continue
+		if quoteHit != 0 {
+			break
 		}
-		break
+		xb := w ^ broadcastBackslash
+		bsHit := (xb - swarLsb) & ^xb & swarMsb
+		escaped |= bsHit
 	}
-	escaped := false
 	for ; i < n; i++ {
 		// gjson trick: the only bytes this loop acts on are the closing quote
 		// and the backslash. For double-quote strings quote=0x22, for
@@ -350,7 +349,7 @@ func stringEndConfig(_ Config, data []byte, quote byte) (int, bool) {
 		}
 		c := data[i]
 		if c == quote {
-			if !escaped {
+			if escaped == 0 {
 				return i + 1, false
 			}
 			j := i - 1
@@ -365,10 +364,10 @@ func stringEndConfig(_ Config, data []byte, quote byte) (int, bool) {
 				j--
 			}
 		} else if c == '\\' {
-			escaped = true
+			escaped = 1
 		}
 	}
-	return -1, escaped
+	return -1, escaped != 0
 }
 
 // SYS-REQ-046
