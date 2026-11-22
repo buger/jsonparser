@@ -328,7 +328,7 @@ func stringEndConfig(_ Config, data []byte, quote byte) (int, bool) {
 	n := len(data)
 	escaped := uint64(0)
 	for ; i+8 <= n; i += 8 {
-		w := binary.LittleEndian.Uint64(data[i:])
+		w := binary.LittleEndian.Uint64(data[i : i+8])
 		xq := w ^ broadcastQuote
 		quoteHit := (xq - swarLsb) & ^xq & swarMsb
 		if quoteHit != 0 {
