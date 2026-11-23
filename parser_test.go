@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 )
@@ -2259,6 +2260,37 @@ func TestFuzzParseFloatHarnessCoverage(t *testing.T) {
 	}
 	if got := FuzzParseFloat([]byte(`1.2.3`)); got != 0 {
 		t.Fatalf("expected FuzzParseFloat failure path to return 0, got %d", got)
+	}
+}
+
+// Verifies: SYS-REQ-013
+func TestParseFloatOutOfRange(t *testing.T) {
+	tests := []struct {
+		in   string
+		sign int
+	}{
+		{in: "1e400", sign: 1},
+		{in: "-1e400", sign: -1},
+		{in: "1.8e308", sign: 1},
+	}
+
+	for _, test := range tests {
+		got, err := ParseFloat([]byte(test.in))
+		if !errors.Is(err, OverflowFloatError) {
+			t.Errorf("ParseFloat(%q) error mismatch: expected %v, got %v", test.in, OverflowFloatError, err)
+		}
+		if !math.IsInf(got, test.sign) {
+			t.Errorf("ParseFloat(%q) value mismatch: expected infinity with sign %d, got %v", test.in, test.sign, got)
+		}
+	}
+
+	if _, err := GetFloat([]byte(`{"a": 1e400, "b": 1}`), "a"); !errors.Is(err, OverflowFloatError) {
+		t.Errorf("GetFloat on 1e400 error mismatch: expected %v, got %v", OverflowFloatError, err)
+	}
+
+	// Underflow rounds to zero without an error, as in strconv.ParseFloat.
+	if got, err := ParseFloat([]byte("1e-400")); got != 0 || err != nil {
+		t.Errorf("ParseFloat(%q) = %v, %v; expected 0, <nil>", "1e-400", got, err)
 	}
 }
 

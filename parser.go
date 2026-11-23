@@ -19,6 +19,7 @@ var (
 	MalformedObjectError       = errors.New("Value looks like object, but can't find closing '}' symbol")
 	MalformedValueError        = errors.New("Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol")
 	OverflowIntegerError       = errors.New("Value is number, but overflowed while parsing")
+	OverflowFloatError         = errors.New("Value is number, but out of float64 range")
 	MalformedStringEscapeError = errors.New("Encountered an invalid escape sequence in a string")
 	NullValueError             = errors.New("Value is null")
 )
@@ -2147,9 +2148,14 @@ func ParseString(b []byte) (string, error) {
 }
 
 // ParseNumber parses a Number ValueType into a Go float64
+// A number outside the float64 range returns OverflowFloatError together with +Inf or -Inf.
 // SYS-REQ-013, SYS-REQ-037, SYS-REQ-065
 func ParseFloat(b []byte) (float64, error) {
 	if v, err := parseFloat(&b); err != nil {
+		var numErr *strconv.NumError
+		if errors.As(err, &numErr) && numErr.Err == strconv.ErrRange {
+			return v, OverflowFloatError
+		}
 		return 0, MalformedValueError
 	} else {
 		return v, nil
