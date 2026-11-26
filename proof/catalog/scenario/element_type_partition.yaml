@@ -1,0 +1,19 @@
+id: element_type_partition
+catalog_version: 1
+category: scenario
+order: 1002
+status: active
+name: element_type_partition
+summary: An array-mutation path resolves against an existing array whose element types span partitions not covered by a single test witness.
+description: |
+  Covers the partition where Set with a beyond-length array index [N]
+  targets an existing nested array whose first element is NOT an object
+  (i.e. a scalar: number, string, bool, null, or a nested array). The
+  append-at-end code path's guard previously matched only on the first
+  element byte being '{', so scalar-element arrays silently fell through
+  to the replace-container branch and were destroyed. Each JSON element
+  type (Number, String, Boolean, Null, Array, Object) constitutes a
+  distinct partition that must be independently pinned by a regression
+  test so the append guard cannot regress for one type while passing
+  for another. Discovered by DEFECT-260727-WWWY (ADHD diverge→critic
+  round on SYS-REQ-110).

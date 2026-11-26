@@ -2,8 +2,8 @@ package jsonparser
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	_ "fmt"
 	"reflect"
 	"testing"
 )
@@ -11,6 +11,7 @@ import (
 // Set it to non-empty value if want to run only specific test
 var activeTest = ""
 
+// Test helper for SYS-REQ-006.
 func toArray(data []byte) (result [][]byte) {
 	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
 		result = append(result, value)
@@ -19,6 +20,7 @@ func toArray(data []byte) (result [][]byte) {
 	return
 }
 
+// Test helper for SYS-REQ-006 and SYS-REQ-008.
 func toStringArray(data []byte) (result []string) {
 	ArrayEach(data, func(value []byte, dataType ValueType, offset int, err error) {
 		result = append(result, string(value))
@@ -226,6 +228,41 @@ var deleteTests = []DeleteTest{
 		json: `   {"test":"input"}`,
 		path: []string{"test"},
 		data: `   {}`,
+	},
+	{
+		desc: "GO-2026-4514: malformed JSON without enclosing braces should not panic",
+		json: `"0":"0":`,
+		path: []string{"0"},
+		data: `"0":"0":`,
+	},
+	{
+		desc: "GO-2026-4514: malformed JSON with key but truncated value should not panic",
+		json: `{"a":  `,
+		path: []string{"a"},
+		data: `{"a":  `,
+	},
+	{
+		desc: "GO-2026-4514: malformed nested JSON with truncated value should not panic",
+		json: `{"a":{"b":  `,
+		path: []string{"a", "b"},
+		data: `{"a":{"b":  `,
+	},
+	{
+		// OSS-Fuzz testcase 4649128545288192: leading garbage comma
+		// caused findTokenStart to return offset 0, which then made the
+		// trailing-comma cleanup branch reassign keyOffset=0, which made
+		// lastToken(data[:0]) return -1, which made data[prevTok] panic
+		// with "index out of range [-1]" at parser.go.
+		desc: "OSS-Fuzz: leading-comma malformed input must not panic in Delete",
+		json: `,{"test":1{}`,
+		path: []string{"test"},
+		data: `}`,
+	},
+	{
+		desc: "OSS-Fuzz variant: leading comma + empty string then object must not panic in Delete",
+		json: `,""{"test":0}`,
+		path: []string{"test"},
+		data: `}`,
 	},
 }
 
@@ -1036,6 +1073,13 @@ var getStringTests = []GetTest{
 
 var getUnsafeStringTests = []GetTest{
 	{
+		desc:    `read empty string as unsafe string`,
+		json:    `{"c": ""}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    ``,
+	},
+	{
 		desc:    `Do not translate Unicode symbols`,
 		json:    `{"c": "test"}`,
 		path:    []string{"c"},
@@ -1062,6 +1106,19 @@ var getUnsafeStringTests = []GetTest{
 		path:    []string{"c"},
 		isFound: true,
 		data:    `\\\"`,
+	},
+	{
+		desc:    `read boolean token as unsafe string`,
+		json:    `{"c": true}`,
+		path:    []string{"c"},
+		isFound: true,
+		data:    `true`,
+	},
+	{
+		desc:    `missing key returns not found for unsafe string`,
+		json:    `{"c": "test"}`,
+		path:    []string{"missing"},
+		isFound: false,
 	},
 }
 
@@ -1155,6 +1212,7 @@ var getArrayTests = []GetTest{
 
 // checkFoundAndNoError checks the dataType and error return from Get*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Get*(), or false if the test is finished.
+// Test helper for SYS-REQ-001, SYS-REQ-002, SYS-REQ-003, SYS-REQ-004, SYS-REQ-005, and SYS-REQ-011.
 func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jtype ValueType, value interface{}, err error) bool {
 	isFound := (err != KeyPathNotFoundError)
 	isErr := (err != nil && err != KeyPathNotFoundError)
@@ -1179,6 +1237,7 @@ func getTestCheckFoundAndNoError(t *testing.T, testKind string, test GetTest, jt
 	}
 }
 
+// Test helper for SYS-REQ-001, SYS-REQ-002, SYS-REQ-003, SYS-REQ-004, SYS-REQ-005, and SYS-REQ-011.
 func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(GetTest) (interface{}, ValueType, error), resultChecker func(GetTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1208,6 +1267,7 @@ func runGetTests(t *testing.T, testKind string, tests []GetTest, runner func(Get
 	}
 }
 
+// Test helper for SYS-REQ-009.
 func setTestCheckFoundAndNoError(t *testing.T, testKind string, test SetTest, value interface{}, err error) bool {
 	isFound := (err != KeyPathNotFoundError)
 	isErr := (err != nil && err != KeyPathNotFoundError)
@@ -1232,6 +1292,7 @@ func setTestCheckFoundAndNoError(t *testing.T, testKind string, test SetTest, va
 	}
 }
 
+// Test helper for SYS-REQ-009.
 func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(SetTest) (interface{}, ValueType, error), resultChecker func(SetTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1258,6 +1319,7 @@ func runSetTests(t *testing.T, testKind string, tests []SetTest, runner func(Set
 	}
 }
 
+// Test helper for SYS-REQ-010.
 func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner func(DeleteTest) (interface{}, []byte), resultChecker func(DeleteTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1293,19 +1355,13 @@ func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner fu
 	}
 }
 
-func TestSet(t *testing.T) {
-	runSetTests(t, "Set()", setTests,
-		func(test SetTest) (value interface{}, dataType ValueType, err error) {
-			value, err = Set([]byte(test.json), []byte(test.setData), test.path...)
-			return
-		},
-		func(test SetTest, value interface{}) (bool, interface{}) {
-			expected := []byte(test.data.(string))
-			return bytes.Equal(expected, value.([]byte)), expected
-		},
-	)
-}
-
+// Verifies: SYS-REQ-010 [example]
+// STK-REQ-005:AC-2:acceptance
+// MCDC SYS-REQ-010: delete_path_is_provided=F, delete_returns_empty_document_without_path=T => TRUE
+// Verifies: SYS-REQ-033 [example]
+// MCDC SYS-REQ-033: delete_path_is_provided=T, delete_target_exists=T, delete_returns_document_without_target=T => TRUE
+// Verifies: SYS-REQ-034 [example]
+// MCDC SYS-REQ-034: delete_path_is_provided=T, delete_target_exists=F, delete_input_is_unusable_for_requested_path=F, delete_preserves_input_when_target_missing=T => TRUE
 func TestDelete(t *testing.T) {
 	runDeleteTests(t, "Delete()", deleteTests,
 		func(test DeleteTest) (interface{}, []byte) {
@@ -1319,6 +1375,13 @@ func TestDelete(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-001 [example]
+// STK-REQ-001:AC-1:acceptance
+// MCDC SYS-REQ-001: addressed_path_exists=F, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=F => TRUE
+// MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=F, key_path_is_provided=T, returns_existing_path_lookup_result=F => TRUE
+// MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=F, returns_existing_path_lookup_result=F => TRUE
+// MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=F => FALSE
+// MCDC SYS-REQ-001: addressed_path_exists=T, json_input_is_well_formed=T, key_path_is_provided=T, returns_existing_path_lookup_result=T => TRUE
 func TestGet(t *testing.T) {
 	runGetTests(t, "Get()", getTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1332,6 +1395,142 @@ func TestGet(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-016 [boundary]
+// MCDC SYS-REQ-016: N/A
+// Verifies: SYS-REQ-017 [boundary]
+// MCDC SYS-REQ-017: N/A
+// Verifies: SYS-REQ-018 [boundary]
+// MCDC SYS-REQ-018: N/A
+// Verifies: SYS-REQ-019 [boundary]
+// MCDC SYS-REQ-019: N/A
+// Verifies: SYS-REQ-020 [boundary]
+// MCDC SYS-REQ-020: N/A
+// Verifies: SYS-REQ-021 [boundary]
+// MCDC SYS-REQ-021: N/A
+// Verifies: SYS-REQ-022 [boundary]
+// MCDC SYS-REQ-022: N/A
+// Verifies: SYS-REQ-023 [boundary]
+// MCDC SYS-REQ-023: N/A
+// Verifies: SYS-REQ-024 [boundary]
+// MCDC SYS-REQ-024: N/A
+// Verifies: SYS-REQ-025 [boundary]
+// MCDC SYS-REQ-025: N/A
+// Verifies: SYS-REQ-026 [boundary]
+// MCDC SYS-REQ-026: N/A
+// Verifies: SYS-REQ-027 [boundary]
+// MCDC SYS-REQ-027: N/A
+func TestGetRequirementSlices(t *testing.T) {
+	t.Run("well formed missing path returns not found", func(t *testing.T) {
+		value, dataType, offset, err := Get([]byte(`{"a":"b"}`), "missing")
+		if !errors.Is(err, KeyPathNotFoundError) {
+			t.Fatalf("expected KeyPathNotFoundError, got %v", err)
+		}
+		if dataType != NotExist || offset != -1 || value != nil {
+			t.Fatalf("expected not-found tuple, got value=%v type=%v offset=%d", value, dataType, offset)
+		}
+	})
+
+	t.Run("incomplete input returns parse error", func(t *testing.T) {
+		if _, _, _, err := Get([]byte(`{"a":`), "a"); err == nil {
+			t.Fatal("expected parse-related error for incomplete input")
+		}
+	})
+
+	t.Run("no key path returns closest root value", func(t *testing.T) {
+		value, dataType, _, err := Get([]byte(`{"a":1}`))
+		if err != nil {
+			t.Fatalf("Get without key path returned error: %v", err)
+		}
+		if dataType != Object || string(value) != `{"a":1}` {
+			t.Fatalf("unexpected root value result: value=%s type=%v", string(value), dataType)
+		}
+	})
+
+	t.Run("empty input with key path returns not found", func(t *testing.T) {
+		_, dataType, offset, err := Get([]byte(""), "a")
+		if !errors.Is(err, KeyPathNotFoundError) {
+			t.Fatalf("expected KeyPathNotFoundError, got %v", err)
+		}
+		if dataType != NotExist || offset != -1 {
+			t.Fatalf("expected empty-input not-found tuple, got type=%v offset=%d", dataType, offset)
+		}
+	})
+
+	t.Run("object key lookup respects current scope", func(t *testing.T) {
+		value, dataType, _, err := Get([]byte(`{"a":{"b":1},"b":2}`), "a", "b")
+		if err != nil {
+			t.Fatalf("nested object lookup returned error: %v", err)
+		}
+		if dataType != Number || string(value) != "1" {
+			t.Fatalf("unexpected nested object lookup result: value=%s type=%v", string(value), dataType)
+		}
+	})
+
+	t.Run("array index lookup returns in-bounds element", func(t *testing.T) {
+		value, dataType, _, err := Get([]byte(`{"a":[{"b":1},"foo",3]}`), "a", "[1]")
+		if err != nil {
+			t.Fatalf("array index lookup returned error: %v", err)
+		}
+		if dataType != String || string(value) != "foo" {
+			t.Fatalf("unexpected array lookup result: value=%s type=%v", string(value), dataType)
+		}
+	})
+
+	t.Run("invalid array index syntax returns not found", func(t *testing.T) {
+		if _, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "["); !errors.Is(err, KeyPathNotFoundError) {
+			t.Fatalf("expected KeyPathNotFoundError for malformed array index, got %v", err)
+		}
+	})
+
+	t.Run("out of bounds array index returns not found", func(t *testing.T) {
+		if _, _, _, err := Get([]byte(`{"a":[1,2]}`), "a", "[9]"); !errors.Is(err, KeyPathNotFoundError) {
+			t.Fatalf("expected KeyPathNotFoundError for out-of-bounds array index, got %v", err)
+		}
+	})
+
+	t.Run("escaped keys are matched after decoding", func(t *testing.T) {
+		value, dataType, _, err := Get([]byte(`{"a\u00B0b":1}`), "a°b")
+		if err != nil {
+			t.Fatalf("escaped-key lookup returned error: %v", err)
+		}
+		if dataType != Number || string(value) != "1" {
+			t.Fatalf("unexpected escaped-key lookup result: value=%s type=%v", string(value), dataType)
+		}
+	})
+
+	t.Run("string results are unquoted but not unescaped", func(t *testing.T) {
+		value, dataType, _, err := Get([]byte(`{"a":"line\nbreak"}`), "a")
+		if err != nil {
+			t.Fatalf("string lookup returned error: %v", err)
+		}
+		if dataType != String || string(value) != `line\nbreak` {
+			t.Fatalf("unexpected raw string result: value=%s type=%v", string(value), dataType)
+		}
+	})
+
+	t.Run("best effort lookup succeeds when malformed data is outside addressed token", func(t *testing.T) {
+		value, dataType, _, err := Get([]byte(`{"a":1]`), "a")
+		if err != nil {
+			t.Fatalf("best-effort lookup returned error: %v", err)
+		}
+		if dataType != Number || string(value) != "1" {
+			t.Fatalf("unexpected best-effort lookup result: value=%s type=%v", string(value), dataType)
+		}
+	})
+
+	t.Run("invalid addressed token shape returns value type error", func(t *testing.T) {
+		if _, _, _, err := Get([]byte(`{"a":u}`), "a"); !errors.Is(err, UnknownValueTypeError) {
+			t.Fatalf("expected UnknownValueTypeError, got %v", err)
+		}
+	})
+}
+
+// Verifies: SYS-REQ-002 [example]
+// STK-REQ-002:AC-1:acceptance
+// MCDC SYS-REQ-002: addressed_value_is_string=F, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=F => TRUE
+// MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=F, returns_getstring_decoded_value=F => TRUE
+// MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=F => FALSE
+// MCDC SYS-REQ-002: addressed_value_is_string=T, raw_string_token_is_well_formed=T, returns_getstring_decoded_value=T => TRUE
 func TestGetString(t *testing.T) {
 	runGetTests(t, "GetString()", getStringTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1345,6 +1544,11 @@ func TestGetString(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-011 [example]
+// STK-REQ-006:AC-1:acceptance
+// MCDC SYS-REQ-011: addressed_value_is_string=F, returns_unsafe_string_view=F => TRUE
+// MCDC SYS-REQ-011: addressed_value_is_string=T, returns_unsafe_string_view=F => FALSE
+// MCDC SYS-REQ-011: addressed_value_is_string=T, returns_unsafe_string_view=T => TRUE
 func TestGetUnsafeString(t *testing.T) {
 	runGetTests(t, "GetUnsafeString()", getUnsafeStringTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1358,6 +1562,12 @@ func TestGetUnsafeString(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-003 [example]
+// STK-REQ-003:AC-1:acceptance
+// MCDC SYS-REQ-003: addressed_value_is_number=F, raw_number_token_is_integer_parseable=T, returns_getint_value=F => TRUE
+// MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=F, returns_getint_value=F => TRUE
+// MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=T, returns_getint_value=F => FALSE
+// MCDC SYS-REQ-003: addressed_value_is_number=T, raw_number_token_is_integer_parseable=T, returns_getint_value=T => TRUE
 func TestGetInt(t *testing.T) {
 	runGetTests(t, "GetInt()", getIntTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1371,6 +1581,12 @@ func TestGetInt(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-004 [example]
+// STK-REQ-003:AC-2:acceptance
+// MCDC SYS-REQ-004: addressed_value_is_number=F, raw_number_token_is_float_parseable=T, returns_getfloat_value=F => TRUE
+// MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=F, returns_getfloat_value=F => TRUE
+// MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=T, returns_getfloat_value=F => FALSE
+// MCDC SYS-REQ-004: addressed_value_is_number=T, raw_number_token_is_float_parseable=T, returns_getfloat_value=T => TRUE
 func TestGetFloat(t *testing.T) {
 	runGetTests(t, "GetFloat()", getFloatTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1384,6 +1600,12 @@ func TestGetFloat(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-005 [example]
+// STK-REQ-003:AC-3:acceptance
+// MCDC SYS-REQ-005: addressed_value_is_boolean=F, raw_boolean_token_is_well_formed=T, returns_getboolean_value=F => TRUE
+// MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=F, returns_getboolean_value=F => TRUE
+// MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=T, returns_getboolean_value=F => FALSE
+// MCDC SYS-REQ-005: addressed_value_is_boolean=T, raw_boolean_token_is_well_formed=T, returns_getboolean_value=T => TRUE
 func TestGetBoolean(t *testing.T) {
 	runGetTests(t, "GetBoolean()", getBoolTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1397,6 +1619,8 @@ func TestGetBoolean(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-001 [example]
+// MCDC SYS-REQ-001: N/A
 func TestGetSlice(t *testing.T) {
 	runGetTests(t, "Get()-for-arrays", getArrayTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
@@ -1410,6 +1634,10 @@ func TestGetSlice(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-006 [example]
+// STK-REQ-004:AC-1:acceptance
+// MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=F => FALSE
+// MCDC SYS-REQ-006: addressed_array_is_empty=F, addressed_array_is_well_formed=T, array_callback_receives_elements_in_order=T => TRUE
 func TestArrayEach(t *testing.T) {
 	mock := []byte(`{"a": { "b":[{"x": 1} ,{"x":2},{ "x":3}, {"x":4} ]}}`)
 	count := 0
@@ -1440,6 +1668,8 @@ func TestArrayEach(t *testing.T) {
 	}, "a", "b")
 }
 
+// Verifies: SYS-REQ-029 [boundary]
+// MCDC SYS-REQ-029: addressed_array_is_well_formed=F, malformed_array_input_returns_error=T => TRUE
 func TestArrayEachWithWhiteSpace(t *testing.T) {
 	// Issue #159
 	count := 0
@@ -1490,6 +1720,8 @@ func TestArrayEachWithWhiteSpace(t *testing.T) {
 	}
 }
 
+// Verifies: SYS-REQ-028 [boundary]
+// MCDC SYS-REQ-028: addressed_array_is_empty=T, addressed_array_is_well_formed=T, empty_array_produces_no_callbacks=T => TRUE
 func TestArrayEachEmpty(t *testing.T) {
 	funcError := func([]byte, ValueType, int, error) { t.Errorf("Run func not allow") }
 
@@ -1531,6 +1763,7 @@ type keyValueEntry struct {
 	valueType ValueType
 }
 
+// Test helper for SYS-REQ-007.
 func (kv keyValueEntry) String() string {
 	return fmt.Sprintf("[%s: %s (%s)]", kv.key, kv.value, kv.valueType)
 }
@@ -1640,6 +1873,18 @@ var objectEachTests = []ObjectEachTest{
 	},
 }
 
+// Verifies: SYS-REQ-031 [example]
+// MCDC SYS-REQ-031: addressed_object_is_well_formed=F, malformed_object_input_returns_error=T => TRUE
+// Verifies: SYS-REQ-030 [example]
+// MCDC SYS-REQ-030: addressed_object_is_empty=T, addressed_object_is_well_formed=T, empty_object_produces_no_entries=T => TRUE
+// Verifies: SYS-REQ-031 [example]
+// MCDC SYS-REQ-031: addressed_object_is_well_formed=F, malformed_object_input_returns_error=T => TRUE
+// Verifies: SYS-REQ-030 [example]
+// MCDC SYS-REQ-030: addressed_object_is_empty=T, addressed_object_is_well_formed=T, empty_object_produces_no_entries=T => TRUE
+// Verifies: SYS-REQ-007 [example]
+// STK-REQ-004:AC-2:acceptance
+// MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=T, object_callback_receives_entries=F => FALSE
+// MCDC SYS-REQ-007: addressed_object_is_empty=F, addressed_object_is_well_formed=T, object_callback_receives_entries=T => TRUE
 func TestObjectEach(t *testing.T) {
 	for _, test := range objectEachTests {
 		if activeTest != "" && test.desc != activeTest {
@@ -1686,6 +1931,42 @@ func TestObjectEach(t *testing.T) {
 	}
 }
 
+// Verifies: SYS-REQ-032 [boundary]
+// MCDC SYS-REQ-032: addressed_object_is_well_formed=T, object_callback_returns_error=T, object_callback_error_is_returned=T => TRUE
+func TestObjectEachNestedPathAndCallbackError(t *testing.T) {
+	t.Run("nested object path", func(t *testing.T) {
+		var entries []keyValueEntry
+		err := ObjectEach([]byte(`{"outer":{"a":1,"b":true}}`), func(key, value []byte, valueType ValueType, off int) error {
+			entries = append(entries, keyValueEntry{
+				key:       string(key),
+				value:     string(value),
+				valueType: valueType,
+			})
+			return nil
+		}, "outer")
+		if err != nil {
+			t.Fatalf("ObjectEach nested path returned error: %v", err)
+		}
+		expected := []keyValueEntry{
+			{key: "a", value: "1", valueType: Number},
+			{key: "b", value: "true", valueType: Boolean},
+		}
+		if !reflect.DeepEqual(expected, entries) {
+			t.Fatalf("ObjectEach nested path entries mismatch: expected %#v, got %#v", expected, entries)
+		}
+	})
+
+	t.Run("callback error is returned", func(t *testing.T) {
+		sentinel := errors.New("stop iteration")
+		err := ObjectEach([]byte(`{"a":1}`), func(key, value []byte, valueType ValueType, off int) error {
+			return sentinel
+		})
+		if !errors.Is(err, sentinel) {
+			t.Fatalf("ObjectEach callback error mismatch: expected %v, got %v", sentinel, err)
+		}
+	})
+}
+
 var testJson = []byte(`{
 	"name": "Name", 
 	"order": "Order", 
@@ -1715,6 +1996,12 @@ var testJson = []byte(`{
 	"arrString": ["a","b","c"]}
 }`)
 
+// Verifies: SYS-REQ-008 [example]
+// STK-REQ-004:AC-3:acceptance
+// MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => FALSE
+// MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=T, multipath_requests_are_provided=T => TRUE
+// MCDC SYS-REQ-008: eachkey_callback_receives_found_values=F, eachkey_completes_requested_scan=T, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => TRUE
+// MCDC SYS-REQ-008: eachkey_callback_receives_found_values=T, eachkey_completes_requested_scan=F, eachkey_malformed_input_returns_error=F, missing_multipath_request_does_not_emit_callback=F, multipath_requests_are_provided=T => TRUE
 func TestEachKey(t *testing.T) {
 	tc := []struct {
 		path     []string
@@ -1892,6 +2179,7 @@ var parseFloatTest = []ParseTest{
 
 // parseTestCheckNoError checks the error return from Parse*() against the test case expectations.
 // Returns true the test should proceed to checking the actual data returned from Parse*(), or false if the test is finished.
+// Test helper for SYS-REQ-012, SYS-REQ-013, SYS-REQ-014, and SYS-REQ-015.
 func parseTestCheckNoError(t *testing.T, testKind string, test ParseTest, value interface{}, err error) bool {
 	if isErr := (err != nil); test.isErr != isErr {
 		// If the call didn't match the error expectation, fail
@@ -1906,6 +2194,7 @@ func parseTestCheckNoError(t *testing.T, testKind string, test ParseTest, value 
 	}
 }
 
+// Test helper for SYS-REQ-012, SYS-REQ-013, SYS-REQ-014, and SYS-REQ-015.
 func runParseTests(t *testing.T, testKind string, tests []ParseTest, runner func(ParseTest) (interface{}, error), resultChecker func(ParseTest, interface{}) (bool, interface{})) {
 	for _, test := range tests {
 		value, err := runner(test)
@@ -1929,6 +2218,13 @@ func runParseTests(t *testing.T, testKind string, tests []ParseTest, runner func
 	}
 }
 
+// Verifies: SYS-REQ-036 [example]
+// MCDC SYS-REQ-036: raw_boolean_literal_is_valid=F, returns_parseboolean_error=T => TRUE
+// Verifies: SYS-REQ-012 [example]
+// STK-REQ-007:AC-1:acceptance
+// MCDC SYS-REQ-012: raw_boolean_literal_is_valid=F, returns_parseboolean_value=F => TRUE
+// MCDC SYS-REQ-012: raw_boolean_literal_is_valid=T, returns_parseboolean_value=F => FALSE
+// MCDC SYS-REQ-012: raw_boolean_literal_is_valid=T, returns_parseboolean_value=T => TRUE
 func TestParseBoolean(t *testing.T) {
 	runParseTests(t, "ParseBoolean()", parseBoolTests,
 		func(test ParseTest) (value interface{}, err error) {
@@ -1941,6 +2237,13 @@ func TestParseBoolean(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-037 [example]
+// MCDC SYS-REQ-037: raw_float_token_is_well_formed=F, returns_parsefloat_error=T => TRUE
+// Verifies: SYS-REQ-013 [example]
+// STK-REQ-007:AC-2:acceptance
+// MCDC SYS-REQ-013: raw_float_token_is_well_formed=F, returns_parsefloat_value=F => TRUE
+// MCDC SYS-REQ-013: raw_float_token_is_well_formed=T, returns_parsefloat_value=F => FALSE
+// MCDC SYS-REQ-013: raw_float_token_is_well_formed=T, returns_parsefloat_value=T => TRUE
 func TestParseFloat(t *testing.T) {
 	runParseTests(t, "ParseFloat()", parseFloatTest,
 		func(test ParseTest) (value interface{}, err error) {
@@ -1953,11 +2256,78 @@ func TestParseFloat(t *testing.T) {
 	)
 }
 
+// Verifies: SYS-REQ-013 [fuzz]
+// MCDC SYS-REQ-013: N/A
+func TestFuzzParseFloatHarnessCoverage(t *testing.T) {
+	if got := FuzzParseFloat([]byte(`1.25`)); got != 1 {
+		t.Fatalf("expected FuzzParseFloat success path to return 1, got %d", got)
+	}
+	if got := FuzzParseFloat([]byte(`1.2.3`)); got != 0 {
+		t.Fatalf("expected FuzzParseFloat failure path to return 0, got %d", got)
+	}
+}
+
+// Verifies: STK-REQ-001 [boundary]
+// MCDC STK-REQ-001: N/A
+func TestValueTypeString(t *testing.T) {
+	cases := []struct {
+		value    ValueType
+		expected string
+	}{
+		{NotExist, "non-existent"},
+		{String, "string"},
+		{Number, "number"},
+		{Object, "object"},
+		{Array, "array"},
+		{Boolean, "boolean"},
+		{Null, "null"},
+		{Unknown, "unknown"},
+		{ValueType(255), "unknown"},
+	}
+
+	for _, tc := range cases {
+		if got := tc.value.String(); got != tc.expected {
+			t.Fatalf("ValueType(%d).String() = %q, want %q", tc.value, got, tc.expected)
+		}
+	}
+}
+
+// Verifies: STK-REQ-001 [boundary]
+// MCDC STK-REQ-001: N/A
+func TestTokenStart(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected int
+	}{
+		{name: "comma separator", input: `{"a":1,"b":2`, expected: 6},
+		{name: "array separator", input: `[1,2`, expected: 2},
+		{name: "opening object", input: `{"a":1`, expected: 0},
+		{name: "no separator", input: `value`, expected: 0},
+	}
+
+	for _, tc := range cases {
+		if got := tokenStart([]byte(tc.input)); got != tc.expected {
+			t.Fatalf("%s: tokenStart(%q) = %d, want %d", tc.name, tc.input, got, tc.expected)
+		}
+	}
+}
+
 var parseStringTest = []ParseTest{
+	{
+		in:     ``,
+		intype: String,
+		out:    "",
+	},
 	{
 		in:     `\uFF11`,
 		intype: String,
 		out:    "\uFF11",
+	},
+	{
+		in:     `line\nbreak`,
+		intype: String,
+		out:    "line\nbreak",
 	},
 	{
 		in:     `\uFFFF`,
@@ -1965,12 +2335,21 @@ var parseStringTest = []ParseTest{
 		out:    "\uFFFF",
 	},
 	{
+		// \uDF00 is a lone low surrogate: per DEFECT-260727-SNGT it now matches
+		// encoding/json (U+FFFD substitution) rather than returning an error.
 		in:     `\uDF00`,
 		intype: String,
-		isErr:  true,
+		out:    "\uFFFD",
 	},
 }
 
+// Verifies: SYS-REQ-038 [example]
+// MCDC SYS-REQ-038: raw_string_literal_is_well_formed=F, returns_parsestring_error=T => TRUE
+// Verifies: SYS-REQ-014 [example]
+// STK-REQ-007:AC-3:acceptance
+// MCDC SYS-REQ-014: raw_string_literal_is_well_formed=F, returns_parsestring_value=F => TRUE
+// MCDC SYS-REQ-014: raw_string_literal_is_well_formed=T, returns_parsestring_value=F => FALSE
+// MCDC SYS-REQ-014: raw_string_literal_is_well_formed=T, returns_parsestring_value=T => TRUE
 func TestParseString(t *testing.T) {
 	runParseTests(t, "ParseString()", parseStringTest,
 		func(test ParseTest) (value interface{}, err error) {
@@ -1981,4 +2360,202 @@ func TestParseString(t *testing.T) {
 			return obtained.(string) == expected, expected
 		},
 	)
+}
+
+// Verifies: SYS-REQ-040 [example]
+// MCDC SYS-REQ-040: raw_int_token_is_well_formed=F, raw_int_token_overflows_int64=F, returns_parseint_malformed_error=T => TRUE
+// Verifies: SYS-REQ-039 [example]
+// MCDC SYS-REQ-039: raw_int_token_overflows_int64=T, returns_parseint_overflow_error=T => TRUE
+// Verifies: SYS-REQ-015 [example]
+// STK-REQ-007:AC-4:acceptance
+// MCDC SYS-REQ-015: raw_int_token_is_well_formed=F, returns_parseint_value=F => TRUE
+// MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=F => FALSE
+// MCDC SYS-REQ-015: raw_int_token_is_well_formed=T, returns_parseint_value=T => TRUE
+func TestParseInt(t *testing.T) {
+	// SYS-REQ-015:malformed_input:nominal
+	//   Witness for the happy-path nominal partition: ParseInt on well-formed
+	//   JSON Number tokens ("0", "-12345", "9223372036854775807") returns the
+	//   expected int64 value with no error.
+	// SYS-REQ-015:malformed_input:negative
+	//   Witness for the malformed-input partition of ParseInt. The "alpha
+	//   suffix", "fractional token", and "empty input" rows below all assert
+	//   MalformedValueError is returned for tokens that do not conform to the
+	//   JSON Number grammar. (Note: the sign-only partition `ParseInt("-")`
+	//   is covered separately by TestParseIntSignOnly_KI2.)
+	tests := []struct {
+		name    string
+		in      string
+		want    int64
+		wantErr error
+	}{
+		{
+			name: "zero",
+			in:   "0",
+			want: 0,
+		},
+		{
+			name: "negative integer",
+			in:   "-12345",
+			want: -12345,
+		},
+		{
+			name: "max int64",
+			in:   "9223372036854775807",
+			want: 9223372036854775807,
+		},
+		{
+			name:    "empty input",
+			in:      "",
+			wantErr: MalformedValueError,
+		},
+		{
+			name:    "fractional token",
+			in:      "1.2",
+			wantErr: MalformedValueError,
+		},
+		{
+			name:    "alpha suffix",
+			in:      "123x",
+			wantErr: MalformedValueError,
+		},
+		{
+			name:    "overflow",
+			in:      "9223372036854775808",
+			wantErr: OverflowIntegerError,
+		},
+		{
+			name:    "underflow",
+			in:      "-9223372036854775809",
+			wantErr: OverflowIntegerError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := ParseInt([]byte(test.in))
+			if test.wantErr != nil {
+				if !errors.Is(err, test.wantErr) {
+					t.Fatalf("ParseInt(%q) error mismatch: expected %v, got %v", test.in, test.wantErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("ParseInt(%q) returned unexpected error: %v", test.in, err)
+			}
+			if got != test.want {
+				t.Fatalf("ParseInt(%q) value mismatch: expected %d, got %d", test.in, test.want, got)
+			}
+		})
+	}
+}
+
+// Verifies: SYS-REQ-015
+func TestParseIntSignOnly_KI2(t *testing.T) {
+	if _, err := ParseInt([]byte("-")); err == nil {
+		t.Fatal(`ParseInt("-") returned nil error, want malformed-value error`)
+	}
+}
+
+// Verifies: SYS-REQ-110
+func TestSetTopLevelArrayAppend_KI4(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     string
+		setValue string
+		key      string
+		want     string
+	}{
+		{name: "append beyond length", data: `[1,2,3]`, setValue: `4`, key: "[5]", want: `[1,2,3,4]`},
+		{name: "append to empty", data: `[]`, setValue: `1`, key: "[0]", want: `[1]`},
+		{name: "replace index zero", data: `[1,2]`, setValue: `9`, key: "[0]", want: `[9,2]`},
+		{name: "replace index one", data: `[1,2]`, setValue: `3`, key: "[1]", want: `[1,3]`},
+		{name: "append cleans trailing comma", data: `[1,2,]`, setValue: `3`, key: "[5]", want: `[1,2,3]`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := Set([]byte(test.data), []byte(test.setValue), test.key)
+			if err != nil {
+				t.Fatalf("Set(%s, %s, %q) returned error: %v", test.data, test.setValue, test.key, err)
+			}
+			if string(got) != test.want {
+				t.Fatalf("Set(%s, %s, %q) = %s, want %s", test.data, test.setValue, test.key, got, test.want)
+			}
+		})
+	}
+}
+
+// Verifies: SYS-REQ-110 [boundary]
+// SYS-REQ-110:boundary:negative
+// SYS-REQ-110:element_type_partition:nominal
+//   Positive/nominal witness for the element_type_partition obligation: Set
+//   with a beyond-length array index on a non-empty nested array of SCALAR
+//   elements must append at end and preserve all existing elements. Before
+//   this fix, the condition `data[subObjOff] == '{'` limited append-behavior
+//   to arrays whose first element was an object; scalar arrays (numbers,
+//   strings, bools, nulls, nested arrays) were silently replaced with
+//   [value], destroying all data.
+func TestSetBeyondLengthScalarArrayPreservesElements_SYS110(t *testing.T) {
+	cases := []struct {
+		name     string
+		data     string
+		keys     []string
+		setValue string
+		want     string
+	}{
+		{"number_array", `{"a":[1,2,3]}`, []string{"a", "[9]"}, `99`, `{"a":[1,2,3,99]}`},
+		{"string_array", `{"a":["x","y"]}`, []string{"a", "[9]"}, `"z"`, `{"a":["x","y","z"]}`},
+		{"bool_array", `{"a":[true,false]}`, []string{"a", "[9]"}, `true`, `{"a":[true,false,true]}`},
+		{"null_array", `{"a":[null,null]}`, []string{"a", "[9]"}, `null`, `{"a":[null,null,null]}`},
+		{"nested_number_array", `{"a":[[1,2]]}`, []string{"a", "[9]"}, `99`, `{"a":[[1,2],99]}`},
+		{"mixed_first_number", `{"a":[1,{"x":2}]}`, []string{"a", "[9]"}, `99`, `{"a":[1,{"x":2},99]}`},
+		{"index_equals_len", `{"a":[1,2,3]}`, []string{"a", "[3]"}, `99`, `{"a":[1,2,3,99]}`},
+		{"index_len_plus_one", `{"a":[1,2,3]}`, []string{"a", "[4]"}, `99`, `{"a":[1,2,3,99]}`},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := Set([]byte(c.data), []byte(c.setValue), c.keys...)
+			if err != nil {
+				t.Fatalf("Set(%s,%v) returned error: %v", c.data, c.keys, err)
+			}
+			if string(got) != c.want {
+				t.Fatalf("Set(%s,%v) = %s; want %s (scalar array elements must be preserved on beyond-length append)", c.data, c.keys, string(got), c.want)
+			}
+		})
+	}
+}
+
+// Verifies: SYS-REQ-029 [malformed_input]
+// SYS-REQ-029:malformed_input:negative
+// SYS-REQ-029:non_array_root_no_callback:negative
+//   Negative witness: ArrayEach on a non-array root value (object, number,
+//   string, bool) must NOT invoke the callback at all and must return an
+//   error. Before this fix, ArrayEach emitted exactly one spurious callback
+//   with the first token of the non-array value (e.g. the object key parsed
+//   as a string element) before returning MalformedArrayError — a caller
+//   performing side effects in the callback observed a bogus invocation.
+func TestArrayEachNonArrayRootNoCallback_SYS029(t *testing.T) {
+	cases := []struct {
+		name string
+		data string
+	}{
+		{"object_root", `{"a":1,"b":2}`},
+		{"number_root", `12345`},
+		{"bool_root", `true`},
+		{"null_root", `null`},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			callbacks := 0
+			_, err := ArrayEach([]byte(c.data), func(v []byte, vt ValueType, o int, e error) {
+				callbacks++
+			})
+			if err == nil {
+				t.Fatalf("ArrayEach(%s) expected error, got nil", c.data)
+			}
+			if callbacks != 0 {
+				t.Fatalf("ArrayEach(%s) emitted %d callback(s) before erroring — non-array root must not invoke callback", c.data, callbacks)
+			}
+		})
+	}
 }

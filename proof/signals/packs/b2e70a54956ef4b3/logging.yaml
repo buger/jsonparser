@@ -1,0 +1,40 @@
+rules:
+  - id: go.logging.secret-key
+    message: Log call includes a secret-like field name; require redaction evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: logging.secret_key
+        provider: opengrep
+        tags: [logging, processes_secrets]
+        obligations: [secrets_not_logged]
+        confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern: klog.$METHOD(..., $KEY, ...)
+          - pattern: log.$METHOD(..., $KEY, ...)
+          - pattern: slog.$METHOD(..., $KEY, ...)
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: '"(?i)(secret|token|password|credential|bearer|cookie)[^"]*"'
+
+  - id: go.logging.fatalf-then-return
+    message: log.Fatalf calls os.Exit; the following return statement is dead code. Use Errorf for graceful error handling.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      proof:
+        signal_id: logging.fatalf_dead_return
+        provider: opengrep
+        tags: [logging, error_handling]
+        obligations: [errors_propagated]
+        confidence: high
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $LOGGER.Fatalf(...)
+              return ...
+          - pattern: |
+              os.Exit(...)
+              return ...

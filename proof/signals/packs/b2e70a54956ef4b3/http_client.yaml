@@ -1,0 +1,212 @@
+rules:
+  - id: go.security.insecure-tls
+    message: TLS certificate verification is disabled.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      proof:
+        signal_id: tls.certificate_validation_disabled
+        provider: opengrep
+        tags: [http_client]
+        obligations: [cert_validation_strict]
+        confidence: high
+    patterns:
+      - pattern: |
+          tls.Config{..., InsecureSkipVerify: true, ...}
+
+  - id: go.http.default-client-call
+    message: Package-level HTTP client call uses the default client; require documented timeout/retry/TLS behavior.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: http.default_client_call
+        provider: opengrep
+        tags: [http_client]
+        obligations: [request_timeout_bounded, external_call_failure_observable]
+        confidence: high
+    pattern-either:
+      - pattern: http.Get(...)
+      - pattern: http.Head(...)
+      - pattern: http.Post(...)
+      - pattern: http.PostForm(...)
+
+  - id: go.http.request-without-context
+    message: HTTP request is constructed without context; require documented deadline/cancellation behavior.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: http.request_without_cancellation
+        provider: opengrep
+        tags: [http_client]
+        obligations: [request_timeout_bounded]
+        confidence: high
+    patterns:
+      - pattern: http.NewRequest(...)
+      - pattern-not-inside: |
+          $REQ, $ERR := http.NewRequest(...)
+          ...
+          $REQ = $REQ.WithContext(...)
+      - pattern-not-inside: |
+          $REQ, $ERR = http.NewRequest(...)
+          ...
+          $REQ = $REQ.WithContext(...)
+
+  - id: go.http.client-api
+    message: HTTP client API use requires external-call timeout, cancellation, TLS, and failure-observation evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: http.client_dependency
+        provider: opengrep
+        tags: [http_client]
+        confidence: medium
+    pattern-either:
+      - pattern: http.Get(...)
+      - pattern: http.Head(...)
+      - pattern: http.Post(...)
+      - pattern: http.PostForm(...)
+      - pattern: http.NewRequest(...)
+      - pattern: http.NewRequestWithContext(...)
+      - pattern: http.DefaultClient
+      - pattern: http.Client{...}
+      - pattern: http.Transport{...}
+      - pattern: http.Request{...}
+
+  - id: go.http.server-api
+    message: HTTP server API use requires listener, request-boundary, timeout, and static-file review evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: http.server_dependency
+        provider: opengrep
+        tags: [http_server]
+        confidence: medium
+    pattern-either:
+      - pattern: http.FileServer(...)
+      - pattern: http.Handle(...)
+      - pattern: http.HandleFunc(...)
+      - pattern: http.ListenAndServe(...)
+      - pattern: http.ListenAndServeTLS(...)
+      - pattern: http.Serve(...)
+      - pattern: http.StripPrefix(...)
+      - pattern: http.NewServeMux(...)
+      - pattern: http.Server{...}
+      - pattern: http.ServeMux{...}
+
+  - id: go.http.client-without-timeout
+    message: http.Client created without explicit Timeout; requests may hang indefinitely.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: http.client_without_timeout
+        provider: opengrep
+        tags: [http_client]
+        obligations: [request_timeout_bounded]
+        confidence: medium
+    patterns:
+      - pattern: '&http.Client{...}'
+      - pattern-not: '&http.Client{..., Timeout: ..., ...}'
+
+  - id: go.http.uses-default-servemux
+    severity: WARNING
+    languages: [go]
+    message: |
+      Library code registers handlers on or serves http.DefaultServeMux
+      (http.Handle / http.HandleFunc / http.ListenAndServe(..., nil)). The
+      DefaultServeMux is process-global; a second init in the same process
+      (re-init after config reload, parallel tests, two pumps configured for
+      different ports) panics with "http: multiple registrations for /metrics".
+      Construct an explicit *http.ServeMux and wire it through a private
+      *http.Server.
+    metadata:
+      proof:
+        signal_id: http.uses_default_servemux
+        provider: opengrep
+        tags: [http_server, process_local]
+        obligations: [request_timeout_bounded]
+        confidence: high
+        notes: |
+          Excludes func main() and TestMain bodies, where mounting on the
+          global mux is an intentional application boundary, plus the standard
+          tests/cmd/main path excludes.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: http.Handle($P, $H)
+          - pattern: http.HandleFunc($P, $H)
+          - pattern: http.ListenAndServe($A, nil)
+          - pattern: http.ListenAndServeTLS($A, $C, $K, nil)
+      - pattern-not-inside: |
+          func TestMain($T *testing.M) {
+            ...
+          }
+      - pattern-not-inside: |
+          func main() {
+            ...
+          }
+
+  - id: go.dial-return-without-close
+    severity: ERROR
+    languages: [go]
+    message: |
+      A net.Conn returned by a custom dialer (closure-shaped, where conn IS
+      the success-return value) writes a setup payload in a loop. The
+      Write's error arm returns `(nil, err)` without first calling
+      `conn.Close()`. The connection (and its socket / FD / TLS session)
+      leaks. Add `defer conn.Close()` immediately after the successful dial,
+      OR an explicit Close() before the return-on-error in the loop.
+    metadata:
+      proof:
+        signal_id: network.dial_return_without_close
+        provider: opengrep
+        tags: [http_client, network_boundary]
+        obligations: [external_call_failure_observable]
+        confidence: high
+        notes: |
+          Restricted to the closure / method shape that returns
+          (conn net.Conn, err error) and writes a setup payload in a range
+          loop whose error arm returns (nil, err). A defer conn.Close()
+          anywhere in the body suppresses the finding (the safe shape),
+          regardless of which dial function produced the conn; this tolerates
+          the dial being nested inside an if/else with an intervening
+          err-check (the real fixed shape).
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              return func($A string) (conn net.Conn, err error) {
+                ...
+                for $K, $V := range $INIT {
+                  if $X, $E2 := conn.Write($V); $E2 != nil {
+                    return nil, $E2
+                  }
+                }
+                ...
+              }
+          - pattern: |
+              func ($R $RT) $M(...) (conn net.Conn, err error) {
+                ...
+                for $K, $V := range $INIT {
+                  if $X, $E2 := conn.Write($V); $E2 != nil {
+                    return nil, $E2
+                  }
+                }
+                ...
+              }
+      - pattern-not-inside: |
+          ...
+          defer conn.Close()
+          ...

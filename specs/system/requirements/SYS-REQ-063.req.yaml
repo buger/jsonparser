@@ -1,0 +1,60 @@
+id: SYS-REQ-063
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !raw_string_has_backslash_at_end | returns_error_for_backslash_at_end
+description: When ParseString encounters a string literal ending with a lone backslash (the escape sequence is incomplete because there is no character after the backslash), the parser shall return MalformedValueError.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: A backslash at the end of a string is the simplest truncated-escape case and exercises the len(in) < 2 guard in unescapeToUTF8.
+tags:
+    - parse
+    - string
+    - escape
+    - edge-case
+variables:
+    - raw_string_has_backslash_at_end
+    - returns_error_for_backslash_at_end
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.957903Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:4e55e840af996538ef8d4c9b822e4924718cf58f1a81f2b856c50d33c83c12e4
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit backslash-at-end rejection requirement for ParseString.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_escape_sequence

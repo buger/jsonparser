@@ -1,0 +1,73 @@
+id: SYS-REQ-113
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy wildcard_path_resolves_to_every_matched_element
+description: EachKeyWildcard, ArrayEachWildcard, and SetWildcard accept [*] as a wildcard array-index component that fans out over every element of the addressed array. EachKeyWildcard invokes the callback once per matched combination in document order; ArrayEachWildcard iterates an array addressed by a path that may end in [*]; SetWildcard applies Set to every concrete path produced by expanding all [*] components. Multiple wildcards compose by cartesian fan-out. If a wildcard addresses a non-array container the parser returns MalformedArrayError; an empty matched array is a no-op (SetWildcard returns data unchanged, EachKeyWildcard invokes no callback).
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: v1.4.0 introduces [*] wildcard path components so library users can fan out over array elements without pre-walking the JSON; the contract must be explicit so future refactors preserve document order, multi-wildcard composition, and the no-panic-on-non-array guarantee.
+tags:
+    - wildcard
+    - path
+    - array
+    - each_key
+    - set
+    - nominal
+    - boundary
+    - malformed_input
+variables:
+    - wildcard_path_resolves_to_every_matched_element
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - wildcard_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-28T08:49:16.607341Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:be77d56d8eb7059b17e4147519d1c24656b3051d67e51936292424183de5004b
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-28T08:49:36Z"
+        comment: 'v1.4.0 added in CHG-260728-RKTS: container length accessors, wildcard path support, JSONPath compiled paths. Traced via source-native // SYS-REQ-xxx annotations; obligation hazards graded; witnesses in len_uint_test.go, wildcard_test.go, path_compiler_test.go.'
+        fingerprint: sha256:2d08a80ac370b6871ff7feb7886a3abdea925406da9966695bbc523e29e6f89b
+        ai_generated: false
+        motivation:
+            kind: chg
+            ref: CHG-260728-RKTS
+history:
+    created_by: human:cli
+    created_at: "2026-07-28T08:29:10Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-28T08:49:36Z"
+obligation_checklist:
+    - nominal
+    - boundary
+    - malformed_input
+obligation_hazards:
+    - class: nominal
+      worst_case: EachKeyWildcard/SetWildcard emit callbacks or apply mutations in non-document order, or skip matched elements / emit extra callbacks, breaking deterministic fan-out that downstream callers rely on.
+      severity: medium
+    - class: boundary
+      worst_case: A [*] component matching an empty array regresses to invoke the callback once with a stale value, or SetWildcard corrupts the document on the empty-match no-op path; multi-wildcard composition drops one branch of the cartesian product.
+      severity: high
+    - class: malformed_input
+      worst_case: A [*] component addressing a non-array container (object, scalar) is not rejected with MalformedArrayError and instead panics, silently skips, or mutates an unaddressed sibling; nested malformed JSON inside a matched element propagates incorrectly to the caller.
+      severity: high
+verification_state: passing

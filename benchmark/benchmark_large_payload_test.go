@@ -1,7 +1,7 @@
 /*
-   Each test should process 24kb json record (based on Discourse API)
-   It should read 2 arrays, and for each item in array get few fields.
-   Basically it means processing full JSON file.
+Each test should process 24kb json record (based on Discourse API)
+It should read 2 arrays, and for each item in array get few fields.
+Basically it means processing full JSON file.
 */
 package benchmark
 
@@ -21,6 +21,13 @@ import (
 /*
    github.com/buger/jsonparser
 */
+// Verifies: STK-REQ-001
+// MCDC STK-REQ-001: N/A
+// Verifies: STK-REQ-003
+// MCDC STK-REQ-003: N/A
+// Verifies: STK-REQ-004
+// MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkJsonParserLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -39,9 +46,16 @@ func BenchmarkJsonParserLarge(b *testing.B) {
 /*
    encoding/json
 */
+// Verifies: STK-REQ-001
+// MCDC STK-REQ-001: N/A
+// Verifies: STK-REQ-003
+// MCDC STK-REQ-003: N/A
+// Verifies: STK-REQ-004
+// MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonStructLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var data LargePayload
+		var data encodingJSONLargePayload
 		json.Unmarshal(largeFixture, &data)
 
 		for _, u := range data.Users {
@@ -54,6 +68,13 @@ func BenchmarkEncodingJsonStructLarge(b *testing.B) {
 	}
 }
 
+// Verifies: STK-REQ-001
+// MCDC STK-REQ-001: N/A
+// Verifies: STK-REQ-003
+// MCDC STK-REQ-003: N/A
+// Verifies: STK-REQ-004
+// MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEncodingJsonInterfaceLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data interface{}
@@ -76,7 +97,13 @@ func BenchmarkEncodingJsonInterfaceLarge(b *testing.B) {
 /*
    github.com/pquerna/ffjson
 */
-
+// Verifies: STK-REQ-001
+// MCDC STK-REQ-001: N/A
+// Verifies: STK-REQ-003
+// MCDC STK-REQ-003: N/A
+// Verifies: STK-REQ-004
+// MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkFFJsonLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var data LargePayload
@@ -95,6 +122,13 @@ func BenchmarkFFJsonLarge(b *testing.B) {
 /*
    github.com/mailru/easyjson
 */
+// Verifies: STK-REQ-001
+// MCDC STK-REQ-001: N/A
+// Verifies: STK-REQ-003
+// MCDC STK-REQ-003: N/A
+// Verifies: STK-REQ-004
+// MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkEasyJsonLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		lexer := &jlexer.Lexer{Data: largeFixture}
@@ -114,6 +148,13 @@ func BenchmarkEasyJsonLarge(b *testing.B) {
 /*
    github.com/a8m/djson
 */
+// Verifies: STK-REQ-001
+// MCDC STK-REQ-001: N/A
+// Verifies: STK-REQ-003
+// MCDC STK-REQ-003: N/A
+// Verifies: STK-REQ-004
+// MCDC STK-REQ-004: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkDjsonLarge(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		m, _ := djson.DecodeObject(largeFixture)

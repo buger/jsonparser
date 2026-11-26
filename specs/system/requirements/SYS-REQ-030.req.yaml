@@ -1,0 +1,60 @@
+id: SYS-REQ-030
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_object_is_well_formed | !addressed_object_is_empty | empty_object_produces_no_entries
+description: When ObjectEach addresses a well-formed empty JSON object, the parser shall emit no entry callbacks.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Empty-object behavior is externally visible and should be reviewed independently from non-empty entry reporting, malformed-input failure, and callback error propagation.
+tags:
+    - decomposition
+    - objecteach
+    - edge-case
+variables:
+    - addressed_object_is_well_formed
+    - addressed_object_is_empty
+    - empty_object_produces_no_entries
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.534807Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:24eda55f7b711f6d192565d03dd48ab164b5a8c9ae995cc281123dfe279013df
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:codex
+    created_at: "2026-04-14T15:45:00Z"
+    last_modified_by: agent:codex
+    last_modified_at: "2026-04-14T15:45:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T15:45:00Z"
+          from: draft
+          to: review
+          reason: Added explicit empty-object behavior for ObjectEach.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

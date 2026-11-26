@@ -1,0 +1,65 @@
+id: SYS-REQ-069
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !set_target_is_nested_in_existing_structure | set_performs_nested_mutation_correctly
+description: When Set is called with a multi-level path where intermediate levels exist but the leaf does not, the parser shall correctly create the missing nested structure and insert the value at the correct location.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Nested mutation through createInsertComponent exercises depth-tracking logic that determines whether to append inside an existing structure or overwrite. This is a distinct behavior from flat key insertion.
+tags:
+    - set
+    - nested
+    - mutation
+variables:
+    - set_target_is_nested_in_existing_structure
+    - set_performs_nested_mutation_correctly
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.035934Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:c41a7a81ec674f6abee224fca70ddbe1bc8c5af1f9e75ee1eb5ba33e544bfa44
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:20Z"
+obligation_checklist:
+    - nested_mutation
+obligation_hazards:
+    - class: nested_mutation
+      worst_case: Set on path [a][b] where a exists but b does not overwrites the sibling [a][c] value or builds malformed JSON like {"a":{"b":1}} missing a comma, silently corrupting the document.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit nested-mutation correctness requirement for Set.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nested_mutation

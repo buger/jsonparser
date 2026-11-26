@@ -1,0 +1,58 @@
+id: SYS-REQ-091
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !getstring_input_is_nil | getstring_returns_safe_result_for_nil
+description: When GetString is called with a nil byte slice as input, the parser shall return an empty string and an error or not-found result without panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Nil input must not cause a nil-pointer dereference. GetString delegates to Get, so nil safety must be preserved through the delegation chain.
+tags:
+    - getstring
+    - nil_safety
+variables:
+    - getstring_input_is_nil
+    - getstring_returns_safe_result_for_nil
+traces:
+    satisfies:
+        - STK-REQ-002
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.344095Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:97611f91d07501080553085b4bdb606448b59e5664a22685aa67f1c6e2641638
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:39Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added nil-safety obligation for GetString.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nil_safety

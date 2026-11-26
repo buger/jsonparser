@@ -1,0 +1,60 @@
+id: SYS-REQ-102
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !mutation_input_has_unicode_keys | mutation_handles_unicode_keys_safely
+description: When Set or Delete is called with key paths containing Unicode characters, the parser shall correctly resolve the path and perform the mutation or return a well-defined error without panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: JSON object keys can be arbitrary Unicode strings. Mutation helpers must handle non-ASCII key paths without corrupting the document.
+tags:
+    - set
+    - delete
+    - edge_case
+    - unicode
+variables:
+    - mutation_input_has_unicode_keys
+    - mutation_handles_unicode_keys_safely
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.485942Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:8711cb49b5f40559e56b261c465bbe8691d8faf884d1f61da66ca7a4a43dc796
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:50Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added Unicode key edge case obligation for Set/Delete.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:34Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: edge_case

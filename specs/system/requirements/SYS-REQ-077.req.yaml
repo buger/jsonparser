@@ -1,0 +1,64 @@
+id: SYS-REQ-077
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !getint_addressed_value_is_not_number | returns_getint_type_mismatch_error
+description: When GetInt addresses a value that is not a JSON number (e.g., a string, boolean, object, array, or null), the parser shall return a type-mismatch error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: GetInt has explicit type-checking logic that rejects non-number values. This is behaviorally distinct from successful integer parsing and from malformed-input errors.
+tags:
+    - getint
+    - type-mismatch
+variables:
+    - getint_addressed_value_is_not_number
+    - returns_getint_type_mismatch_error
+traces:
+    satisfies:
+        - STK-REQ-003
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.136901Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:2aa788941b60180d067eb58a72a63bdde7330c2469ee70895332c6e0ec92055c
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:22Z"
+obligation_checklist:
+    - type_mismatch
+obligation_hazards:
+    - class: type_mismatch
+      worst_case: GetInt on a string value like "42" silently returns 42 by accepting the wrapped token, masking the type error and corrupting the caller's numeric schema.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added type-mismatch error requirement for GetInt.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:32Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: type_mismatch

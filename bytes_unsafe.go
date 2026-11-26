@@ -1,6 +1,7 @@
-//go:build !appengine && !appenginevm
-// +build !appengine,!appenginevm
+//go:build (!appengine && !appenginevm && ignore) || !tinygo
+// +build !appengine,!appenginevm,ignore !tinygo
 
+// SYS-REQ-001, SYS-REQ-013, SYS-REQ-014: unsafe build-tag byte utilities
 package jsonparser
 
 import (

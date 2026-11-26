@@ -1,0 +1,60 @@
+id: SYS-REQ-067
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !parsestring_input_is_empty | returns_parsestring_identity_for_empty
+description: When ParseString receives an empty byte slice, the parser shall return an empty Go string without error because an empty string body (content between quotes) is a valid string representation.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Empty string input to ParseString (representing the body of '""') is a valid edge case that should produce an empty Go string, not an error.
+tags:
+    - parse
+    - string
+    - empty
+    - boundary
+variables:
+    - parsestring_input_is_empty
+    - returns_parsestring_identity_for_empty
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.009965Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:282d24cf2984e828c6d87e9b1827f63cc632125544f4ce9cee336d7dd53f9407
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit empty-input behavior for ParseString.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

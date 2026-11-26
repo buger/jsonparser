@@ -1,0 +1,66 @@
+id: SYS-REQ-044
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !tokenEnd_returns_len_data | caller_bounds_checks_tokenEnd_sentinel
+description: When internal helper tokenEnd returns len(data) as a sentinel value indicating no delimiter was found, all callers of tokenEnd shall treat this sentinel as an end-of-input condition and shall not use it as an unchecked array index that could exceed the valid data range.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: 'The root cause of PR #280 was that tokenEnd returns len(data) as a sentinel, and Delete used data[endOffset+tokEnd] without checking whether endOffset+tokEnd >= len(data). This data constraint must be formalized.'
+tags:
+    - sentinel
+    - data-constraint
+    - pr280
+variables:
+    - tokenEnd_returns_len_data
+    - caller_bounds_checks_tokenEnd_sentinel
+traces:
+    satisfies:
+        - STK-REQ-001
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.706881Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:4daa8ac7f43d65357e89b97df2635a010fc5eee4edd2522738ace8e3a2f602a8
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:18Z"
+obligation_checklist:
+    - sentinel_value_boundary
+obligation_hazards:
+    - class: sentinel_value_boundary
+      worst_case: A caller of tokenEnd uses the returned len(data) sentinel as data[end] rather than treating it as EOF (e.g. value classification peeks data[tokenEnd(...)] for the next delimiter), panicking with index-out-of-range.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit sentinel-value boundary requirement for tokenEnd callers.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: sentinel_value_boundary

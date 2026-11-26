@@ -1,0 +1,63 @@
+id: SYS-REQ-011
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_value_is_string | returns_unsafe_string_view
+description: When GetUnsafeString addresses a JSON string value, the parser shall return the addressed raw value bytes mapped directly as a Go string without JSON unescaping.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: GetUnsafeString is explicitly documented as the low-allocation alternative to GetString and needs its own contract coverage.
+tags: []
+variables:
+    - addressed_value_is_string
+    - returns_unsafe_string_view
+traces:
+    satisfies:
+        - STK-REQ-006
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.215867Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:537f998de52976ee4f4ff8621d5930490644d8274c502e60fb0cb90283fecdf6
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:21:50Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:14Z"
+obligation_checklist:
+    - determinism
+obligation_hazards:
+    - class: determinism
+      worst_case: GetUnsafeString returns different raw bytes for identical input across calls, corrupting downstream byte-equality or hash invariants.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:27:00Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T13:23:27Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

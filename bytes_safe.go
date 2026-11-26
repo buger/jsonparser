@@ -1,6 +1,7 @@
-//go:build appengine || appenginevm
-// +build appengine appenginevm
+//go:build appengine || appenginevm || tinygo
+// +build appengine appenginevm tinygo
 
+// SYS-REQ-001, SYS-REQ-013, SYS-REQ-014: safe build-tag byte utilities
 package jsonparser
 
 import (

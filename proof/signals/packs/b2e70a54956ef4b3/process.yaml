@@ -1,0 +1,27 @@
+rules:
+  - id: go.process.exec-without-context
+    message: Subprocess started without context cancellation; require timeout/cancellation behavior or process-local suppression.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: process.exec_without_cancellation
+        provider: opengrep
+        tags: [ipc, process_local]
+        obligations: [external_call_timeout_bounded]
+        confidence: medium
+    pattern: exec.Command(...)
+
+  - id: go.process.exec-api
+    message: Subprocess execution requires process lifetime, argument-boundary, environment, and failure-observation evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: process.dependency
+        provider: opengrep
+        tags: [ipc, process_local]
+        confidence: medium
+    pattern-either:
+      - pattern: exec.Command(...)
+      - pattern: exec.CommandContext(...)

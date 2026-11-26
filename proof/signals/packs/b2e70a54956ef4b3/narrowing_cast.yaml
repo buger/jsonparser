@@ -1,0 +1,41 @@
+# SIG-10 narrowing-cast-unbounded-input -- Go INFO-severity worklist rule.
+#
+# Sibling of data/solidity/narrowing_cast.yaml. Detects integer narrowing
+# conversions (int8/int16/int32, uint8/uint16/uint32) where the source value
+# can exceed the target type's range and silently wrap. The Go language spec
+# defines these conversions as modular truncation, so any unbounded input
+# produces silent data corruption.
+#
+# Note: Go's `int` and `uint` types are platform-width (32 or 64 bits). The
+# narrower conversions below lose range on every platform, which is why the
+# rule targets the fixed-width intN/uintN types and excludes `int(...)` and
+# `uint(...)` (which are widening-to-platform-width on 64-bit hosts).
+#
+# Carries the existing catalog obligation overflow_safety (structural); no new
+# catalog entry.
+# Fixtures: data/go/fixtures/<signal_id>/{positive,negative}/ -- validated by
+# `proof signals validate --signal <id> --strict`.
+rules:
+  - id: go.narrowing-cast.unbounded-input
+    message: Narrowing integer cast on possibly-unbounded input -- reviewer confirms upstream bounds check
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: go.narrowing_cast_unbounded
+        provider: opengrep
+        tags: [casts, overflow]
+        obligations: [overflow_safety]
+        confidence: low
+        notes: |
+          INFO-severity worklist rule (SIG-10). Fires on narrowing integer
+          conversions where the source value can exceed type-max and wrap
+          silently. The reviewer confirms whether the source is bounded by an
+          upstream `if v > math.MaxInt32 { ... }` guard or a saturating helper.
+    pattern-either:
+      - pattern: int32($X)
+      - pattern: int16($X)
+      - pattern: int8($X)
+      - pattern: uint32($X)
+      - pattern: uint16($X)
+      - pattern: uint8($X)

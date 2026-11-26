@@ -1,0 +1,58 @@
+id: SYS-REQ-051
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !set_input_is_truncated | set_returns_error_for_truncated_input
+description: When Set is called on truncated JSON input where the path resolution encounters incomplete structural elements, the parser shall return an error rather than producing corrupt output or panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Set shares the same internalGet code path as Delete. If truncated input can cause Delete to panic, Set is equally vulnerable through the same sentinel-value patterns.
+tags:
+    - set
+    - truncation
+variables:
+    - set_input_is_truncated
+    - set_returns_error_for_truncated_input
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.79389Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:2a3ed40a8543fe3cc67de3edfb2e82d81ee7605d0c22e42a368b2e28e29ff1a5
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit Set truncated-input error requirement.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary

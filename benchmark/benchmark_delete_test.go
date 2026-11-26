@@ -6,6 +6,9 @@ import (
 	"github.com/buger/jsonparser"
 )
 
+// Verifies: STK-REQ-005
+// MCDC STK-REQ-005: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkDeleteSmall(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -15,6 +18,9 @@ func BenchmarkDeleteSmall(b *testing.B) {
 	}
 }
 
+// Verifies: STK-REQ-005
+// MCDC STK-REQ-005: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkDeleteNested(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -24,6 +30,9 @@ func BenchmarkDeleteNested(b *testing.B) {
 	}
 }
 
+// Verifies: STK-REQ-005
+// MCDC STK-REQ-005: N/A
+// reqproof:proptest:skip performance benchmark; measures wall-clock time and allocations, output is non-deterministic and not comparable to an independent reference
 func BenchmarkDeleteLarge(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()

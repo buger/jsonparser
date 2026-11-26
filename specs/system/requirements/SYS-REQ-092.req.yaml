@@ -1,0 +1,59 @@
+id: SYS-REQ-092
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !getstring_input_has_escaped_unicode | getstring_decodes_and_preserves_semantics
+description: When GetString is called on a JSON string containing escaped Unicode sequences (e.g., \u00e9, \uD83D\uDE00), the parser shall decode them to the correct Go string runes, preserving round-trip semantic equivalence with the original Unicode codepoints.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Encoding safety ensures that escaped Unicode in JSON is faithfully decoded to Go strings. This is critical for internationalized payloads.
+tags:
+    - getstring
+    - encoding_safety
+    - unicode
+variables:
+    - getstring_input_has_escaped_unicode
+    - getstring_decodes_and_preserves_semantics
+traces:
+    satisfies:
+        - STK-REQ-002
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.355894Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:e8d7c6be5f2abbc428175e15ce4dfb508e793f8816deed59ea7cb0c006057cef
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:40Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added encoding-safety obligation for GetString.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: encoding_safety

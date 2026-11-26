@@ -1,0 +1,86 @@
+id: SYS-REQ-006
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_array_is_well_formed | addressed_array_is_empty | array_callback_receives_elements_in_order
+description: When ArrayEach addresses a well-formed non-empty JSON array, the parser shall invoke the callback for each addressed array element in encounter order.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Ordered iteration over addressed array contents is a distinct externally visible behavior from empty-array handling and malformed-input handling.
+tags:
+    - decomposition
+    - arrayeach
+    - traversal
+variables:
+    - addressed_array_is_well_formed
+    - addressed_array_is_empty
+    - array_callback_receives_elements_in_order
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.075848Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:1eaf7dbae3f4dcbaa849611c02e538f4d65b87ae034debf4256015eeba0370d5
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T06:53:14Z"
+        comment: 'Re-approved after ArrayEach non-array-root fix (DEFECT-260727-ARR1): root-type guard prevents spurious callback on non-array input.'
+        fingerprint: sha256:45d23e6eb3587670d876d1b2b1ac2b683c7e27b1b71f3d1081d0ce882aedafdb
+        ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-ARR1
+        motivation_history:
+            - kind: defect
+              ref: DEFECT-260727-ARR1
+              rationale: ArrayEach on a non-array root emitted a spurious callback before erroring (DEFECT-260727-ARR1); the ordered-iteration contract on SYS-REQ-006 is affected because the spurious callback violated encounter-order semantics on non-array input. Fixed in parser.go:ArrayEach root-type guard.
+              superseded_at: "2026-07-27T06:53:14Z"
+              superseded_by: human:buger
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:10:56Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T06:53:14Z"
+obligation_checklist:
+    - determinism
+obligation_hazards:
+    - class: determinism
+      worst_case: ArrayEach invokes callbacks in non-deterministic encounter order on identical input, breaking caller-side slice-append or sum accumulation invariants.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:14:56Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-04-14T15:45:00Z"
+          from: review
+          to: review
+          reason: Narrowed ArrayEach success behavior to the non-empty ordered-iteration case.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

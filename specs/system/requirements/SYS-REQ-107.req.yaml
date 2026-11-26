@@ -1,0 +1,61 @@
+id: SYS-REQ-107
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !parse_helper_input_is_nil | parse_helper_returns_safe_result_for_nil
+description: When ParseBoolean, ParseInt, ParseFloat, or ParseString is called with a nil byte slice, the parser shall return a zero value and an error (or empty string for ParseString) without panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Nil input to parse helpers must not cause nil-pointer panics. The helpers must gracefully handle nil as an empty-input variant.
+tags:
+    - parseboolean
+    - parseint
+    - parsefloat
+    - parsestring
+    - nil_safety
+variables:
+    - parse_helper_input_is_nil
+    - parse_helper_returns_safe_result_for_nil
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.547853Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:aa4c7098cdbcc02d2ef701ee995470ba04bbadb2a19151d0533799c026524114
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:50Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added nil-safety obligation for Parse helpers.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:35Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nil_safety

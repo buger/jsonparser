@@ -1,0 +1,58 @@
+id: SYS-REQ-054
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !object_is_truncated_mid_entry | returns_error_for_truncated_object_entry
+description: When ObjectEach encounters an object entry that is truncated (e.g., '{"a":1, "b":' where the second value is incomplete), the parser shall return a parse-related error and shall not panic.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Truncated mid-entry iteration in ObjectEach exercises Get on incomplete value tokens, which may trigger sentinel-value boundary conditions.
+tags:
+    - objecteach
+    - truncation
+variables:
+    - object_is_truncated_mid_entry
+    - returns_error_for_truncated_object_entry
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.837885Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:37c25437a456fca16dfb641e777029593012ca91118a9a25d260733f1dad4c96
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit truncated-mid-entry behavior for ObjectEach.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_mid_element

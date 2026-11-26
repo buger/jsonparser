@@ -1,0 +1,87 @@
+id: SYS-REQ-010
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy delete_path_is_provided | delete_returns_empty_document_without_path
+description: "When Delete is called without a path, the parser shall return an empty document. DeleteFound is the explicit-found variant of Delete: DeleteFound(data, keys...) returns (result, found) where result is the post-deletion document (or the original input when the path is missing) and found is true iff the addressed value was located and removed."
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Delete without a path is a distinct API outcome and should not be bundled with successful deletion, missing-target handling, or malformed-input robustness.
+tags:
+    - decomposition
+    - delete
+    - edge-case
+variables:
+    - delete_path_is_provided
+    - delete_returns_empty_document_without_path
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.203834Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:48869aa415dce9d409117e40ab3bc1df1f38351f9798553d36aeb55fe2971556
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-26T20:26:16Z"
+        comment: Re-approved after parser.go Delete whitespace-cleanup fix (DEFECT-260726-3PSJ). malformed_input obligation attached (high); nominal+negative witnesses in TestDeleteMalformedJSONRegression_SYS_REQ_010. FuzzPathMutation 60s + FuzzJSONStructureAware 30s crash-free post-fix.
+        fingerprint: sha256:329895adb060c250d735fb3c50cf5dd5838f9304c3a47bb5358544c740998700
+        ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260726-3PSJ
+            rationale: parser.go Delete extended to consume any JSON whitespace run before trailing comma (both branches) and remove leading comma for both } and ] close brackets. Four FuzzPathMutation regression seeds lock the discovered shapes. Behavior changed (the bug fix); obligation added to enforce the partition henceforth.
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:15:31Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T20:26:16Z"
+obligation_checklist:
+    - empty_input
+    - malformed_input
+    - nil_safety
+obligation_hazards:
+    - class: empty_input
+      worst_case: Delete with no path returns a non-empty document instead of an empty one, leaking data the caller explicitly asked to erase.
+      severity: low
+    - class: malformed_input
+      worst_case: Delete on a well-formed array/object with whitespace between the deleted element and the trailing comma (or the close bracket) leaves a dangling comma or close-bracket sequence in the output, producing malformed JSON the caller cannot re-parse (DEFECT-260726-3PSJ, found by FuzzPathMutation).
+      severity: high
+    - class: nil_safety
+      worst_case: Delete on nil data panics in nextToken at data[0] instead of returning the empty document, crashing the caller on a nil trust-boundary input.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:16:45Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-04-14T15:45:00Z"
+          from: review
+          to: review
+          reason: Split Delete no-path behavior out from the broader mutation umbrella.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

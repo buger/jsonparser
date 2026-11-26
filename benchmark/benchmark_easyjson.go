@@ -8,6 +8,7 @@ import (
 
 var _ = json.RawMessage{} // suppress unused package warning
 
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_LargePayload(in *jlexer.Lexer, out *LargePayload) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -54,6 +55,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_LargePayload(in *jlex
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_LargePayload(out *jwriter.Writer, in *LargePayload) {
 	out.RawByte('{')
 	first := true
@@ -87,12 +90,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_LargePayload(out *jwr
 	}
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *LargePayload) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_LargePayload(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *LargePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_LargePayload(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_DSTopicsList(in *jlexer.Lexer, out *DSTopicsList) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -133,6 +142,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_DSTopicsList(in *jlex
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_DSTopicsList(out *jwriter.Writer, in *DSTopicsList) {
 	out.RawByte('{')
 	first := true
@@ -162,12 +173,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_DSTopicsList(out *jwr
 	out.String(in.MoreTopicsUrl)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *DSTopicsList) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_DSTopicsList(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *DSTopicsList) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_DSTopicsList(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_DSTopic(in *jlexer.Lexer, out *DSTopic) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -190,6 +207,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_DSTopic(in *jlexer.Le
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_DSTopic(out *jwriter.Writer, in *DSTopic) {
 	out.RawByte('{')
 	first := true
@@ -208,12 +227,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_DSTopic(out *jwriter.
 	out.String(in.Slug)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *DSTopic) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_DSTopic(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *DSTopic) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_DSTopic(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_DSUser(in *jlexer.Lexer, out *DSUser) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -234,6 +259,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_DSUser(in *jlexer.Lex
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_DSUser(out *jwriter.Writer, in *DSUser) {
 	out.RawByte('{')
 	first := true
@@ -246,12 +273,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_DSUser(out *jwriter.W
 	out.String(in.Username)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *DSUser) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_DSUser(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *DSUser) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_DSUser(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_MediumPayload(in *jlexer.Lexer, out *MediumPayload) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -294,6 +327,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_MediumPayload(in *jle
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_MediumPayload(out *jwriter.Writer, in *MediumPayload) {
 	out.RawByte('{')
 	first := true
@@ -326,12 +361,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_MediumPayload(out *jw
 	out.RawByte('}')
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *MediumPayload) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_MediumPayload(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *MediumPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_MediumPayload(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_CBPerson(in *jlexer.Lexer, out *CBPerson) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -374,6 +415,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_CBPerson(in *jlexer.L
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_CBPerson(out *jwriter.Writer, in *CBPerson) {
 	out.RawByte('{')
 	first := true
@@ -410,12 +453,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_CBPerson(out *jwriter
 	}
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBPerson) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_CBPerson(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBPerson) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_CBPerson(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_CBName(in *jlexer.Lexer, out *CBName) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -436,6 +485,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_CBName(in *jlexer.Lex
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_CBName(out *jwriter.Writer, in *CBName) {
 	out.RawByte('{')
 	first := true
@@ -448,12 +499,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_CBName(out *jwriter.W
 	out.String(in.FullName)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBName) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_CBName(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBName) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_CBName(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_CBGithub(in *jlexer.Lexer, out *CBGithub) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -474,6 +531,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_CBGithub(in *jlexer.L
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_CBGithub(out *jwriter.Writer, in *CBGithub) {
 	out.RawByte('{')
 	first := true
@@ -486,12 +545,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_CBGithub(out *jwriter
 	out.Int(in.Followers)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBGithub) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_CBGithub(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBGithub) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_CBGithub(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_CBGravatar(in *jlexer.Lexer, out *CBGravatar) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -530,6 +595,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_CBGravatar(in *jlexer
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_CBGravatar(out *jwriter.Writer, in *CBGravatar) {
 	out.RawByte('{')
 	first := true
@@ -553,12 +620,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_CBGravatar(out *jwrit
 	out.RawByte(']')
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBGravatar) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_CBGravatar(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBGravatar) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_CBGravatar(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_CBAvatar(in *jlexer.Lexer, out *CBAvatar) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -579,6 +652,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_CBAvatar(in *jlexer.L
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_CBAvatar(out *jwriter.Writer, in *CBAvatar) {
 	out.RawByte('{')
 	first := true
@@ -591,12 +666,18 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_CBAvatar(out *jwriter
 	out.String(in.Url)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBAvatar) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_CBAvatar(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *CBAvatar) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_CBAvatar(l, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_decode_github_com_buger_jsonparser_benchmark_SmallPayload(in *jlexer.Lexer, out *SmallPayload) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
@@ -633,6 +714,8 @@ func easyjson_decode_github_com_buger_jsonparser_benchmark_SmallPayload(in *jlex
 	}
 	in.Delim('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func easyjson_encode_github_com_buger_jsonparser_benchmark_SmallPayload(out *jwriter.Writer, in *SmallPayload) {
 	out.RawByte('{')
 	first := true
@@ -693,9 +776,13 @@ func easyjson_encode_github_com_buger_jsonparser_benchmark_SmallPayload(out *jwr
 	out.Int(in.V)
 	out.RawByte('}')
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *SmallPayload) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson_encode_github_com_buger_jsonparser_benchmark_SmallPayload(w, v)
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (v *SmallPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_decode_github_com_buger_jsonparser_benchmark_SmallPayload(l, v)
 }

@@ -1,0 +1,59 @@
+id: SYS-REQ-068
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !set_path_points_beyond_eof | set_returns_error_for_path_beyond_eof
+description: When Set is called with a path that resolves to a location beyond the end of the available data (e.g., setting a deep nested key in a truncated document), the parser shall return an error rather than panicking or producing corrupt output.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Set uses internalGet for path resolution. If the path points beyond available data, the offsets returned may be sentinel values that cause out-of-bounds access in the mutation logic.
+tags:
+    - set
+    - truncation
+    - sentinel
+variables:
+    - set_path_points_beyond_eof
+    - set_returns_error_for_path_beyond_eof
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.022905Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:f3d2063a4358e73c46f4f05c59413f43ef8493c36ea37346a31faf604ac39eb8
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit Set path-beyond-EOF error requirement.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: sentinel_value_boundary

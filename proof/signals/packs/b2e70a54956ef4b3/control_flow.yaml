@@ -1,0 +1,323 @@
+rules:
+  - id: go.loop.increment-from-mutable-config
+    severity: WARNING
+    languages: [go]
+    message: |
+      A for loop uses a struct field as its stride: `for i := 0; i < N; i +=
+      cfg.BatchSize`, OR a shrink-loop uses a parameter as its slice step:
+      `for batchSize < len(s) { s = s[batchSize:] ... }`. When the field /
+      parameter is zero (default-constructed config, missing YAML key,
+      misconfigured caller) the loop hangs the goroutine forever and produces
+      no observable failure. Validate the field at init time and substitute a
+      non-zero default, OR guard the loop with `if cfg.BatchSize == 0 {
+      cfg.BatchSize = N }` immediately before the loop.
+    metadata:
+      proof:
+        signal_id: control_flow.loop_stride_from_config
+        provider: opengrep
+        tags: [error_handling]
+        obligations: [malformed_input, input_size_bounded]
+        confidence: high
+        notes: |
+          The two pattern-not-inside clauses exclude loops immediately
+          preceded by an `if cfg.field == 0 { ... }` zero-default guard.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              for $I := 0; $I < $N; $I += $RECV.$X.$F {
+                ...
+              }
+          - pattern: |
+              for $I := 0; $I < $N; $I += $RECV.$F {
+                ...
+              }
+          - pattern: |
+              for $C < len($S) {
+                $S, $B = $S[$C:], append($B, $S[0:$C:$C])
+              }
+      - pattern-not-inside: |
+          if $RECV.$X.$F == 0 {
+            ...
+          }
+          ...
+          for $I := 0; $I < $N; $I += $RECV.$X.$F {
+            ...
+          }
+      - pattern-not-inside: |
+          if $RECV.$F == 0 {
+            ...
+          }
+          ...
+          for $I := 0; $I < $N; $I += $RECV.$F {
+            ...
+          }
+
+  - id: go.range.mutate-iteratee
+    severity: ERROR
+    languages: [go]
+    message: |
+      The body of `for k, v := range slice` reassigns `slice` itself via
+      `slice = append(slice[:k], slice[k+1:]...)` or via in-place compaction
+      (`copy(slice[k:], slice[k+1:]); slice = slice[:len(slice)-1]`). The Go
+      spec captures the range expression once at loop entry, so deleting
+      element k shifts element k+1 into position k while the loop counter
+      advances past it -- every other matching element is skipped. Iterate
+      backwards, build a fresh result slice, or use slices.DeleteFunc.
+    metadata:
+      proof:
+        signal_id: control_flow.range_mutate_iteratee
+        provider: opengrep
+        tags: [error_handling]
+        obligations: [determinism]
+        confidence: high
+        notes: |
+          The pattern-not clauses exclude the safe shapes where the splice is
+          immediately followed by break or return (a single deletion per loop
+          is not subject to the element-skipping defect).
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              for $K, $V := range $S {
+                ...
+                $S = append($S[:$K], $S[$K+1:]...)
+                ...
+              }
+          - pattern: |
+              for $K := range $S {
+                ...
+                $S = append($S[:$K], $S[$K+1:]...)
+                ...
+              }
+          - pattern: |
+              for $K, $V := range $S {
+                ...
+                copy($S[$K:], $S[$K+1:])
+                ...
+                $S = $S[:len($S)-1]
+                ...
+              }
+      - pattern-not: |
+          for $_ := range $S {
+            ...
+            $S = append($S[:$_], $S[$_+1:]...)
+            ...
+            break
+          }
+      - pattern-not: |
+          for $_ := range $S {
+            ...
+            $S = append($S[:$_], $S[$_+1:]...)
+            ...
+            return $RET
+          }
+      - pattern-not: |
+          for $_ := range $S {
+            ...
+            $S = append($S[:$_], $S[$_+1:]...)
+            ...
+            return
+          }
+      - pattern-not: |
+          for $_, $V := range $S {
+            ...
+            $S = append($S[:$_], $S[$_+1:]...)
+            ...
+            return $RET
+          }
+      - pattern-not: |
+          for $_, $V := range $S {
+            ...
+            $S = append($S[:$_], $S[$_+1:]...)
+            ...
+            return
+          }
+      - pattern-not: |
+          for $_, $V := range $S {
+            ...
+            $S = append($S[:$_], $S[$_+1:]...)
+            ...
+            break
+          }
+      - pattern-not: |
+          for $_, $V := range $S {
+            ...
+            copy($S[$_:], $S[$_+1:])
+            ...
+            $S = $S[:len($S)-1]
+            ...
+            return
+          }
+      - pattern-not: |
+          for $_, $V := range $S {
+            ...
+            copy($S[$_:], $S[$_+1:])
+            ...
+            $S = $S[:len($S)-1]
+            ...
+            return $RET
+          }
+      - pattern-not: |
+          for $_, $V := range $S {
+            ...
+            copy($S[$_:], $S[$_+1:])
+            ...
+            $S = $S[:len($S)-1]
+            ...
+            break
+          }
+
+  - id: go.recursive-call-without-return
+    severity: ERROR
+    languages: [go]
+    message: |
+      A method invokes itself recursively but the result is discarded -- the
+      call is not prefixed with `return` and not captured into a variable.
+      Execution falls through to the original code path after the recursive
+      call completes, so any work performed by the inner call is duplicated
+      (the outer frame then runs the same loop a second time). Idiomatic
+      recursion uses `return r.MethodName(...)`.
+    metadata:
+      proof:
+        signal_id: control_flow.recursive_call_without_return
+        provider: opengrep
+        tags: [error_handling]
+        obligations: [determinism, errors_propagated]
+        confidence: high
+        notes: |
+          Distinct from recursion.unbounded_on_error (which targets sleep-then-
+          recurse stack growth): this rule targets a discarded recursive call
+          whose work is then duplicated by the fall-through. The three
+          pattern-not clauses exclude `return r.M(...)`, `x := r.M(...)`, and
+          `x = r.M(...)` (all safe shapes). The receiver and method
+          metavariables must match, so calls to a different method or a
+          different receiver do not match.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern: |
+          func ($R $T) $M(...) error {
+            ...
+            if $COND {
+              ...
+              $R.$M(...)
+            }
+            ...
+          }
+      - pattern-not: |
+          func ($R $T) $M(...) error {
+            ...
+            if $COND {
+              ...
+              $X := $R.$M(...)
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func ($R $T) $M(...) error {
+            ...
+            if $COND {
+              ...
+              $X = $R.$M(...)
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func ($R $T) $M(...) error {
+            ...
+            if $COND {
+              ...
+              return $R.$M(...)
+              ...
+            }
+            ...
+          }
+
+  - id: go.equal.subset-not-equality
+    severity: WARNING
+    languages: [go]
+    message: |
+      An `Equal` method ranges over one keyed collection with a membership
+      lookup (`if !exists || !v.Equal(other) { return false }`) but never
+      compares the two collections' sizes, so a value that is a strict subset
+      of the other compares as equal. Add a length/size comparison before the
+      loop (`if a.Len() != b.Len() { return false }`).
+    metadata:
+      proof:
+        signal_id: control_flow.equal_subset_not_equality
+        provider: opengrep
+        tags: [error_handling]
+        obligations: [malformed_input]
+        confidence: medium
+        notes: |
+          Anchored on the membership-check loop, required to live inside a method
+          literally named Equal; the pattern-not-inside clause suppresses when a
+          `!=` size guard precedes the loop. Test bodies are excluded.
+    patterns:
+      - pattern: |
+          for $K, $V := range $LHS {
+            ...
+            if !$EXISTS || !$V.Equal($O2) { return false }
+            ...
+          }
+      - pattern-inside: |
+          func ($RECV $RT) Equal($O $OT) bool { ... }
+      - pattern-not-inside: |
+          func ($RECV $RT) Equal($O $OT) bool {
+            ...
+            if $A != $B { ... }
+            ...
+          }
+      - pattern-not-inside: |
+          func $F($T *testing.T) { ... }
+
+  - id: go.predicate.contradictory-bitand
+    severity: WARNING
+    languages: [go]
+    message: |
+      A non-short-circuit bitwise-AND (`&`) joins two boolean predicates
+      (`v.IsZero() & v.Equal(one)`). In Go `&` is only defined on integer-backed
+      types, so this compiles only for constant-time crypto/bignum bool types --
+      where it evaluates BOTH sides with no short-circuit and, for
+      mutually-exclusive predicates (zero vs one, odd vs even), is always false,
+      so the intended input validation is silently dead and never rejects
+      anything. Use `||`/`&&` of the two independent checks.
+    metadata:
+      proof:
+        signal_id: control_flow.contradictory_bitand_predicate
+        provider: opengrep
+        tags: [error_handling]
+        obligations: [malformed_input]
+        confidence: medium
+        notes: |
+          Matches a bitwise `&` (not `&&`, not `||`) between two boolean-predicate
+          method calls from the crypto/bignum family (IsZero / IsOne / Equal /
+          IsOdd / IsEven), on the same OR different receivers. Anchored on the
+          predicate-method names -- NOT arbitrary methods -- so a legitimate integer
+          bitmask of two non-predicate methods (`caps.Flags() & mask.Bits()`) is
+          not flagged. Measured 0-FP across ~1.9M LOC of Go (kubernetes, cosmo,
+          benthos, bento, tyk, math/big, crypto). Test bodies are excluded.
+    patterns:
+      - pattern-either:
+          - pattern: $A.IsZero(...) & $B.Equal(...)
+          - pattern: $A.Equal(...) & $B.IsZero(...)
+          - pattern: $A.IsZero(...) & $B.IsOne(...)
+          - pattern: $A.IsOne(...) & $B.IsZero(...)
+          - pattern: $A.IsOdd(...) & $B.IsEven(...)
+          - pattern: $A.IsEven(...) & $B.IsOdd(...)
+      - pattern-not-inside: |
+          func $F($T *testing.T) { ... }

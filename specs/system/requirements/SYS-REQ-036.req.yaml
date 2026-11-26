@@ -1,0 +1,66 @@
+id: SYS-REQ-036
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy raw_boolean_literal_is_valid | returns_parseboolean_error
+description: When ParseBoolean receives an invalid boolean token, the parser shall return the documented malformed-value error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Invalid-token failure is externally visible and should be specified independently from valid ParseBoolean success behavior.
+tags:
+    - decomposition
+    - parse
+    - boolean
+    - edge-case
+variables:
+    - raw_boolean_literal_is_valid
+    - returns_parseboolean_error
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.608839Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b09a065ebccdbf8f18dc044d390dcf6c707ad5dc568fac05880aab234804eaee
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:codex
+    created_at: "2026-04-14T15:45:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:17Z"
+obligation_checklist:
+    - malformed_input
+obligation_hazards:
+    - class: malformed_input
+      worst_case: ParseBoolean on adversarial input like truN over-reads past the literal check and returns true, misclassifying malformed input as a valid boolean and corrupting downstream control flow.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T15:45:00Z"
+          from: draft
+          to: review
+          reason: Added explicit invalid-token behavior for ParseBoolean.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

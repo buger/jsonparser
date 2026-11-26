@@ -1,0 +1,16 @@
+id: truncated_mid_key
+catalog_version: 1
+category: scenario
+order: 1005
+status: active
+name: truncated_mid_key
+summary: Input ends inside an object key whose string literal is never terminated.
+description: |
+  Covers inputs such as `{"a` where the opening quote of a key is present but
+  stringEnd in parser.go:254 runs off the end of input before finding the
+  closing quote, returning a not-found signal. Get must surface this as a
+  parse error (SYS-REQ-043) rather than continue iterating object entries
+  with an undefined key boundary. The class is modeled separately from
+  truncated_mid_structure because it triggers stringEnd's failure path,
+  not blockEnd's, and a confused return value would let the object walker
+  read past EOF looking for the next ':' separator.

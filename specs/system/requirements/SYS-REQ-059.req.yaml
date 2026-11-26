@@ -1,0 +1,60 @@
+id: SYS-REQ-059
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !raw_int_token_is_at_int64_max_plus_one | returns_overflow_at_int64_max_plus_one
+description: When ParseInt receives an integer token that is exactly one beyond the int64 range (9223372036854775808 for max+1, -9223372036854775809 for min-1), the parser shall return OverflowIntegerError.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: The boundary between valid and overflow is where off-by-one errors hide. The max+1 and min-1 cases must be specified explicitly.
+tags:
+    - parse
+    - int
+    - boundary
+    - overflow
+variables:
+    - raw_int_token_is_at_int64_max_plus_one
+    - returns_overflow_at_int64_max_plus_one
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.905902Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:52db75aaa6aaba6d6453acea1b7ab232174b8885b423f58c4453e14155ac5fa5
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit int64-boundary+1 overflow requirement for ParseInt.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:31Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: boundary

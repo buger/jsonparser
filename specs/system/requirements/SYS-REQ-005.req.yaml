@@ -1,0 +1,58 @@
+id: SYS-REQ-005
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_value_is_boolean | !raw_boolean_token_is_well_formed | returns_getboolean_value
+description: When GetBoolean addresses a well-formed JSON boolean token, the parser shall return the corresponding Go bool value.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: GetBoolean is a public typed helper for callers that expect boolean JSON fields and need explicit error signaling otherwise.
+tags: []
+variables:
+    - addressed_value_is_boolean
+    - raw_boolean_token_is_well_formed
+    - returns_getboolean_value
+traces:
+    satisfies:
+        - STK-REQ-003
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.063812Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:78c99b2667bc19b9e1676df26c486878cafe21d1622d6f0e56cd5c5328d07730
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:10:46Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-04-13T17:14:56Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:14:56Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

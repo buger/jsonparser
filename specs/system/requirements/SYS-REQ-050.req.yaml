@@ -1,0 +1,60 @@
+id: SYS-REQ-050
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !delete_array_input_is_truncated | (delete_returns_original_input_on_truncated_array & delete_completes_without_panic_on_truncated_array)
+description: When Delete is called with an array-element path on input where the array is truncated (e.g., Delete([]byte(`{"a":[1,2`), "a", "[1]")), the parser shall return the original byte payload unchanged and shall not panic.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Array deletion on truncated input exercises the same tokenEnd sentinel pattern as object deletion but through a different code path in Delete (the array branch).
+tags:
+    - delete
+    - array
+    - truncation
+variables:
+    - delete_array_input_is_truncated
+    - delete_returns_original_input_on_truncated_array
+    - delete_completes_without_panic_on_truncated_array
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.781066Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:bdddb061dcc7eb3aa9b7d398a10866528dfd67b190b0a3e9cdf8296566f6328f
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit Delete array-truncation no-panic requirement.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary

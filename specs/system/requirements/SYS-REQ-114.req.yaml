@@ -1,0 +1,79 @@
+id: SYS-REQ-114
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy compiled_jsonpath_resolves_to_same_result_as_equivalent_key_path
+description: ParsePath converts a JSONPath-style string (root $. optionally followed by dot-delimited keys, [N] numeric array-index bracket components, [*] wildcard, and "quoted" keys containing dots or brackets) into the path-component slice accepted by Get/Set/Delete/ArrayEach/EachKey. CompilePath parses the path once and returns a CompiledPath value whose Get/GetString/GetInt/Set/Delete/ArrayEach/EachKey methods behave identically to invoking the equivalent top-level function with the parsed components. ParsePath returns errEmptyPath for an empty input and errMalformedPath for any non-conforming syntax (unbalanced bracket, missing key between dots, control character in quoted key, non-numeric bracket index other than *).
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: v1.4.0 exposes a JSONPath compiler so callers can amortize the cost of parsing a path string across many Get/Set/Delete operations and so external callers can express bracket-index paths without hand-assembling [N] tokens. The contract that CompiledPath methods are observationally equivalent to the equivalent top-level function must be explicit so future refactors do not diverge the compiled and uncompiled code paths.
+tags:
+    - jsonpath
+    - compiler
+    - path
+    - parse
+    - nominal
+    - boundary
+    - malformed_input
+variables:
+    - compiled_jsonpath_resolves_to_same_result_as_equivalent_key_path
+traces:
+    satisfies:
+        - STK-REQ-001
+    verified_by_extra:
+        - path_compiler_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-28T08:49:16.663337Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:14ba6da131a193cf53563d2cd4ad8c2c93413dc5ca79984d63ec61d35d5af606
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-28T09:13:02Z"
+        comment: 'Severity lowered from high to medium on the nominal hazard (consistent with SYS-REQ-112/113 nominal hazards) so high_severity_obligation_without_vector does not require a vector for a non-security-relevant observational-equivalence hazard.'
+        fingerprint: sha256:96f6d855fac27e3abaac0b4f933388d0428367af2641376acfec0b0285b87b3b
+        ai_generated: false
+        motivation:
+            kind: chg
+            ref: CHG-260728-RKTS
+history:
+    created_by: human:cli
+    created_at: "2026-07-28T08:29:25Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-28T09:13:02Z"
+obligation_checklist:
+    - nominal
+    - boundary
+    - malformed_input
+obligation_hazards:
+    - class: nominal
+      worst_case: CompiledPath methods diverge observationally from invoking the equivalent top-level function with the parsed components (different error semantics, different returned offsets, different mutated document shape), breaking the substitution invariant callers rely on.
+      severity: medium
+    - class: boundary
+      worst_case: A root path ("$" or "$.") or empty input drives ParsePath to return a wrong-shaped slice (nil vs empty) or to panic; the root-array-index case ("$[0]") misroutes through the dotted-key parser and returns errMalformedPath for a valid path.
+      severity: medium
+    - class: malformed_input
+      worst_case: An unbalanced bracket, missing key between dots, control character in a quoted key, or non-numeric bracket index other than * is accepted as a parsed component instead of returning errMalformedPath / errUnterminatedKey, producing a path slice that silently fails to resolve downstream or crashes searchKeys.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-07-28T09:13:02Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-28T08:49:36Z comment="v1.4.0 added in CHG-260728-RKTS: container length accessors, wildcard path support, JSONPath compiled paths. Traced via source-native // SYS-REQ-xxx annotations; obligation hazards graded; witnesses in len_uint_test.go, wildcard_test.go, path_compiler_test.go.")'
+          changed_by: human:buger

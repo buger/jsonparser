@@ -1,0 +1,96 @@
+schema_version: 1
+id: DEFECT-260726-3F95
+title: ParseInt("-") returns (0, nil) — silent false-success on sign-only input
+introduced_in: inception
+source:
+    type: audit_finding
+classification:
+    defect_class: missing_validation
+    surface: error_handling
+    severity: low
+    security_relevant: false
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-015
+    added_obligations:
+        - requirement: SYS-REQ-015
+          obligation_class: malformed_input
+    regression_tests:
+        - parser_test.go:TestParseInt
+description: |
+    `ParseInt` (parser.go:1498) delegates to `parseInt` (bytes.go:9). When the
+    input is exactly a sign byte with no following digits (`"-"` or `"+"`-style
+    input where `+` is rejected because it isn't valid JSON but `-` is a valid
+    JSON number prefix), the parser:
+
+      1. strips the leading `-` (bytes.go:15-18), leaving an empty byte slice;
+      2. iterates over the empty slice (zero iterations), so `n` stays `0`;
+      3. falls through to the `if neg` branch (bytes.go:43) and returns
+         `(-0, true, false)` = `(0, nil)`.
+
+    The caller (`GetInt` / any code using `ParseInt` to validate a JSON number
+    token) is told the input parsed successfully with value `0`. This is silent
+    false-success on caller-controlled input: a JSON value of just `-` is
+    malformed (no digits follow the sign) but is reported as a well-formed
+    integer equal to zero.
+
+    Hazard class: this is the same family as the JSON fuzzer's existing
+    `ParseInt` finding — the input partition "sign byte only, no digits" is not
+    covered by the parser's malformed-input branch. The catalog obligation
+    `malformed_input` requires a typed error on this partition; the code
+    returns `(0, nil)` instead.
+
+reproducer:
+    - 'ParseInt([]byte("-")) → (0, nil); want (0, MalformedValueError)'
+    - 'ParseInt([]byte("")) → (0, MalformedValueError) [already correct — empty case is guarded at bytes.go:10-12]'
+    - |
+        Go repro:
+          v, err := jsonparser.ParseInt([]byte("-"))
+          // got:  v == 0, err == nil
+          // want: v == 0, err == jsonparser.MalformedValueError
+affected_requirements_rationale:
+    - SYS-REQ-015 covers ParseInt's contract for well-formed Number tokens.
+    - SYS-REQ-039, SYS-REQ-058, SYS-REQ-064 cover the negative/overflow/empty
+      partitions of integer parsing. The sign-only-no-digits partition is an
+      unspecified sub-case of the malformed-input contract.
+fix_scope: |
+    One-line guard in `parseInt` (bytes.go): after stripping the sign byte,
+    check `len(bytes) == 0` and return `(0, false, false)` so the caller maps
+    it to `MalformedValueError`. Add a row to `TestParseInt` in
+    parser_test.go:2368 covering `ParseInt("-")`. Out of scope for the
+    hazard-sweep pass (not a panic, not a memory hazard); left as tracked debt.
+disposition:
+    status: covered_by_known_issue
+    owner: human:buger
+    known_issues:
+        - KI-2
+    requirements:
+        - SYS-REQ-015
+    evidence:
+        verified_by:
+            - parser_test.go:TestParseInt
+        related_known_issues:
+            - KI-2
+    reviewer: human:buger
+    reviewed_at: "2026-07-26T19:10:00Z"
+    resolution_note: |
+        Tracked as KnownIssue KI-2 (live failure-mode record, release-disposition
+        ship_with_known_issue). The malformed_input obligation is now attached
+        to SYS-REQ-015 (and graded low) so the audit enforces this failure
+        mode henceforth. The existing TestParseInt rows cover every malformed
+        partition EXCEPT the sign-only case, which is the open bug; the
+        witness comment in parser_test.go:TestParseInt makes that scoping
+        explicit so a future contributor cannot mistake coverage.
+related_requirements:
+    - SYS-REQ-015
+    - SYS-REQ-039
+    - SYS-REQ-058
+    - SYS-REQ-064
+history:
+    - at: "2026-07-26T19:01:53Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T19:05:00Z"
+      by: human:buger
+      action: enriched
+      reason: Added repro, fix-scope, and affected-requirements rationale during final hazard sweep.

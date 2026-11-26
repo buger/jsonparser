@@ -1,0 +1,98 @@
+id: SYS-REQ-001
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !json_input_is_well_formed | !key_path_is_provided | !addressed_path_exists | returns_existing_path_lookup_result
+description: When the JSON input is well formed, a key path is provided, and the addressed path exists, the parser shall return the addressed value slice, the corresponding value type classification, the end offset of that value, and no error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: The exported Get API is the fundamental primitive that all typed accessor helpers build on, so successful addressed lookup should be specified independently from not-found, empty-input, incomplete-input, no-key-path behavior, and lower-level path interpretation rules.
+tags: []
+variables:
+    - json_input_is_well_formed
+    - key_path_is_provided
+    - addressed_path_exists
+    - returns_existing_path_lookup_result
+traces:
+    satisfies:
+        - STK-REQ-001
+    verified_by_extra:
+        - parser_error_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:50.902283Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:8db772e89c0b48046445c10a5082f4fe9c8c6e4dd428584beaba084f272e7de0
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T15:21:06Z"
+        comment: 'Final re-approval after L3 strict posture sweep (hazard+obligation+coverage work)'
+        fingerprint: sha256:af8de3c65df6be6169449cc55c1e7a0c6f00e44973c8f8f2097f1bb7aee4fb46
+        ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict sweep complete: hazard worst_cases enumerated, obligation decomposition closed, verification state aligned; requirement intent and obligation semantics unchanged'
+        motivation_history:
+            - kind: unchanged
+              rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T14:36:40Z"
+              superseded_by: human:buger
+            - kind: unchanged
+              rationale: 'L3 strict sweep: obligation decomposition + verification-state alignment completed; requirement content and obligation intent unchanged'
+              superseded_at: "2026-07-26T15:21:06Z"
+              superseded_by: human:buger
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T16:22:41Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T15:21:06Z"
+obligation_checklist:
+    - determinism
+obligation_hazards:
+    - class: determinism
+      worst_case: Get on identical well-formed input returns a different (value,start,end) triple across calls; an offset-math layer downstream computes value[end-start:] past the buffer and slices out of range, panicking the caller.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T16:25:24Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T14:36:40Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T12:44:03Z comment="Re-approved under L3 strict posture; content re-reviewed against current formalization")'
+          changed_by: human:buger
+        - date: "2026-07-26T15:21:06Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T14:36:40Z comment="Re-approved after obligation/verification-state alignment under L3 strict posture")'
+          changed_by: human:buger
+obligation_class: nominal

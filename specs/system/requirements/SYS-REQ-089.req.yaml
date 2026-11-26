@@ -1,0 +1,59 @@
+id: SYS-REQ-089
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !get_input_is_deeply_nested | get_handles_deep_nesting_safely
+description: When Get is called on JSON input with deeply nested structures (e.g., 64+ levels of nesting), the parser shall either return the correct result or a parse error, without panicking or stack-overflowing.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Deeply nested JSON payloads are a known edge case that can cause stack overflows in recursive parsers. The parser must handle them safely.
+tags:
+    - get
+    - edge_case
+    - deep_nesting
+variables:
+    - get_input_is_deeply_nested
+    - get_handles_deep_nesting_safely
+traces:
+    satisfies:
+        - STK-REQ-001
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.316013Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:1f65d7a10328c5fcffd20732779fcfa86abdbc789e487b03c83c756c91ea940c
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:40Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added deep-nesting edge case obligation for Get.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: edge_case

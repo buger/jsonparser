@@ -1,0 +1,81 @@
+id: SYS-REQ-115
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy config_lenient_modes_are_opt_in_and_default_remains_strict
+description: 'When a Config with AllowSingleQuotes=true is provided, the parser shall accept single-quoted strings (delimited by '' instead of ") using the same escape rules as double-quoted strings. When AllowUnknownEscapes=true, unknown escape sequences shall be passed through literally instead of returning an error. The default Config shall remain strict (RFC 8259 only).'
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: v1.5.0 introduces explicit opt-in compatibility modes for common non-RFC JSON emitted by external systems while preserving the strict behavior and API contracts of every existing package-level function.
+tags:
+    - config
+    - lenient
+    - single_quotes
+    - escapes
+    - nominal
+    - malformed_input
+    - encoding_safety
+variables:
+    - config_lenient_modes_are_opt_in_and_default_remains_strict
+traces:
+    satisfies:
+        - STK-REQ-001
+        - STK-REQ-002
+        - STK-REQ-004
+        - STK-REQ-005
+    verified_by_extra:
+        - config_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-28T14:04:02.721878Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:dee70580e1f53e6ddb458bdbc946d81a05e542be1c476a10c5e407df49dd7418
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-28T13:58:53Z"
+        comment: 'v1.5.0: Config + lenient parsing (SYS-REQ-115), streaming ReaderParser (SYS-REQ-116)'
+        fingerprint: sha256:8ef5cd5d456a2f66e3e77280e63ac129f22afa36d4cf448c504f6427c5ee7da2
+        ai_generated: false
+        motivation:
+            kind: chg
+            ref: CHG-260728-H6ER
+history:
+    created_by: agent:codex
+    created_at: "2026-07-28T00:00:00Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-28T13:58:53Z"
+obligation_checklist:
+    - nominal
+    - malformed_input
+    - encoding_safety
+obligation_hazards:
+    - class: nominal
+      worst_case: A Config with AllowSingleQuotes enabled fails to recognize matching single-quoted keys or values, returns incorrect offsets, or lets a quote/bracket inside a single-quoted string terminate the surrounding container early.
+      severity: medium
+    - class: malformed_input
+      worst_case: DefaultConfig or an existing package-level function silently accepts single-quoted input or unknown escapes, weakening the established strict contract for callers that rely on malformed-input rejection.
+      severity: medium
+    - class: encoding_safety
+      worst_case: AllowUnknownEscapes drops or duplicates bytes, consumes a malformed Unicode escape as an unknown escape, or emits a different literal value than the escaped input represents.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-07-28T13:59:12Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive

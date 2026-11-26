@@ -1,0 +1,59 @@
+id: SYS-REQ-031
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy addressed_object_is_well_formed | malformed_object_input_returns_error
+description: When ObjectEach receives malformed or otherwise unusable addressed object input, the parser shall return an error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Malformed-object failure is a distinct observable behavior class and should not be hidden inside entry-reporting or callback-propagation semantics.
+tags:
+    - decomposition
+    - objecteach
+    - edge-case
+variables:
+    - addressed_object_is_well_formed
+    - malformed_object_input_returns_error
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.546985Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:fa3a62c5a47e1bad98b29ff8a91036802c8e1e9c4080fa0abd7b87793c1dde73
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:codex
+    created_at: "2026-04-14T15:45:00Z"
+    last_modified_by: agent:codex
+    last_modified_at: "2026-04-14T15:45:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T15:45:00Z"
+          from: draft
+          to: review
+          reason: Added explicit malformed-input behavior for ObjectEach.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

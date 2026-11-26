@@ -1,0 +1,16 @@
+id: truncated_mid_element
+catalog_version: 1
+category: scenario
+order: 1006
+status: active
+name: truncated_mid_element
+summary: An array element is truncated while ArrayEach is iterating the enclosing array.
+description: |
+  Covers inputs like `[1, {"a":` where the second element is structurally
+  incomplete and ArrayEach must abort iteration cleanly (SYS-REQ-053,
+  SYS-REQ-054). The inner Get call inside the ArrayEach loop returns one of
+  the other sentinels (truncated_at_value_boundary, truncated_mid_structure,
+  or truncated_mid_key) and the iterator must convert that into a propagated
+  error rather than invoking the user callback with byte ranges that cross
+  EOF. This is the iteration-context analog of the singular Get truncation
+  classes and is the bridge to callback_error_propagation.

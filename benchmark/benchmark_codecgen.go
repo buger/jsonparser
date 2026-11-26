@@ -32,6 +32,7 @@ var (
 
 type codecSelfer6617 struct{}
 
+// Benchmark harness support for STK-REQ-004.
 func init() {
 	if codec1978.GenVersion != 10 {
 		_, file, _, _ := runtime.Caller(0)
@@ -42,6 +43,7 @@ func init() {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *SmallPayload) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -276,6 +278,7 @@ func (x *SmallPayload) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *SmallPayload) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -307,6 +310,7 @@ func (x *SmallPayload) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *SmallPayload) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -387,6 +391,7 @@ func (x *SmallPayload) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *SmallPayload) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -554,6 +559,7 @@ func (x *SmallPayload) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBAvatar) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -612,6 +618,7 @@ func (x *CBAvatar) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBAvatar) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -643,6 +650,7 @@ func (x *CBAvatar) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBAvatar) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -675,6 +683,7 @@ func (x *CBAvatar) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBAvatar) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -714,6 +723,7 @@ func (x *CBAvatar) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGravatar) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -772,6 +782,7 @@ func (x *CBGravatar) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGravatar) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -803,6 +814,7 @@ func (x *CBGravatar) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGravatar) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -838,6 +850,7 @@ func (x *CBGravatar) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGravatar) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -880,6 +893,7 @@ func (x *CBGravatar) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGithub) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -930,6 +944,7 @@ func (x *CBGithub) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGithub) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -961,6 +976,7 @@ func (x *CBGithub) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGithub) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -993,6 +1009,7 @@ func (x *CBGithub) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBGithub) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1032,6 +1049,7 @@ func (x *CBGithub) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBName) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -1090,6 +1108,7 @@ func (x *CBName) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBName) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1121,6 +1140,7 @@ func (x *CBName) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBName) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1153,6 +1173,7 @@ func (x *CBName) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBName) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1192,6 +1213,7 @@ func (x *CBName) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBPerson) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -1331,6 +1353,7 @@ func (x *CBPerson) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBPerson) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1362,6 +1385,7 @@ func (x *CBPerson) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBPerson) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1424,6 +1448,7 @@ func (x *CBPerson) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *CBPerson) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1513,6 +1538,7 @@ func (x *CBPerson) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *MediumPayload) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -1607,6 +1633,7 @@ func (x *MediumPayload) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *MediumPayload) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1638,6 +1665,7 @@ func (x *MediumPayload) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *MediumPayload) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1685,6 +1713,7 @@ func (x *MediumPayload) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *MediumPayload) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1749,6 +1778,7 @@ func (x *MediumPayload) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSUser) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -1807,6 +1837,7 @@ func (x *DSUser) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSUser) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1838,6 +1869,7 @@ func (x *DSUser) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSUser) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1870,6 +1902,7 @@ func (x *DSUser) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSUser) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -1909,6 +1942,7 @@ func (x *DSUser) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopic) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -1986,6 +2020,7 @@ func (x *DSTopic) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopic) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2017,6 +2052,7 @@ func (x *DSTopic) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopic) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2055,6 +2091,7 @@ func (x *DSTopic) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopic) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2110,6 +2147,7 @@ func (x *DSTopic) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopicsList) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -2195,6 +2233,7 @@ func (x *DSTopicsList) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopicsList) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2226,6 +2265,7 @@ func (x *DSTopicsList) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopicsList) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2267,6 +2307,7 @@ func (x *DSTopicsList) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *DSTopicsList) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2325,6 +2366,7 @@ func (x *DSTopicsList) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *LargePayload) CodecEncodeSelf(e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -2419,6 +2461,7 @@ func (x *LargePayload) CodecEncodeSelf(e *codec1978.Encoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *LargePayload) CodecDecodeSelf(d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2450,6 +2493,7 @@ func (x *LargePayload) CodecDecodeSelf(d *codec1978.Decoder) {
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *LargePayload) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2497,6 +2541,7 @@ func (x *LargePayload) codecDecodeSelfFromMap(l int, d *codec1978.Decoder) {
 	r.ReadMapEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x *LargePayload) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2561,6 +2606,7 @@ func (x *LargePayload) codecDecodeSelfFromArray(l int, d *codec1978.Decoder) {
 	r.ReadArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x codecSelfer6617) encSlicePtrtoCBAvatar(v []*CBAvatar, e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -2577,6 +2623,7 @@ func (x codecSelfer6617) encSlicePtrtoCBAvatar(v []*CBAvatar, e *codec1978.Encod
 	r.WriteArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x codecSelfer6617) decSlicePtrtoCBAvatar(v *[]*CBAvatar, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2661,6 +2708,7 @@ func (x codecSelfer6617) decSlicePtrtoCBAvatar(v *[]*CBAvatar, d *codec1978.Deco
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x codecSelfer6617) encSlicePtrtoDSTopic(v []*DSTopic, e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -2677,6 +2725,7 @@ func (x codecSelfer6617) encSlicePtrtoDSTopic(v []*DSTopic, e *codec1978.Encoder
 	r.WriteArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x codecSelfer6617) decSlicePtrtoDSTopic(v *[]*DSTopic, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)
@@ -2761,6 +2810,7 @@ func (x codecSelfer6617) decSlicePtrtoDSTopic(v *[]*DSTopic, d *codec1978.Decode
 	}
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x codecSelfer6617) encSlicePtrtoDSUser(v []*DSUser, e *codec1978.Encoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperEncoder(e)
@@ -2777,6 +2827,7 @@ func (x codecSelfer6617) encSlicePtrtoDSUser(v []*DSUser, e *codec1978.Encoder) 
 	r.WriteArrayEnd()
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (x codecSelfer6617) decSlicePtrtoDSUser(v *[]*DSUser, d *codec1978.Decoder) {
 	var h codecSelfer6617
 	z, r := codec1978.GenHelperDecoder(d)

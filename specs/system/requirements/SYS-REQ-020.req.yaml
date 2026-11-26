@@ -1,0 +1,75 @@
+id: SYS-REQ-020
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !path_segment_is_object_key | !segment_is_evaluated_at_current_scope | returns_value_from_current_scope_object_key
+description: When the current path segment is an object key and it is evaluated at the current JSON structural scope, Get shall resolve that segment only against object members in that current scope.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Correct lookup depends on respecting JSON structural scope rather than matching a similarly named key in a sibling or deeper subtree.
+tags:
+    - decomposition
+    - get
+    - scope
+variables:
+    - path_segment_is_object_key
+    - segment_is_evaluated_at_current_scope
+    - returns_value_from_current_scope_object_key
+traces:
+    satisfies:
+        - STK-REQ-001
+    verified_by_extra:
+        - deep_spec_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.410854Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:d727c89e1a696e52a16d0ecd745e417838a4781f08d3cd731113beb87d6c5cc7
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - system_owner
+            - lead_engineer
+        reviewed_at: "2026-07-26T12:44:03Z"
+        comment: 'Re-approved under L3 strict posture; content re-reviewed against current formalization'
+        fingerprint: sha256:7b8fab457b700c721ef43c807fcc4ab2810af0f9256518bd19fb70efdd1d5377
+        ai_generated: false
+        motivation:
+            kind: unchanged
+            rationale: 'L3 strict posture sweep: verification_method schema migration and catalog overlay work; requirement content and obligation intent unchanged'
+history:
+    created_by: human:cli
+    created_at: "2026-04-14T00:00:00Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-26T12:44:03Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit structural-scope behavior for object-key path lookup.
+          changed_by: human:cli
+        - date: "2026-07-26T12:44:03Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="system_owner" reviewer="human:leonidbugaev" at=2026-04-18T10:12:51Z comment="Dogfooding: Get lookup behavior reviewed and complete")'
+          changed_by: human:buger
+        - date: "2026-07-26T13:23:27Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

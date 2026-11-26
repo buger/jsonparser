@@ -1,0 +1,84 @@
+id: SYS-REQ-116
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy reader_parser_provides_incremental_stream_access
+description: 'A ReaderParser shall provide path-based access to JSON data from an io.Reader stream, supporting Get, GetString, and ArrayEach without requiring the entire document to be loaded into memory. The parser shall buffer data incrementally and yield values as they are found.'
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Large JSON documents can exceed available memory even when callers need only one path or need to process array elements sequentially. ReaderParser preserves jsonparser's path-based access model while bounding retained stream data to the current window or value.
+tags:
+    - streaming
+    - io_reader
+    - incremental
+    - nominal
+    - boundary
+    - empty_input
+    - malformed_input
+variables:
+    - reader_parser_provides_incremental_stream_access
+traces:
+    satisfies:
+        - STK-REQ-001
+        - STK-REQ-002
+        - STK-REQ-004
+    verified_by_extra:
+        - reader_parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-28T14:04:02.781943Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:45a36f001b20071e6d6696065e8fcdb8ce368bf810953b0d108143f07a54e00a
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-28T13:58:53Z"
+        comment: 'v1.5.0: Config + lenient parsing (SYS-REQ-115), streaming ReaderParser (SYS-REQ-116)'
+        fingerprint: sha256:21d7aaa8ca526d7b05571b8481504b81aa0bc2ee227cecd5d92a615af42dfb8c
+        ai_generated: false
+        motivation:
+            kind: chg
+            ref: CHG-260728-H6ER
+history:
+    created_by: agent:codex
+    created_at: "2026-07-28T00:00:00Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-28T13:58:53Z"
+obligation_checklist:
+    - nominal
+    - boundary
+    - empty_input
+    - malformed_input
+obligation_hazards:
+    - class: nominal
+      worst_case: ReaderParser returns a different value or ValueType than the byte-slice parser for the same path because incremental matching loses nesting or quote state at a read boundary.
+      severity: medium
+    - class: boundary
+      worst_case: A key, escape sequence, scalar, string, or composite value crossing the sliding-window boundary is truncated, duplicated, or skipped, returning corrupt value bytes or retaining the whole stream.
+      severity: medium
+    - class: empty_input
+      worst_case: An empty or nil reader causes a panic or an unbounded read loop instead of returning the defined not-found or malformed-input result.
+      severity: medium
+    - class: malformed_input
+      worst_case: A truncated string, array, or object is treated as complete and yielded to the caller, or the parser loops forever waiting for a delimiter after stream EOF.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-07-28T13:59:12Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive

@@ -1,0 +1,58 @@
+id: SYS-REQ-087
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !get_called_on_valid_input | get_does_not_mutate_input
+description: When Get is called on a JSON byte slice, the parser shall not mutate the input slice -- the input bytes before and after the call shall be identical. Get is a pure read operation.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Idempotency of read operations means Get must not modify the caller's input buffer. Callers rely on being able to re-read the same input for other keys.
+tags:
+    - get
+    - idempotency
+variables:
+    - get_called_on_valid_input
+    - get_does_not_mutate_input
+traces:
+    satisfies:
+        - STK-REQ-001
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.288911Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ae5994d33a53999fce2fb241bd0937199e1cc2150cfa79d0af2dda72441e3a35
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:39Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added idempotency obligation for Get.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: idempotency

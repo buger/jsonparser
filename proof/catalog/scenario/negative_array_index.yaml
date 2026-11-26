@@ -1,0 +1,16 @@
+id: negative_array_index
+catalog_version: 1
+category: scenario
+order: 1002
+status: active
+name: negative_array_index
+summary: A path segment is an array index expression that is negative or out of range.
+description: |
+  Covers path segments shaped like "[-1]" or "[99]" where the index does not
+  address a real element. Negative array indices are not part of jsonparser's
+  documented path grammar, and an out-of-range positive index has no target;
+  both must resolve to the defined not-found result (SYS-REQ-047) rather than
+  being coerced into an offset into the array body. A violation would let an
+  attacker synthesize an arbitrary byte offset inside nextValue/arrayEach
+  iteration, which is exactly the class of mistake that produced the PR #280
+  panic on sentinel-derived indices.

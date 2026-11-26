@@ -12,6 +12,7 @@ import (
 	fflib "github.com/pquerna/ffjson/fflib/v1"
 )
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBAvatar) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -24,6 +25,8 @@ func (mj *CBAvatar) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBAvatar) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -48,11 +51,13 @@ const (
 
 var ffj_key_CBAvatar_Url = []byte("Url")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBAvatar) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBAvatar) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_CBAvatarbase
@@ -200,6 +205,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBGithub) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -212,6 +218,8 @@ func (mj *CBGithub) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBGithub) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -236,11 +244,13 @@ const (
 
 var ffj_key_CBGithub_Followers = []byte("Followers")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBGithub) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBGithub) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_CBGithubbase
@@ -392,6 +402,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBGravatar) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -404,6 +415,8 @@ func (mj *CBGravatar) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBGravatar) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -452,11 +465,13 @@ const (
 
 var ffj_key_CBGravatar_Avatars = []byte("Avatars")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBGravatar) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBGravatar) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_CBGravatarbase
@@ -652,6 +667,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBName) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -664,6 +680,8 @@ func (mj *CBName) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBName) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -688,11 +706,13 @@ const (
 
 var ffj_key_CBName_FullName = []byte("FullName")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBName) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBName) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_CBNamebase
@@ -840,6 +860,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBPerson) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -852,6 +873,8 @@ func (mj *CBPerson) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *CBPerson) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -924,11 +947,13 @@ var ffj_key_CBPerson_Github = []byte("Github")
 
 var ffj_key_CBPerson_Gravatar = []byte("Gravatar")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBPerson) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *CBPerson) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_CBPersonbase
@@ -1162,6 +1187,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *DSTopic) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -1174,6 +1200,8 @@ func (mj *DSTopic) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *DSTopic) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -1204,11 +1232,13 @@ var ffj_key_DSTopic_Id = []byte("Id")
 
 var ffj_key_DSTopic_Slug = []byte("Slug")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *DSTopic) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *DSTopic) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_DSTopicbase
@@ -1403,6 +1433,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *DSTopicsList) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -1415,6 +1446,8 @@ func (mj *DSTopicsList) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *DSTopicsList) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -1469,11 +1502,13 @@ var ffj_key_DSTopicsList_Topics = []byte("Topics")
 
 var ffj_key_DSTopicsList_MoreTopicsUrl = []byte("MoreTopicsUrl")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *DSTopicsList) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *DSTopicsList) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_DSTopicsListbase
@@ -1712,6 +1747,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *DSUser) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -1724,6 +1760,8 @@ func (mj *DSUser) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *DSUser) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -1748,11 +1786,13 @@ const (
 
 var ffj_key_DSUser_Username = []byte("Username")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *DSUser) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *DSUser) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_DSUserbase
@@ -1900,6 +1940,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *LargePayload) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -1912,6 +1953,8 @@ func (mj *LargePayload) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *LargePayload) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -1978,11 +2021,13 @@ var ffj_key_LargePayload_Users = []byte("Users")
 
 var ffj_key_LargePayload_Topics = []byte("Topics")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *LargePayload) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *LargePayload) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_LargePayloadbase
@@ -2222,6 +2267,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *MediumPayload) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -2234,6 +2280,8 @@ func (mj *MediumPayload) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *MediumPayload) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -2280,11 +2328,13 @@ var ffj_key_MediumPayload_Person = []byte("Person")
 
 var ffj_key_MediumPayload_Company = []byte("Company")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *MediumPayload) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *MediumPayload) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_MediumPayloadbase
@@ -2549,6 +2599,7 @@ done:
 	return nil
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (mj *SmallPayload) MarshalJSON() ([]byte, error) {
 	var buf fflib.Buffer
 	if mj == nil {
@@ -2561,6 +2612,8 @@ func (mj *SmallPayload) MarshalJSON() ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// Benchmark harness support for STK-REQ-004.
 func (mj *SmallPayload) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if mj == nil {
 		buf.WriteString("null")
@@ -2633,11 +2686,13 @@ var ffj_key_SmallPayload_Tz = []byte("Tz")
 
 var ffj_key_SmallPayload_V = []byte("V")
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *SmallPayload) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
 	return uj.UnmarshalJSONFFLexer(fs, fflib.FFParse_map_start)
 }
 
+// Benchmark harness support for STK-REQ-004.
 func (uj *SmallPayload) UnmarshalJSONFFLexer(fs *fflib.FFLexer, state fflib.FFParseState) error {
 	var err error = nil
 	currentKey := ffj_t_SmallPayloadbase

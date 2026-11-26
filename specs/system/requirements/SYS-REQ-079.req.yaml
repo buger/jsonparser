@@ -1,0 +1,64 @@
+id: SYS-REQ-079
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !getboolean_addressed_value_is_partial_literal | returns_getboolean_error_for_partial
+description: When GetBoolean addresses a value that appears to be a partial boolean literal (e.g., the addressed token is "tru" or "fals" due to truncation), the parser shall return an error from the type-classification or ParseBoolean step.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Partial boolean literals can occur when input is truncated at a token boundary. The getType function uses tokenEnd to find the token end, and if the token is partial, it may be classified as Unknown rather than Boolean.
+tags:
+    - getboolean
+    - partial-literal
+variables:
+    - getboolean_addressed_value_is_partial_literal
+    - returns_getboolean_error_for_partial
+traces:
+    satisfies:
+        - STK-REQ-003
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.16302Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:6e47513c4dc817384c10cef0fdab422dba73d0a09c9e36be1a91f81c505e31cd
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:22Z"
+obligation_checklist:
+    - partial_literal
+obligation_hazards:
+    - class: partial_literal
+      worst_case: GetBoolean on an addressed token like tru (3 bytes) over-reads 4 bytes past the literal check in ParseBoolean, panicking with index-out-of-range or returning a wrong bool to the caller.
+      severity: critical
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added partial-literal error requirement for GetBoolean.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:32Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: partial_literal

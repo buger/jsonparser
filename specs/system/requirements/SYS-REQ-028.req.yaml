@@ -1,0 +1,70 @@
+id: SYS-REQ-028
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_array_is_well_formed | !addressed_array_is_empty | empty_array_produces_no_callbacks
+description: When ArrayEach addresses a well-formed empty JSON array, the parser shall emit no callbacks.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Empty-array behavior is externally visible and should be reviewed independently from non-empty iteration and malformed-input failure.
+tags:
+    - decomposition
+    - arrayeach
+    - edge-case
+variables:
+    - addressed_array_is_well_formed
+    - addressed_array_is_empty
+    - empty_array_produces_no_callbacks
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.510921Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:611a0f4ee7e7b4d6201b5ea05fa8c3f570986415bf0769113dbc94896fbf0d1e
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:codex
+    created_at: "2026-04-14T15:45:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:16Z"
+obligation_checklist:
+    - empty_input
+    - nil_safety
+obligation_hazards:
+    - class: empty_input
+      worst_case: ArrayEach on [] emits one spurious callback with a stale element slice, misleading the caller to process a phantom element from a stale buffer.
+      severity: low
+    - class: nil_safety
+      worst_case: ArrayEach on nil data panics in nextToken at data[0] instead of returning without invoking the callback, crashing the caller on a nil trust-boundary input.
+      severity: high
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T15:45:00Z"
+          from: draft
+          to: review
+          reason: Added explicit empty-array behavior for ArrayEach.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:28Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: empty_input

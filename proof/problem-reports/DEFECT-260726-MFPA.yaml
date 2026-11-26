@@ -1,0 +1,102 @@
+schema_version: 1
+id: DEFECT-260726-MFPA
+title: Set with array-index path component under an object parent produces malformed JSON output (silent corruption)
+introduced_in: inception
+source:
+    type: audit_finding
+classification:
+    defect_class: missing_validation
+    surface: data_integrity
+    severity: high
+    security_relevant: false
+hardening:
+    strengthened_requirements:
+        - SYS-REQ-009
+    added_obligations:
+        - requirement: SYS-REQ-009
+          obligation_class: malformed_input
+    regression_tests:
+        - set_spec_test.go:TestSetArrayIndexUnderObjectMalformedJSON_KI3
+description: |
+    When `Set` is called with a key path that contains an array-index
+    component `[N]` whose parent in the addressed JSON is an OBJECT rather
+    than an array, the implementation emits **malformed JSON output** and
+    returns it with a **nil error**. The caller has no signal that the
+    returned bytes cannot be re-parsed by any JSON consumer.
+
+    Reproducer (filed as KI-3, locked by tripwire
+    `set_spec_test.go:TestSetArrayIndexUnderObjectMalformedJSON_KI3`):
+
+      Set(`{"a":{"b":1}}`, `9`, "a", "[5]")     -> `{"a":{"b":1,9}}`   (INVALID)
+      Set(`{"a":{"b":1}}`, `9`, "a", "[0]", "x") -> `{"a":{"b":1,{"x":9}}}` (INVALID)
+      Set(`{"a":1}`,         `9`, "[0]")          -> `{"a":1,9}`         (INVALID)
+
+    Each output is rejected by `encoding/json.Unmarshal` with "invalid
+    character '9' looking for beginning of object key string" or similar.
+
+    Root cause: `createInsertComponent` (parser.go:756) with
+    `isIndex=true, comma=true, object=false` emits only `,<value>` (no
+    quoted object key), so the value is spliced into the object body where
+    JSON requires a `"key":value` pair. `Set` (parser.go:1018-1038) does
+    not reject the cross-type path before invoking
+    `createInsertComponent`. The symmetric case (object-key component under
+    an array parent) is handled by auto-vivification, so the bug is
+    specifically `[N]`-under-object.
+
+    Hazard class: this is the same family as PR #286 (silent data
+    corruption on underspecified `Set` partitions). The partition "path
+    component kind mismatches its parent container kind" was not covered
+    by SYS-REQ-009's fretish. The catalog obligation `malformed_input` is
+    now attached to SYS-REQ-009 so the audit enforces this failure mode
+    henceforth.
+
+reproducer:
+    - 'Set([]byte(`{"a":{"b":1}}`), []byte(`9`), "a", "[5]") -> `{"a":{"b":1,9}}` (invalid JSON), err=nil'
+    - 'Set([]byte(`{"a":1}`), []byte(`9`), "[0]")            -> `{"a":1,9}`         (invalid JSON), err=nil'
+
+fix_scope: |
+    Two viable fixes (one is required, both are improvements):
+      (A) In `parser.go:Set` around lines 1018-1038, add a type-mismatch
+          guard: when the resolved subpath parent is an object and the
+          trailing key starts with `[`, OR the parent is an array and the
+          trailing key does NOT start with `[`, return
+          `KeyPathNotFoundError` (the contract already allows this).
+      (B) In `parser.go:createInsertComponent`, assert that `isIndex`
+          matches the comma/object context and refuse to emit the
+          malformed bytes.
+    Out of scope for the hazard-sweep pass (behavioral change to a public
+    mutation API; needs a design call between silent-reject and
+    auto-coerce). Tracked as KI-3 with `release_disposition:
+    ship_with_known_issue`.
+disposition:
+    status: covered_by_requirement
+    owner: human:buger
+    requirements:
+        - SYS-REQ-009
+    evidence:
+        verified_by:
+            - set_spec_test.go:TestSetAutoCoerce_KI3
+            - set_spec_test.go:TestSetArrayIndexUnderObjectMalformedJSON_KI3
+        related_known_issues:
+            - KI-3
+    reviewer: human:buger
+    reviewed_at: "2026-07-26T19:40:00Z"
+    resolution_note: |
+        FIXED: Set now auto-coerces the container type when a cross-type
+        path is encountered (parser.go:1045-1130). KI-3 status flipped to
+        fixed. The malformed_input obligation on SYS-REQ-009 enforces the
+        no-malformed-output invariant henceforth.
+        observable: PASSES while the bug is present (output fails JSON
+        parse), FAILS the moment a guard lands and Set returns a typed
+        error.
+related_requirements:
+    - SYS-REQ-009
+    - SYS-REQ-110
+history:
+    - at: "2026-07-26T19:37:01Z"
+      by: human:buger
+      action: created
+    - at: "2026-07-26T19:40:00Z"
+      by: human:buger
+      action: enriched
+      reason: Added repro, root-cause, fix-scope, and disposition during final hazard sweep.

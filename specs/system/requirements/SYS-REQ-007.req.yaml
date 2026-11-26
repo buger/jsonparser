@@ -1,0 +1,66 @@
+id: SYS-REQ-007
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_object_is_well_formed | addressed_object_is_empty | object_callback_receives_entries
+description: When ObjectEach addresses a well-formed non-empty JSON object, the parser shall invoke the callback with the correct key, value, and value type tuple for each addressed object entry.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Correct object entry reporting is a distinct externally visible contract from empty-object handling, malformed-input failure, and callback error propagation.
+tags:
+    - decomposition
+    - objecteach
+    - traversal
+variables:
+    - addressed_object_is_well_formed
+    - addressed_object_is_empty
+    - object_callback_receives_entries
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.111821Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:2e5712bda661f70ca2a07e980f58d5b71684ce538ff4e4938be684f06d2f22be
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:10:56Z"
+    last_modified_by: agent:codex
+    last_modified_at: "2026-04-14T15:45:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:14:56Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-04-14T15:45:00Z"
+          from: review
+          to: review
+          reason: Narrowed ObjectEach success behavior to the non-empty entry-reporting case.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

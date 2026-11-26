@@ -1,0 +1,67 @@
+id: SYS-REQ-048
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !delete_input_is_truncated_at_value_boundary | (delete_returns_original_input_on_truncated_value & delete_completes_without_panic_on_truncated_value)
+description: When Delete is called on input that is truncated at a value boundary (the exact PR
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: 'This is the exact bug class from PR #280. Delete calls tokenEnd on truncated input, gets len(data) back, then uses data[endOffset+tokEnd] which panics with index out of range. This specific truncation pattern for Delete must have its own requirement.'
+tags:
+    - pr280
+    - delete
+    - truncation
+    - sentinel
+variables:
+    - delete_input_is_truncated_at_value_boundary
+    - delete_returns_original_input_on_truncated_value
+    - delete_completes_without_panic_on_truncated_value
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.755834Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:2a07d9d2f3ea14ee9abbdc94adfdb893c25fc6e491e665d4085edcaed9a993af
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:19Z"
+obligation_checklist:
+    - truncated_at_value_boundary
+obligation_hazards:
+    - class: truncated_at_value_boundary
+      worst_case: Delete on {"a":1 (the PR-truncation witness) drives internalGet to return stale offsets; the cleanup path slices data[:start] + data[end:] with end > len(data) and panics with slice-out-of-range.
+      severity: critical
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: 'Added explicit Delete truncated-at-value-boundary requirement -- the exact PR #280 bug class.'
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_at_value_boundary

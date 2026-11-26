@@ -1,0 +1,21 @@
+schema_version: proof.evidence_profile.v1
+profile: ki3-set-array-index-under-object-reproducer
+evidence_type: known_issue_tripwire
+component: parser
+requirement: SYS-REQ-009
+requirements:
+    - SYS-REQ-009
+    - SYS-REQ-110
+artifact: set_spec_test.go
+command: go test -v -run TestSetArrayIndexUnderObjectMalformedJSON_KI3 -count=1 ./...
+status: pass
+observed_result: fix_confirmed
+executed_at: "2026-07-29T06:38:07Z"
+input_set:
+    - set_spec_test.go
+    - parser.go
+freshness_hashes:
+    parser.go: sha256:cb017d6e544b9f143da4770702a2885266e68161812976a150d8ec633b909990
+    set_spec_test.go: sha256:9271be3b78f937f02cb206b61cd16cf70670a96363ea9fdf4c0ddd6ee52f755a
+known_issues:
+    - KI-3

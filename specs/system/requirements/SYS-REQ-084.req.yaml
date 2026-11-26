@@ -1,0 +1,65 @@
+id: SYS-REQ-084
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !objecteach_input_is_truncated_mid_structure | returns_error_for_objecteach_truncated_structure
+description: When ObjectEach is called on input truncated mid-structure where the object or a nested structure is not closed, the parser shall return an error without panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: ObjectEach iterates entries by calling Get for each value. Truncated mid-structure input can produce sentinel values from blockEnd that affect iteration.
+tags:
+    - objecteach
+    - truncation
+    - structure
+variables:
+    - objecteach_input_is_truncated_mid_structure
+    - returns_error_for_objecteach_truncated_structure
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.225888Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:f4aee70e8e9a01af010fdf449cd17a535204b49917dedcf0faef7e80fec0c695
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:24Z"
+obligation_checklist:
+    - truncated_mid_structure
+obligation_hazards:
+    - class: truncated_mid_structure
+      worst_case: ObjectEach on {"a":1 (unclosed object) recurses past EOF in findKeyStart; the value-offset read at data[i] panics with index-out-of-range on the truncated input.
+      severity: critical
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added truncated-mid-structure error requirement for ObjectEach.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_mid_structure

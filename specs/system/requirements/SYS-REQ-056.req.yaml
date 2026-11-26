@@ -1,0 +1,66 @@
+id: SYS-REQ-056
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !delete_input_is_truncated_mid_structure | (delete_returns_original_input_on_truncated_structure & delete_completes_without_panic_on_truncated_structure)
+description: When Delete is called on input that is truncated mid-structure (e.g., an object with an unclosed nested object like '{"a":{"b":1'), the parser shall return the original byte payload unchanged and shall not panic.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Mid-structure truncation in Delete exercises both internalGet and findKeyStart with incomplete structural input, which is a distinct truncation pattern from at-value-boundary.
+tags:
+    - delete
+    - truncation
+    - structure
+variables:
+    - delete_input_is_truncated_mid_structure
+    - delete_returns_original_input_on_truncated_structure
+    - delete_completes_without_panic_on_truncated_structure
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.865883Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:e36611af132d6e2aa6d6273b13c38127afb4b5bd6a014cb7e4c3daf79d4460c6
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:20Z"
+obligation_checklist:
+    - truncated_mid_structure
+obligation_hazards:
+    - class: truncated_mid_structure
+      worst_case: Delete on {"a":{"b":1 (unclosed nested object) drives findKeyStart into recursion that over-reads; the cleanup data[prevTok] dereference at parser.go:907 panics with index-out-of-range.
+      severity: critical
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit Delete mid-structure truncation no-panic requirement.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: truncated_mid_structure

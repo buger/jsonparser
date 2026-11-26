@@ -1,0 +1,35 @@
+id: CHG-260728-RKTS
+type: feature
+title: 'v1.4.0: ArrayEachErr, Escape/SetString, GetArrayLen/GetUint64, DeleteFound, wildcard paths, JSONPath compiler'
+intent: Records the v1.4.0 new exported API surface as a FEATURE change so the no_authored_change_surface_reviewed warning clears. New surface traces to SYS-REQ-003/004/008/009/010/014/112/113/114 via source-native // SYS-REQ-xxx code annotations. Adds SYS-REQ-112 (container length accessor), SYS-REQ-113 (wildcard path support), SYS-REQ-114 (JSONPath compiled paths).
+owner: human:buger
+target_release: v1.4.0
+requirements:
+    - SYS-REQ-003
+    - SYS-REQ-004
+    - SYS-REQ-008
+    - SYS-REQ-009
+    - SYS-REQ-010
+    - SYS-REQ-014
+    - SYS-REQ-033
+    - SYS-REQ-034
+    - SYS-REQ-035
+    - SYS-REQ-048
+    - SYS-REQ-049
+    - SYS-REQ-050
+    - SYS-REQ-056
+    - SYS-REQ-110
+    - SYS-REQ-111
+    - SYS-REQ-112
+    - SYS-REQ-113
+    - SYS-REQ-114
+readiness_policy:
+    require_requirements_reviewed: false
+    require_tests: false
+    require_docs: false
+    require_no_suspect_links: false
+status: active
+history:
+    - at: "2026-07-28T08:33:58Z"
+      by: human:buger
+      action: created

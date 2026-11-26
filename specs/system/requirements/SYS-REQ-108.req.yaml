@@ -1,0 +1,58 @@
+id: SYS-REQ-108
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !parsestring_input_has_standard_escapes | parsestring_roundtrip_preserves_semantics
+description: When ParseString is called on a byte slice containing standard JSON escape sequences (backslash-n, backslash-t, double backslash, backslash-solidus, backslash-doublequote, backslash-uXXXX), the decoded Go string shall contain the correct Unicode codepoints such that re-encoding to JSON would produce semantically equivalent escape sequences.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Encoding safety for ParseString ensures that the decode path does not lose information. The decoded string must represent the same semantic content as the original JSON encoding.
+tags:
+    - parsestring
+    - encoding_safety
+variables:
+    - parsestring_input_has_standard_escapes
+    - parsestring_roundtrip_preserves_semantics
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.560343Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:99f490b34d1af3390748daedb1deb3531ebb378abc07cb70ef7b3634e6dd0570
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:50Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added encoding-safety obligation for ParseString.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:35Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: encoding_safety

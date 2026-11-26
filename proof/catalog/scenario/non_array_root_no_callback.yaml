@@ -1,0 +1,20 @@
+id: non_array_root_no_callback
+catalog_version: 1
+category: scenario
+order: 1003
+status: active
+name: non_array_root_no_callback
+summary: An iteration entry point is invoked on a root value whose JSON type is not the expected container; the callback must not fire.
+description: |
+  Covers the partition where ArrayEach (or a sibling iteration API) is
+  invoked on a root value whose JSON type is not an array (object,
+  number, string, boolean, or null) without a key path to dereference
+  into. The previous implementation emitted one spurious callback with
+  the first content token misinterpreted as an array element (e.g. an
+  object key parsed as a string element), THEN returned a malformed-
+  array error — a caller performing side effects in the callback
+  observed a bogus invocation on input that was not an array at all.
+  The contract: if the addressed root is not the expected container
+  type, return the documented error immediately WITHOUT invoking the
+  callback. Discovered by DEFECT-260727-ARR1 (ADHD diverge→critic
+  round on SYS-REQ-029).

@@ -1,0 +1,59 @@
+id: SYS-REQ-109
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !parseint_input_has_edge_case_number | parseint_handles_edge_numbers_safely
+description: When ParseInt is called on edge-case numeric tokens such as negative zero, very long digit strings (100+ digits), or numbers with unusual but valid formatting, the parser shall return a correct int64 value or a well-defined overflow/malformed error without panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Edge-case numeric tokens stress the integer parsing logic and must produce correct results or well-defined errors rather than undefined behavior.
+tags:
+    - parseint
+    - edge_case
+    - large_numbers
+variables:
+    - parseint_input_has_edge_case_number
+    - parseint_handles_edge_numbers_safely
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.574081Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:181d7fd2df6da279a8e1ac14f5cdd9b5ac830f1418240d6460b6f6ccea4c996f
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:51Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added edge-case number obligation for ParseInt.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:35Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: edge_case

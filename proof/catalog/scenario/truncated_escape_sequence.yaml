@@ -1,0 +1,17 @@
+id: truncated_escape_sequence
+catalog_version: 1
+category: scenario
+order: 1007
+status: active
+name: truncated_escape_sequence
+summary: A string literal ends mid-escape, leaving `\` or a partial `\uXXXX` sequence.
+description: |
+  Covers the boundary condition in ParseString / unescapeToUTF8 /
+  decodeUnicodeEscape where a backslash is followed by insufficient bytes
+  (e.g. `\u00` with fewer than four hex digits, or a trailing lone `\`).
+  jsonparser must return MalformedValueError (SYS-REQ-060, SYS-REQ-061,
+  SYS-REQ-062, SYS-REQ-063, SYS-REQ-072) rather than read past the buffer
+  to complete the escape. Because this input is untrusted byte data from
+  the network, an unchecked read would be a classic out-of-bounds disclosure
+  path; the modeled guarantee is that ParseString treats end-of-input inside
+  an escape as a hard error.

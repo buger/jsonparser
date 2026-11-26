@@ -1,0 +1,71 @@
+id: SYS-REQ-112
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_container_is_array_or_object | returns_container_element_count
+description: GetArrayLen returns the number of elements in the addressed JSON array (0 for an empty array), and GetObjectLen returns the number of key-value pairs in the addressed JSON object (0 for an empty object). Both helpers address the container by key path without invoking a caller callback, returning KeyPathNotFoundError when the path is missing and MalformedArrayError / MalformedObjectError when the addressed value is not the expected container type.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Existing ArrayEach/ObjectEach iteration APIs force the caller to provide a callback that runs per element; callers who only need the count pay callback overhead and must carry mutation hazards in the callback closure. A direct length accessor closes the gap as a v1.4.0 exported helper.
+tags:
+    - container_length
+    - array
+    - object
+    - boundary
+    - malformed_input
+variables:
+    - addressed_container_is_array_or_object
+    - returns_container_element_count
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - len_uint_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-28T08:49:16.56134Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ba46abcaeb570dff9ae0ba6e3dbc9a6fddede60b21a54c7b825be4a8d647f6a3
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-28T08:49:36Z"
+        comment: 'v1.4.0 added in CHG-260728-RKTS: container length accessors, wildcard path support, JSONPath compiled paths. Traced via source-native // SYS-REQ-xxx annotations; obligation hazards graded; witnesses in len_uint_test.go, wildcard_test.go, path_compiler_test.go.'
+        fingerprint: sha256:8016fa45a43e9e9393c30f4923f581b88b4ccbe79ecc95cdda11c49ba07cd3de
+        ai_generated: false
+        motivation:
+            kind: chg
+            ref: CHG-260728-RKTS
+history:
+    created_by: human:cli
+    created_at: "2026-07-28T08:28:57Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-28T08:49:36Z"
+obligation_checklist:
+    - nominal
+    - boundary
+    - malformed_input
+obligation_hazards:
+    - class: nominal
+      worst_case: GetArrayLen/GetObjectLen return a count that does not match the actual number of elements/pairs in the addressed container, silently corrupting downstream length-based branching.
+      severity: medium
+    - class: boundary
+      worst_case: An empty addressed array ([]) or object ({}) drives a regression in scanContainerLen that double-counts the closing delimiter or panics on the empty body, inverting the zero-vs-nonzero branch downstream.
+      severity: medium
+    - class: malformed_input
+      worst_case: A non-container addressed value (scalar, mismatched bracket) or a missing path returns a silent zero count or a wrong error type (e.g. nil instead of MalformedArrayError / KeyPathNotFoundError), hiding the lookup failure from the caller.
+      severity: high
+verification_state: passing

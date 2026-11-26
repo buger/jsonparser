@@ -1,0 +1,1087 @@
+rules:
+  - id: go.log.fatal-in-init
+    severity: WARNING
+    languages: [go]
+    message: |
+      log.Fatal / os.Exit called from a non-main constructor or processing function.
+      This aborts the entire process and bypasses caller error handling; return
+      an error instead so the caller can recover.
+    metadata:
+      proof:
+        signal_id: process.log_fatal_in_init
+        provider: opengrep
+        tags: [logging, error_handling]
+        obligations: [errors_propagated]
+        confidence: high
+        notes: |
+          Scoped to library-shaped receiver methods. Excludes func main(),
+          TestMain, tests, cmd/** entry points, and main.go where process exit
+          may be an intentional application boundary.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func ($RECV $T) Init(...) error {
+                ...
+                log.Fatal(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) Init(...) error {
+                ...
+                $L.Fatal(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) Init(...) error {
+                ...
+                log.Fatalf(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) Init(...) error {
+                ...
+                $L.Fatalf(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) WriteData(...) error {
+                ...
+                log.Fatal(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) WriteData(...) error {
+                ...
+                $L.Fatal(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) WriteData(...) error {
+                ...
+                log.Fatalf(...)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) WriteData(...) error {
+                ...
+                $L.Fatalf(...)
+                ...
+              }
+      - pattern-not-inside: |
+          func main() {
+            ...
+          }
+      - pattern-not-inside: |
+          func TestMain($M *testing.M) {
+            ...
+          }
+
+  - id: go.context.dropped-on-floor
+    severity: WARNING
+    languages: [go]
+    message: |
+      Function receives a context.Context parameter but creates a fresh
+      context.Background() / context.TODO() inside the body and uses that
+      instead. Caller deadlines and cancellation can be silently dropped.
+    metadata:
+      proof:
+        signal_id: context.dropped_on_floor
+        provider: opengrep
+        tags: [concurrent, error_propagation]
+        obligations: [cancellation_observed]
+        confidence: medium
+        notes: |
+          Excludes top-level entry points and tests. Detached work that uses
+          context.WithoutCancel(ctx) is not considered this bug shape.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func $F(..., $CTX context.Context, ...) error {
+                ...
+                context.Background()
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) $M(..., $CTX context.Context, ...) error {
+                ...
+                context.Background()
+                ...
+              }
+          - pattern: |
+              func $F(..., $CTX context.Context, ...) error {
+                ...
+                context.TODO()
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) $M(..., $CTX context.Context, ...) error {
+                ...
+                context.TODO()
+                ...
+              }
+      - pattern-not: context.WithoutCancel($CTX)
+      - pattern-not-inside: |
+          func main() {
+            ...
+          }
+      - pattern-not-inside: |
+          func init() {
+            ...
+          }
+
+  - id: go.recursion.unbounded-on-error
+    severity: WARNING
+    languages: [go]
+    message: |
+      Function calls itself recursively after a sleep on the error arm with
+      no retry counter, max-attempt guard, or context-deadline check. Sustained
+      failure can grow the goroutine stack without bound.
+    metadata:
+      proof:
+        signal_id: recursion.unbounded_on_error
+        provider: opengrep
+        tags: [error_handling, concurrent]
+        obligations: [errors_propagated]
+        confidence: medium
+        notes: |
+          Excludes simple bounded-retry and context-Done select-arm shapes.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func ($RECV $T) $M() {
+                ...
+                if $ERR != nil {
+                  ...
+                  time.Sleep(...)
+                  $RECV.$M()
+                  ...
+                }
+                ...
+              }
+          - pattern: |
+              func $F() {
+                ...
+                if $ERR != nil {
+                  ...
+                  time.Sleep(...)
+                  $F()
+                  ...
+                }
+                ...
+              }
+      - pattern-not: |
+          if $N < $MAX {
+            ...
+            time.Sleep(...)
+            $F()
+          }
+      - pattern-not: |
+          if $N >= $MAX {
+            return $ERR
+          }
+      - pattern-not-inside: |
+          select {
+          case <-$CTX.Done():
+            ...
+          }
+
+  - id: go.mapstructure.lenient-decode
+    severity: INFO
+    languages: [go]
+    message: |
+      mapstructure.Decode silently ignores unknown keys in the input map. For
+      configuration parsing this can hide typos; use a DecoderConfig with
+      ErrorUnused: true when unknown keys should fail loudly.
+    metadata:
+      proof:
+        signal_id: deserializer.mapstructure_lenient
+        provider: opengrep
+        tags: [deserializer, structured_data_parser]
+        obligations: [malformed_recovers_or_errors_loudly]
+        confidence: high
+        notes: |
+          INFO severity: mapstructure's default is intentionally lenient and
+          some projects rely on forward-compatible config parsing.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-either:
+          - pattern: mapstructure.Decode($IN, $OUT)
+          - pattern: mapstructure.WeakDecode($IN, $OUT)
+      - pattern-not-inside: |
+          &mapstructure.DecoderConfig{..., ErrorUnused: true, ...}
+
+  - id: go.http.default-transport-mutation
+    severity: WARNING
+    languages: [go]
+    message: |
+      Assignment mutates http.DefaultClient or http.DefaultTransport from
+      non-entrypoint code. These globals are process-wide and can make caller
+      behavior and tests order-dependent.
+    metadata:
+      proof:
+        signal_id: http.default_transport_mutation
+        provider: opengrep
+        tags: [http_client, process_local]
+        obligations: [request_timeout_bounded]
+        confidence: high
+        notes: |
+          Excludes main() and TestMain where process-wide integration setup can
+          be intentional. Library code should prefer a private client/transport.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-either:
+          - pattern: http.DefaultClient.Transport = $X
+          - pattern: http.DefaultClient.Timeout = $X
+          - pattern: http.DefaultClient = $X
+          - pattern: http.DefaultTransport = $X
+      - pattern-not-inside: |
+          func TestMain($T *testing.M) {
+            ...
+          }
+      - pattern-not-inside: |
+          func main() {
+            ...
+          }
+
+  - id: go.backoff.maxelapsed-zero-is-unbounded
+    severity: INFO
+    languages: [go]
+    message: |
+      cenkalti/backoff ExponentialBackOff treats MaxElapsedTime = 0 as retry
+      forever. If unbounded retry is not intended, set a finite duration.
+    metadata:
+      proof:
+        signal_id: backoff.maxelapsed_zero
+        provider: opengrep
+        tags: [error_handling, scheduler]
+        obligations: [external_call_timeout_bounded]
+        confidence: medium
+        notes: |
+          Specific to github.com/cenkalti/backoff v2/v3/v4; other retry
+          libraries can define zero MaxElapsedTime differently.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-either:
+          - pattern: $B.MaxElapsedTime = 0
+          - pattern: 'backoff.ExponentialBackOff{..., MaxElapsedTime: 0, ...}'
+          - pattern: '&backoff.ExponentialBackOff{..., MaxElapsedTime: 0, ...}'
+
+  - id: go.goroutine.no-recover
+    severity: WARNING
+    languages: [go]
+    message: |
+      Loop-backed goroutine launched without a deferred recover at the top of
+      its body. A panic in a long-lived worker goroutine cannot be caught by
+      the launching frame and will crash the process.
+    metadata:
+      proof:
+        signal_id: concurrency.goroutine_no_recover
+        provider: opengrep
+        tags: [concurrent, panic_safety]
+        obligations: [panic_free_input_handling]
+        confidence: medium
+        notes: |
+          WARNING severity is scoped to goroutines containing loops so short
+          helper goroutines and one-shot cancellation waiters are not flagged
+          by default. Teams that require recover on every goroutine can
+          broaden this rule locally.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "examples/**"
+        - "testutil/**"
+        - "internal/awstesting/**"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              go func() {
+                ...
+                for ... {
+                  ...
+                }
+                ...
+              }()
+          - pattern: |
+              go func(...) {
+                ...
+                for ... {
+                  ...
+                }
+                ...
+              }(...)
+      - pattern-not: |
+          go func() {
+            defer func() {
+              if r := recover(); r != nil {
+                ...
+              }
+              ...
+            }()
+            ...
+            for ... {
+              ...
+            }
+            ...
+          }()
+      - pattern-not: |
+          go func(...) {
+            defer func() {
+              if r := recover(); r != nil {
+                ...
+              }
+              ...
+            }()
+            ...
+            for ... {
+              ...
+            }
+            ...
+          }(...)
+
+  - id: go.http.health-handler-unconditional-200
+    severity: INFO
+    languages: [go]
+    message: |
+      HTTP handler appears to return 200 unconditionally. If mounted as a
+      readiness probe, it may report ready before dependencies are reachable.
+    metadata:
+      proof:
+        signal_id: http.health_unconditional_200
+        provider: opengrep
+        tags: [http_server]
+        obligations: [external_call_failure_observable]
+        confidence: low
+        notes: |
+          Suppressed when the 200 is under an if/switch or after an obvious
+          error branch.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func $H($W http.ResponseWriter, $R *http.Request) {
+                ...
+                $W.WriteHeader(http.StatusOK)
+                ...
+              }
+          - pattern: |
+              func ($RECV $T) $H($W http.ResponseWriter, $R *http.Request) {
+                ...
+                $W.WriteHeader(http.StatusOK)
+                ...
+              }
+      - metavariable-regex:
+          metavariable: $H
+          regex: '(?i).*(health|ready|live|readiness|liveness).*'
+      - pattern-not-inside: |
+          if $COND {
+            ...
+            $W.WriteHeader(http.StatusOK)
+            ...
+          }
+      - pattern-not-inside: |
+          switch $V {
+          case $C:
+            ...
+          }
+      - pattern-not: |
+          if $ERR != nil {
+            ...
+            $W.WriteHeader($S)
+            ...
+            return
+          }
+          ...
+          $W.WriteHeader(http.StatusOK)
+
+  - id: go.slice.preallocated-with-continue-on-error
+    severity: INFO
+    languages: [go]
+    message: |
+      Slice is preallocated with len(), filled by indexed assignment, and the
+      loop body can continue on error. That can leave zero-value holes in the
+      result; append to a zero-length slice when sparse output is not intended.
+    metadata:
+      proof:
+        signal_id: slice.preallocated_continue_on_error
+        provider: opengrep
+        tags: [error_handling, panic_safety]
+        obligations: [nil_safety]
+        confidence: medium
+        notes: |
+          May false-positive when the consumer intentionally expects an
+          index-aligned sparse output slice.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-inside: |
+          $S := make([]$T, len($IN))
+          ...
+          for $I, $V := range $IN {
+            ...
+          }
+      - pattern-inside: |
+          for $I, $V := range $IN {
+            ...
+            if $ERR != nil {
+              ...
+              continue
+            }
+            ...
+          }
+      - pattern: $S[$I] = $X
+
+  - id: go.context.zero-timeout
+    severity: WARNING
+    languages: [go]
+    message: |
+      context.WithTimeout / WithDeadline called with a zero or already-passed
+      deadline. This returns an already-cancelled context.
+    metadata:
+      proof:
+        signal_id: context.zero_timeout
+        provider: opengrep
+        tags: [concurrent, scheduler]
+        obligations: [external_call_timeout_bounded]
+        confidence: high
+    paths:
+      exclude:
+        - "*_test.go"
+    pattern-either:
+      - pattern: context.WithTimeout($CTX, 0)
+      - pattern: context.WithTimeout($CTX, time.Duration(0))
+      - pattern: context.WithTimeout($CTX, 0 * time.Second)
+      - pattern: context.WithTimeout($CTX, 0 * time.Millisecond)
+      - pattern: context.WithDeadline($CTX, time.Time{})
+
+  - id: go.context.cancel-where-timeout-expected
+    severity: INFO
+    languages: [go]
+    message: |
+      context.WithCancel called in a zero-timeout fallback. The intent appears
+      to be no timeout, but downstream callers cannot observe a deadline.
+    metadata:
+      proof:
+        signal_id: context.cancel_where_timeout_expected
+        provider: opengrep
+        tags: [concurrent, scheduler]
+        obligations: [external_call_timeout_bounded]
+        confidence: low
+        notes: |
+          Bounded operations sometimes legitimately use WithCancel plus an
+          external watchdog goroutine; this is a low-confidence style signal.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if $X == 0 {
+                ...
+                $CTX, $CANCEL = context.WithCancel($PARENT)
+                ...
+              }
+          - pattern: |
+              if $X == 0 {
+                ...
+                $CTX, $CANCEL := context.WithCancel($PARENT)
+                ...
+              }
+
+  # Wave-11 #353 Rule 1: catch the bug class behind wave-9's cold-vs-cached
+  # divergence (#339) -- six workflow checks read overlay state populated at
+  # runtime by an earlier check but their descriptor() registration omitted
+  # the matching cache enum (DependencyDerivedVerification / DependencyVerifyCache),
+  # so the per-check cache key was a stable function of stale inputs and
+  # reused a prior verdict the propose engine would no longer produce. The
+  # spec contract SYS-REQ-260623-CCK1 (cache_key_completeness) governs this
+  # at the runtime cache-key model; this lint pins the rule at PR time so
+  # the same omission cannot recur silently.
+  - id: go.workflow.check-descriptor-missing-dependency
+    severity: WARNING
+    languages: [generic]
+    message: |
+      Workflow check known to read cache-backed overlay state (derived_verification
+      rows or verify_cache rows) is registered in check_descriptors.go via a
+      descriptor() call whose argument list omits BOTH DependencyDerivedVerification
+      and DependencyVerifyCache. Add the matching cache-dependency enum so the
+      per-check cache key invalidates when the overlay-producing earlier check
+      runs cold (the wave-9 cold-vs-cached divergence bug class -- see issue #339,
+      SYS-REQ-260623-CCK1).
+
+      Allow-listed consumer check IDs: solver_latency_clean, verify_passes,
+      coverage_met, vacuity_clean, verification_chain_complete,
+      verification_state_consistent. When introducing a new workflow check
+      whose Run body calls overlay accessors (ProposeVerificationState,
+      LoadDerivedSuspectLinks, ListComponentVerificationStates,
+      configuredTestResultStatus, solverLatencyMeasuredInCurrentRun), add its
+      ID to this rule's allow-list AND declare DependencyDerivedVerification
+      or DependencyVerifyCache on its descriptor.
+    metadata:
+      proof:
+        signal_id: workflow.check_descriptor_missing_dependency
+        provider: opengrep
+        obligations: [invariant_preservation]
+        confidence: high
+        notes: |
+          Cross-symbol assertions ("descriptor declares X iff its Run reads Y")
+          do not fit opengrep's single-file structural matching, so this rule
+          implements the strongest practical signal: a generic regex pinned
+          to a six-entry allow-list distilled from the wave-9 forensic
+          findings on issue #339. Any new overlay-consuming check MUST be
+          added to the alternation; the matching unit-test invariant in
+          pkg/workflow/check_descriptors_test.go (TestCacheCorrectnessInvariant_*)
+          enforces the same rule at the registry level for the existing
+          closure of checks.
+
+          Limitations:
+          - alternation is closed: an unmistakable overlay-consumer added
+            without updating this rule's allow-list will not fire here, but
+            the descriptor-test invariant will still flag it.
+          - `languages: [generic]` is required because opengrep's Go AST
+            cannot match standalone map-entry literal shapes (verified at
+            authoring time: tried `"key": $X` patterns, parser rejects them).
+    paths:
+      include:
+        - "check_descriptors.go"
+      exclude:
+        - "pkg/signalpacks/testdata/**"
+    patterns:
+      - pattern-regex: '"(solver_latency_clean|verify_passes|coverage_met|vacuity_clean|verification_chain_complete|verification_state_consistent)":\s*descriptor\(\s*CachePolicy\w+(?:,\s*Dependency(?!DerivedVerification|VerifyCache)\w+)+\s*\)\s*\.?'
+
+  - id: go.test-parser.success-without-count-guard
+    severity: ERROR
+    languages: [go]
+    message: |
+      Function whose name suggests test-output parsing (parse/detect/check/run
+      + test/result/output) returns true after matching a runner success
+      token ("PASS" / "passed" / "OK") in its output argument without first
+      asserting that the count of tests executed is > 0. A runner that
+      matched zero tests routinely exits 0 and emits "PASS"/"OK"-shaped
+      output, so trusting the success token without a count-guard stamps a
+      vacuous 0-test run as a genuine green. Issue #324 was the dogfooded
+      shape: `python3 runtests.py path/to/test.py` matched zero tests,
+      exited 0, and `proof evidence refresh` stamped genuine green. Add a
+      count check (testCount > 0, passCount > 0, ran > 0, etc.) before the
+      return.
+    metadata:
+      proof:
+        signal_id: go.test_parser.success_without_count_guard
+        provider: opengrep
+        tags: [error_handling]
+        obligations: [empty_input, errors_propagated]
+        confidence: high
+        notes: |
+          Targets bool-returning Go functions whose name suggests test-output
+          parsing (matches `(?i)(parse|detect|check|run|extract|interpret|read).*(test|result|output|exit|report|run)`)
+          and which return true after matching a runner success token
+          ("PASS" / "passed" / "OK") in the output argument. The pattern-not
+          clauses exclude the safe shapes where the function compares any of
+          testCount / passCount / ran / total / count / numTests / executed
+          against 0 before returning success. The function-name regex keeps
+          the rule from firing on unrelated string-matching helpers
+          (security allow-lists, HTTP routers) that legitimately scan for
+          the same tokens.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "cmd/**"
+        - "main.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func $F(...) bool {
+                ...
+                if strings.Contains($OUT, "PASS") {
+                  ...
+                  return true
+                }
+                ...
+              }
+          - pattern: |
+              func $F(...) bool {
+                ...
+                if strings.Contains($OUT, "passed") {
+                  ...
+                  return true
+                }
+                ...
+              }
+          - pattern: |
+              func $F(...) bool {
+                ...
+                if strings.Contains($OUT, "OK") {
+                  ...
+                  return true
+                }
+                ...
+              }
+          - pattern: |
+              func $F(...) (bool, error) {
+                ...
+                if strings.Contains($OUT, "PASS") {
+                  ...
+                  return true, nil
+                }
+                ...
+              }
+          - pattern: |
+              func $F(...) (bool, error) {
+                ...
+                if strings.Contains($OUT, "passed") {
+                  ...
+                  return true, nil
+                }
+                ...
+              }
+          - pattern: |
+              func $F(...) (bool, error) {
+                ...
+                if strings.Contains($OUT, "OK") {
+                  ...
+                  return true, nil
+                }
+                ...
+              }
+      - metavariable-regex:
+          metavariable: $F
+          regex: '(?i).*(parse|detect|check|run|extract|interpret|read).*(test|result|output|exit|report|run)'
+      - pattern-not: |
+          func $F(...) bool {
+            ...
+            if $COUNT > 0 {
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) (bool, error) {
+            ...
+            if $COUNT > 0 {
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) bool {
+            ...
+            if $COUNT == 0 {
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) (bool, error) {
+            ...
+            if $COUNT == 0 {
+              ...
+            }
+            ...
+          }
+
+  # Wave-14 #353 Rule 3: catch the bug class behind issue #296 -- Proof's
+  # coverage and interface walkers iterated req.Traces.Components without
+  # first filtering external actors, so an actor declared external on the
+  # requirement's Interface block (api_client, hive_console,
+  # subgraph_backend, js_gateway, ...) was treated like an in-system
+  # component that "must have a covering child requirement" or "must have
+  # an interface specification". Wave-10 commit e8fd9855a fixed the two
+  # canonical walkers (pkg/gaps/cross_component.go and
+  # pkg/gaps/interface_coverage.go); this lint pins the safe shape at PR
+  # time so any new component walker added to the audit/coverage pipeline
+  # cannot regress quietly.
+  - id: go.audit-component-walker.missing-external-filter
+    severity: WARNING
+    languages: [go]
+    message: |
+      Function in an audit/coverage walker file iterates
+      `req.Traces.Components` without checking for an external-actor
+      filter inside the loop body. Components declared external on the
+      requirement's interface block (api_client, hive_console,
+      subgraph_backend, ...) are out-of-system actors and must be
+      excluded from coverage/decomposition demands before being counted
+      or emitted as findings (the issue #296 bug class -- wave-10 fix:
+      commit e8fd9855a; canonical safe sites:
+      pkg/gaps/cross_component.go AnalyzeCrossComponentGaps,
+      pkg/gaps/interface_coverage.go analyzeInterfaceCoverageImpl,
+      pkg/workflow/workflow.go interface-synthesis loop).
+
+      Recognized safe shapes (any one of these inside the loop body
+      clears the rule):
+        if externalParties[comp] { continue }
+        if externals[comp] { continue }
+        if req.Interface.IsExternalParty(comp) { continue }
+        if externalParties[comp] || req.Interface.IsExternalParty(comp) { ... }
+
+      If your walker is intentionally external-inclusive (e.g. a graph
+      builder in pkg/trace/ that creates edges for ALL declared
+      components including externals), keep the walker in a file outside
+      this rule's filename-based scope (cross_component.go,
+      interface_coverage.go, workflow.go) so the rule does not flag it.
+      Document the rationale in the function comment.
+    metadata:
+      proof:
+        signal_id: audit.component_walker.missing_external_filter
+        provider: opengrep
+        obligations: [invariant_preservation]
+        confidence: high
+        notes: |
+          Targets Go functions inside the coverage-walker files
+          (cross_component.go, interface_coverage.go, workflow.go) that
+          range over `$R.Traces.Components` without one of the four
+          recognized external-filter `if` shapes appearing inside the
+          loop body. Pattern-not clauses cover both the map-lookup form
+          (`externalParties[comp]` / `externals[comp]`) and the
+          receiver-method form (`req.Interface.IsExternalParty(comp)`),
+          each combined with simple `||` chaining for the
+          wave-10-canonical disjunction shape.
+
+          Issue #296 background: an INT-REQ whose interface.consumer is
+          an out-of-system actor (HTTP client, FFI bridge, downstream
+          service) listed that actor in traces.components. The
+          unfiltered walkers in cross_component_clean /
+          interface_coverage then demanded a covering in-system
+          requirement, an interface spec, or a non-broken reference --
+          producing noise that could only be silenced by either omitting
+          the external party (losing the contract) or accepting the
+          coverage warning. Wave-10 (e8fd9855a) added
+          `CollectExternalParties` + `req.Interface.IsExternalParty` and
+          made every coverage walker honor them.
+
+          Limitations:
+          - This rule is filename-scoped to cross_component.go /
+            interface_coverage.go / workflow.go. A new coverage walker
+            added in a fresh file name will not be caught here; add the
+            new filename to this rule's paths.include AND mirror one of
+            the four safe shapes.
+          - The pattern-not clauses cover the canonical guard shapes
+            wave-10 actually used. A guard written as a switch, a
+            negated `if !$EXT[$C]` early-keep, or an outer-loop pre-
+            filter will not match pattern-not and will trip the rule.
+            Rewrite to the canonical `if $EXT[$C] { continue }` form,
+            or add the new shape as another pattern-not below.
+          - The unit-level invariant on the actual two coverage walkers
+            is enforced by pkg/gaps/external_parties_test.go (added in
+            wave-10 alongside e8fd9855a). This signal rule extends that
+            invariant to PR time across any future walker file with a
+            matching filename.
+    paths:
+      include:
+        - "cross_component.go"
+        - "interface_coverage.go"
+        - "workflow.go"
+      exclude:
+        - "*_test.go"
+        - "pkg/signalpacks/testdata/**"
+    patterns:
+      - pattern: |
+          func $F(...) $T {
+            ...
+            for _, $C := range $R.Traces.Components {
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            for _, $C := range $R.Traces.Components {
+              ...
+              if $EXT[$C] {
+                ...
+              }
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            for _, $C := range $R.Traces.Components {
+              ...
+              if $EXT[$C] || ... {
+                ...
+              }
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            for _, $C := range $R.Traces.Components {
+              ...
+              if $R.Interface.IsExternalParty($C) {
+                ...
+              }
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            for _, $C := range $R.Traces.Components {
+              ...
+              if ... || $R.Interface.IsExternalParty($C) {
+                ...
+              }
+              ...
+            }
+            ...
+          }
+
+  # Wave-14 (issue #353 Rule 4) -- recurrence guard for issue #281's bug class.
+  # Wave-10 (commit 4296aaf95) wrapped pkg/repo/index.go's setupIndexSchema +
+  # ensureIndexSchemaColumns in a per-(dbPath) sync.Once memo so a process
+  # that re-opens the same SQLite index runs CREATE TABLE / PRAGMA
+  # table_info(...) at most once per path. Before the fix, every open re-ran
+  # the full DDL + 40-pragma pass; on 1420 requirements the per-file open
+  # pattern in trace.loadRequirementsStrict measured ~3.4 s vs the batched
+  # ~170 ms (20x slowdown -- issue #281). The contract that prevents
+  # recurrence is SYS-REQ-260623-SY1C ("DDL-bearing schema setup runs at most
+  # once per dbPath per process via sync.Once.Do").
+  #
+  # This signal pins the same contract at PR time: any new function that
+  # executes a DDL statement (CREATE TABLE, ALTER TABLE, CREATE INDEX,
+  # CREATE UNIQUE INDEX) directly via db.Exec / db.ExecContext / tx.Exec /
+  # tx.ExecContext WITHOUT being inside a sync.Once.Do(func() { ... })
+  # closure trips the rule. The fix shape is to either (a) move the DDL
+  # under a sync.Once.Do, or (b) call a helper (like runSchemaSetupOnce) that
+  # itself memoizes via sync.Once.
+  - id: go.db.create-table-without-sync-once
+    severity: WARNING
+    languages: [go]
+    message: |
+      Function executes a DDL statement (CREATE TABLE / CREATE INDEX /
+      CREATE UNIQUE INDEX / ALTER TABLE) via db.Exec / db.ExecContext
+      WITHOUT being wrapped in a sync.Once.Do(func() { ... }) closure. The
+      same shape caused issue #281: setupIndexSchema + ensureIndexSchemaColumns
+      ran on every openConfiguredIndexDB, so a per-file index re-open loop
+      paid ~40 PRAGMA probes + CREATE TABLE IF NOT EXISTS per file
+      (measured 20x slowdown on 1420 requirements). The wave-10 fix (commit
+      4296aaf95, SYS-REQ-260623-SY1C) memoized schema setup per (dbPath)
+      using sync.Once; new DDL execution sites must follow the same pattern.
+
+      Fix: move the DDL call inside a sync.Once.Do(func() { ... }) closure,
+      OR invoke a helper that itself wraps the DDL with sync.Once (e.g.
+      runSchemaSetupOnce in pkg/repo/index.go).
+    metadata:
+      proof:
+        signal_id: go.db.create_table_without_sync_once
+        provider: opengrep
+        tags: [db_write, concurrent]
+        obligations: [invariant_preservation]
+        confidence: high
+        notes: |
+          Targets DDL execution sites under packages that own database
+          schema setup. Two-stage match:
+            (1) the call shape -- $DB.Exec($SQL, ...) or
+                $DB.ExecContext($CTX, $SQL, ...).
+            (2) the SQL literal -- a metavariable-pattern with a
+                pattern-regex matching CREATE TABLE / CREATE INDEX /
+                CREATE UNIQUE INDEX / ALTER TABLE (case-insensitive).
+          A pattern-not-inside `$ONCE.Do(func() { ... })` suppresses the
+          fire when the call already sits inside a sync.Once.Do closure
+          (or any .Do(func() {...}) wrapper -- the metavar makes the
+          predicate shape-based, not name-based).
+
+          Opengrep matching choice:
+          - languages: [go] (AST-level) because the call+regex+not-inside
+            composition needs structural matching, not generic-regex
+            line-bounded matching. Verified at authoring time against the
+            bad/ and good/ fixtures: bad fires 4x (one per DDL site),
+            good fires 0x (all 4 sites are inside sync.Once.Do, and the
+            INSERT control case correctly does not fire because the
+            metavariable-pattern excludes DML).
+          - metavariable-regex was tried first but did not match the SQL
+            literal text (string-content vs. abstract-content mismatch in
+            opengrep 1.22); metavariable-pattern + pattern-regex inside
+            it matches reliably.
+
+          Limitations:
+          - the pattern-not-inside check is closure-scoped: a DDL call
+            that lives in a helper function called FROM inside a
+            sync.Once.Do closure will still trip the rule (opengrep
+            cannot follow the call graph across function boundaries).
+            Inline the DDL into the closure body OR mint a helper that
+            itself uses sync.Once (the pattern-not-inside will then
+            recognize the helper-internal once.Do).
+          - excluded from `*_test.go` and `pkg/signalpacks/testdata/**`:
+            tests legitimately create/drop tables on a per-test basis to
+            exercise schema-recovery branches (pkg/repo/coverage_boost*
+            tests), and signalpack fixtures encode the bad shape on
+            purpose.
+    paths:
+      exclude:
+        - "*_test.go"
+        - "pkg/signalpacks/testdata/**"
+    patterns:
+      - pattern-either:
+          - pattern: $DB.Exec($SQL, ...)
+          - pattern: $DB.ExecContext($CTX, $SQL, ...)
+      - metavariable-pattern:
+          metavariable: $SQL
+          patterns:
+            - pattern-regex: "(?i)CREATE\\s+(UNIQUE\\s+)?(TABLE|INDEX)|ALTER\\s+TABLE"
+      - pattern-not-inside: |
+          $ONCE.Do(func() {
+              ...
+          })
+
+  # Wave-14 (issue #353 Rule 5) -- recurrence guard for issue #305's bug
+  # class. Wave-9 (commit 3fb34a4f1) fixed pkg/repo/writer.go so any read-
+  # modify-write path through repo.WriteRequirement / WriteRequirementWithOptions
+  # captures a snapshot of the SQLite 'authored'-source-kind cache via
+  # snapshotPriorAuthoredTraceCache BEFORE persistDerivedStateWithOptions
+  # rewrites it from the in-memory req. Without that prior snapshot, the
+  # renderer's overlay_audit branch cannot detect entries the user removed
+  # from on-disk YAML, and the next write silently resurrects them from
+  # the stale cache. The originating field report was a metadata-touching
+  # command rebinding a panic-safety requirement to the wrong handler
+  # because a stale source-trace entry was resurrected on round-trip.
+  # The contract that prevents recurrence is SYS-REQ-260623-8X7M.
+  #
+  # This signal pins the same contract at PR time: any new function in
+  # writer.go that calls persistDerivedState* WITHOUT also calling
+  # snapshotPriorAuthoredTraceCache somewhere in the same function body
+  # trips the rule. The fix shape is to either (a) call
+  # snapshotPriorAuthoredTraceCache(root, req.ID) and thread the result
+  # into opts.priorAuthoredCache before persist, or (b) accept a
+  # pre-populated opts.priorAuthoredCache from a caller that did so.
+  - id: go.repo.write-requirement-without-prior-snapshot
+    severity: WARNING
+    languages: [go]
+    message: |
+      Function in pkg/repo/writer.go persists requirement derived-state
+      via persistDerivedStateWithOptions / persistDerivedState WITHOUT
+      first capturing the prior 'authored'-source-kind cache via
+      snapshotPriorAuthoredTraceCache. The same shape caused the issue
+      #305 bug class: a metadata-touching command (proof approve / any
+      read-modify-write path through repo.WriteRequirement) silently
+      resurrected source-trace entries that the user had removed from
+      the authored YAML in overlay_audit-mode projects, because the
+      renderer's overlay branch re-added them from stale SQLite cache
+      rows. The wave-9 fix (commit 3fb34a4f1, SYS-REQ-260623-8X7M)
+      snapshots the prior cache BEFORE persistDerivedStateWithOptions
+      rewrites it; new writer functions must follow the same pattern.
+
+      Fix: call snapshotPriorAuthoredTraceCache(root, req.ID) inside
+      the function body BEFORE the persistDerivedState* call and assign
+      the result into opts.priorAuthoredCache. The renderer uses the
+      snapshot to drop overlay-resurrected entries when the file gets
+      rewritten.
+    metadata:
+      proof:
+        signal_id: go.repo.write_requirement_without_prior_snapshot
+        provider: opengrep
+        tags: [db_write, snapshot_consistency, state_rewrite]
+        obligations: [invariant_preservation]
+        confidence: high
+        notes: |
+          Targets functions inside pkg/repo/writer.go (the requirement-
+          authoring entry point). Two-part shape:
+            (1) the persist call -- persistDerivedStateWithOptions(...)
+                or persistDerivedState(...).
+            (2) absence of any snapshotPriorAuthoredTraceCache(...) call
+                in the same function body, in either statement, simple
+                assignment, short-var-decl, or composite-literal field
+                form.
+          A pattern-not clause for each of the four recognized snapshot
+          shapes suppresses the fire when the caller correctly snapshots
+          first.
+
+          Opengrep matching choice:
+          - languages: [go] (AST-level) because the call+pattern-not
+            composition needs structural matching, not generic-regex
+            line-bounded matching.
+          - paths.include is filename-scoped to "writer.go" so the rule
+            only fires on the requirement-write entry point file. The
+            actual implementation of persistDerivedState* lives in
+            pkg/repo/derived_state.go and is intentionally excluded (it
+            is the sink, not a caller; it does not need to snapshot its
+            own cache).
+
+          Limitations:
+          - the pattern-not check is function-scoped: a writer function
+            that delegates snapshotting to a helper called from inside
+            its body will still trip the rule (opengrep cannot follow
+            the call graph across function boundaries). Inline the
+            snapshot call into the writer body OR mint a helper whose
+            name matches snapshotPriorAuthoredTraceCache.
+          - the four pattern-not shapes (statement, `$X = ...`,
+            `$X := ...`, composite-literal-field) cover the canonical
+            assignment forms used in wave-9's writer.go fix. A snapshot
+            taken via a switch, inside an `if`-init clause, or through
+            a method receiver on a typed cache holder would not match
+            pattern-not and would trip the rule. Rewrite to a
+            canonical form, OR add the new shape as another pattern-not
+            below.
+          - excluded from `*_test.go`: tests legitimately construct
+            requirement state without going through the snapshot guard
+            to exercise the persist path in isolation.
+    paths:
+      include:
+        - "writer.go"
+      exclude:
+        - "*_test.go"
+        - "pkg/signalpacks/testdata/**"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              func $F(...) $T {
+                ...
+                persistDerivedStateWithOptions(...)
+                ...
+              }
+          - pattern: |
+              func $F(...) $T {
+                ...
+                persistDerivedState(...)
+                ...
+              }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            snapshotPriorAuthoredTraceCache(...)
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            $X = snapshotPriorAuthoredTraceCache(...)
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            $X := snapshotPriorAuthoredTraceCache(...)
+            ...
+          }
+      - pattern-not: |
+          func $F(...) $T {
+            ...
+            $X{..., $K: snapshotPriorAuthoredTraceCache(...), ...}
+            ...
+          }

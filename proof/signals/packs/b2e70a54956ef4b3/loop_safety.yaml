@@ -1,0 +1,80 @@
+# SIG-04 unguarded-external-call-in-loop -- Go OpenGrep signal rules.
+#
+# Sibling of data/solidity/loop_safety.yaml. Detects method calls inside
+# a for/range loop whose error return is NOT co-located with an inline
+# `if ...; err != nil` guard. If any iteration fails, the loop continues
+# silently or the failure propagates as a panic -- the Go equivalent of
+# the Solidity "single reverting callee unwinds the whole loop" bug class.
+# The catalog obligation that owns this signal is
+# `loop_external_call_guarded`
+# (pkg/catalog/data/domain/defi/loop_external_call_guarded.yaml).
+#
+# What it detects:
+#   Any `$RECEIVER.$METHOD(...)` call site that lives inside a Go for/
+#   range loop body and is NOT inside an `if $ERR := ...; $ERR != nil`
+#   guard. The safe pattern (inline error check that breaks, continues,
+#   or surfaces the error) is suppressed via a `pattern-not-inside`
+#   clause.
+#
+# Heuristic, not a proof:
+#   OpenGrep cannot statically resolve whether `$METHOD` returns an
+#   error at all (e.g. `Ping()` with no return values still matches
+#   the call shape). Reviewers are expected to filter obvious false
+#   positives (side-effect-only calls) on positive hits. The signal is
+#   reported at WARNING severity because the loop-context + dropped-
+#   return shape is the bug pattern even when a small fraction of hits
+#   turn out to be intentional.
+#
+# Why this rule stays loop-coupled:
+#   A global Go bare-call rule cannot tell from syntax whether a method returns
+#   an error and leaked hundreds of side-effect-only calls on external beds.
+#   This rule retains the distinct loop-multiplied failure shape, where the
+#   surrounding loop is the evidence anchor reviewers need for triage.
+#
+# Fixtures: data/go/fixtures/go.unguarded_external_call_in_loop/{positive,negative}/
+# validated by `proof signals validate --signal <id> --strict`.
+rules:
+  - id: go.loop.unguarded-external-call
+    message: Method call inside a for/range loop without an inline error check; a single failing iteration continues silently or unwinds the whole loop.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.unguarded_external_call_in_loop
+        provider: opengrep
+        tags: [external_call, liveness, error_handling]
+        # No obligations anchor: this rule cannot support obligation
+        # ownership at its precision. OpenGrep cannot express "the second
+        # return value is discarded" (see notes), so the pattern fires on any
+        # matching call statement. Sampling this repository's own corpus, the
+        # matches are dominated by calls that cannot return an error at all —
+        # fmt.Sprintf, fmt.Errorf, strings.*, filepath.Join, sort.Slice,
+        # time.Now, cobra Flags().StringVar — plus lines that already capture
+        # err. Proposing a catalog obligation from that would record heuristic
+        # noise as governance data. The rule stays a REPORTED signal for
+        # hunt-rank review, which is its stated purpose.
+        confidence: medium
+        notes: |
+          Two-leg obligation check:
+            (1) inline error check -- covered structurally by the
+                pattern-not-inside suppression. The safe pattern
+                (`if err := ...; err != nil { ... }`) clears the rule.
+            (2) provably-constant loop bound -- OpenGrep cannot resolve
+                whether the range operand is a fixed-size slice/array
+                vs. a runtime-grown collection. Reviewers must confirm
+                on every positive hit. A loop over a compiler-fixed
+                array (`for ... := range [4]int{...}`) is a known false
+                positive.
+    paths:
+      exclude:
+        - "*_test.go"
+    patterns:
+      - pattern-inside: |
+          for ... {
+            ...
+          }
+      - pattern: $RECEIVER.$METHOD(...)
+      - pattern-not-inside: |
+          if $ERR := ...; $ERR != nil {
+            ...
+          }

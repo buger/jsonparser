@@ -1,0 +1,157 @@
+id: SYS-REQ-110
+version: 1
+status: approved
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !set_targets_array_index_beyond_length | set_appends_value_at_array_end
+description: When Set targets an array-index path component [N] where N >= the current length of the addressed array, the parser shall append the value at the end of the array (index becomes len(array)) and return the mutated document, rather than overwriting existing elements or panicking. This contract applies regardless of the existing array's element types (scalars, objects, nested arrays, mixed); the previous implementation only honored it when the first element was an object, silently replacing scalar arrays — fixed (DEFECT-260727-WWWY).
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: 'Set on an array-index beyond current length was underspecified; PR #286 found it silently overwrites element 0, destroying data the caller did not address. The append-at-end contract must be explicit so the overwrite path can never regress.'
+tags:
+    - set
+    - array_index
+    - boundary
+    - beyond_length
+variables:
+    - set_targets_array_index_beyond_length
+    - set_appends_value_at_array_end
+references:
+    - type: external
+      id: PR-286
+traces:
+    satisfies:
+        - STK-REQ-005
+    verified_by_extra:
+        - parser_test.go
+        - reference_oracle_test.go
+        - set_spec_test.go
+        - fuzz_native_test.go
+    documented_by_extra:
+        - README.md
+        - docs/proof-gap-root-cause.md
+    reviewed_at: "2026-07-26T18:07:41.05718Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:b498bd567cc5ffee007bbd61cb194d3fe754bfa87ca4a50bd620bc2d02030a3e
+verification:
+    assurance_level: B
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:buger
+        role: lead_engineer
+        roles:
+            - lead_engineer
+        reviewed_at: "2026-07-27T06:53:38Z"
+        comment: 'Re-approved noting open design gap (DEFECT-260727-T7P7): top-level array-index beyond-length still returns KeyPathNotFoundError. The scalar-array fix (DEFECT-260727-WWWY) is also tracked in motivation_history. element_type_partition obligation added and locked by regression test.'
+        fingerprint: sha256:52827854518417e4fe1f1f947da168176665208b5b1d8c52fb213e1813188ae1
+        ai_generated: false
+        motivation:
+            kind: defect
+            ref: DEFECT-260727-T7P7
+        motivation_history:
+            - kind: unchanged
+              rationale: 'Formalization refinement only: added complement partition variables and modeled the no-panic invariant; the behavioral contract (append-at-end beyond length) is unchanged.'
+              superseded_at: "2026-07-26T17:42:08Z"
+              superseded_by: human:leonidbugaev
+            - kind: unchanged
+              rationale: Removed auxiliary/domain int vars from the variables list (they live in the vars model, not FRETish); behavioral contract unchanged.
+              superseded_at: "2026-07-26T19:54:38Z"
+              superseded_by: human:buger
+            - kind: defect
+              ref: DEFECT-260726-MFPA
+              rationale: malformed_input obligation added to SYS-REQ-009 (and graded high; SYS-REQ-110 nested_mutation delegation preserved) to enforce the cross-type Set failure mode henceforth (DEFECT-260726-MFPA); nominal witness in TestSet, negative tripwire in TestSetArrayIndexUnderObjectMalformedJSON_KI3.
+              superseded_at: "2026-07-27T06:49:51Z"
+              superseded_by: human:buger
+            - kind: defect
+              ref: DEFECT-260727-WWWY
+              superseded_at: "2026-07-27T06:53:38Z"
+              superseded_by: human:buger
+history:
+    created_by: human:cli
+    created_at: "2026-07-26T17:12:59Z"
+    last_modified_by: human:buger
+    last_modified_at: "2026-07-27T06:53:38Z"
+obligation_checklist:
+    - boundary
+    - nested_mutation
+    - element_type_partition
+obligation_delegations:
+    - class: boundary
+      delegated_to: SYS-REQ-009
+      reason: SYS-REQ-110 is a leaf contract partition; the boundary implementation lives in parser.go:Set / parser.go:createInsertComponent which SYS-REQ-009 already carries implemented_by traces for (source_native autolink). Delegating avoids weakening SYS-REQ-110 by removing the obligation.
+      delegated_by: human:buger
+      delegated_at: "2026-07-26T18:09:59Z"
+obligation_hazards:
+    - class: boundary
+      worst_case: Set on [len(array)] or beyond silently overwrites element 0 (or another existing element the caller did not address), destroying data and returning a mutated document with no error — silent corruption of unaddressed state.
+      severity: high
+    - class: nested_mutation
+      worst_case: Set on a beyond-length array index inside a nested container drives createInsertComponent to emit array scaffolding at the wrong offset; a regression overwrites a sibling element or builds malformed JSON, silently corrupting the nested structure.
+      severity: medium
+    - class: element_type_partition
+      worst_case: Set on a beyond-length array index under a nested key whose existing array contains SCALAR first elements (numbers, strings, bools, nulls, nested arrays — anything where the first element byte is not '{') silently replaces the entire array with a single-element [value], destroying all existing data. The append-at-end code path's guard previously required data[subObjOff]=='{' , so only object-first-element arrays took the append branch; scalar arrays fell through to the replace-container branch. Fixed in DEFECT-260727-WWWY; regression test TestSetBeyondLengthScalarArrayPreservesElements_SYS110 locks all scalar element-type partitions.
+      severity: high
+verification_state: failing
+lifecycle:
+    change_history:
+        - date: "2026-07-26T17:20:51Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T17:39:24Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:23:12Z comment="Adding SYS-REQ-110 (Set append-at-end for array index >= len) and SYS-REQ-111 (empty-string key component -> KeyPathNotFoundError, no panic) to close the under-specification gaps behind PR #286 and DEFECT-260726-QS2V/KI-1. Boundary integer domains (array_index, path_component_length) and the path_segment_kind mutex declared in parser.vars.yaml.")'
+          changed_by: human:leonidbugaev
+        - date: "2026-07-26T17:42:08Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:39:24Z comment="Re-approved after partition-completeness and no-panic-variable refinement.")'
+          changed_by: human:leonidbugaev
+        - date: "2026-07-26T18:46:10Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T19:52:55Z"
+          from: verification=passing
+          to: verification=failing
+          reason: auto-derived [passing→failing] signals=2; known_issue:KI-3=failing | tests_pass:test_status=passing
+          changed_by: human:buger
+        - date: "2026-07-26T19:54:38Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:leonidbugaev" at=2026-07-26T17:42:08Z comment="variables list now FRETish-consistent.")'
+          changed_by: human:buger
+        - date: "2026-07-27T06:10:19Z"
+          from: verification=failing
+          to: verification=passing
+          reason: auto-derived [failing→passing] signals=2; known_issue:KI-3=none | tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-27T06:49:51Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-26T19:54:38Z comment="Re-approved after attaching malformed_input obligation (DEFECT-260726-MFPA / KI-3 hazard hardening). Tripwire TestSetArrayIndexUnderObjectMalformedJSON_KI3 locks the live failure mode; verification_state auto-derived failing reflects the open KI-3 on the cross-type partition.")'
+          changed_by: human:buger
+        - date: "2026-07-27T06:49:57Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-27T06:49:51Z comment="Re-approved after adding element_type_partition obligation (ADHD diverge-critic round found scalar-array data-loss bug; DEFECT-260727-WWWY fixed). Description tightened; hazard graded high; regression test locks all scalar element-type partitions.")'
+          changed_by: human:buger
+        - date: "2026-07-27T06:53:38Z"
+          from: approved
+          to: approved
+          reason: 're-approve (prior: role="lead_engineer" reviewer="human:buger" at=2026-07-27T06:49:57Z comment="Re-approved after adding element_type_partition obligation (ADHD round found scalar-array data-loss bug; DEFECT-260727-WWWY fixed).")'
+          changed_by: human:buger
+        - date: "2026-07-27T07:04:59Z"
+          from: verification=passing
+          to: verification=failing
+          reason: auto-derived [passing→failing] signals=3; known_issue:KI-3=none | known_issue:KI-4=failing | tests_pass:test_status=passing
+          changed_by: agent:auto-derive

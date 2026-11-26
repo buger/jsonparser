@@ -1,0 +1,58 @@
+id: SYS-REQ-004
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_value_is_number | !raw_number_token_is_float_parseable | returns_getfloat_value
+description: When GetFloat addresses a JSON number token that is parseable as a float64 value, the parser shall return the corresponding float64 result. ArrayEachErr is the io.EOF-aware ArrayEach variant where the callback may stop iteration by returning an error; the returned count includes the element whose callback stopped iteration.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: GetFloat is the public floating-point accessor for callers that know the expected numeric type and still need defined failure behavior.
+tags: []
+variables:
+    - addressed_value_is_number
+    - raw_number_token_is_float_parseable
+    - returns_getfloat_value
+traces:
+    satisfies:
+        - STK-REQ-003
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.051851Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:5edd64991911eef692da392a2acc7fe21f01cdfd8d39eccd221ee323f43d3db0
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:10:46Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-04-13T17:14:56Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:14:56Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

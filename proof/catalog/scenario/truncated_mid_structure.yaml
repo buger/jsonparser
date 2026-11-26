@@ -1,0 +1,16 @@
+id: truncated_mid_structure
+catalog_version: 1
+category: scenario
+order: 1004
+status: active
+name: truncated_mid_structure
+summary: Input ends inside an opened object or array that is never closed.
+description: |
+  Covers inputs like `{"a":[1,2` where a structural delimiter has been opened
+  but the matching closeSym is absent. This exercises blockEnd in parser.go:285
+  returning -1, which is a distinct sentinel path from the tokenEnd
+  len(data) case: callers must check the negative return and propagate a
+  parse error rather than using it as an offset. Get, Delete and ObjectEach
+  each terminate the structure walk on this signal (SYS-REQ-042, SYS-REQ-056,
+  SYS-REQ-084). A violation would let a negative index underflow the byte
+  slice and crash or corrupt memory.

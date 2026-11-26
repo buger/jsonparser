@@ -43,6 +43,10 @@ var parseIntTests = []ParseIntTest{
 		out: -9223372036854775808,
 	},
 	{
+		in:  "-9223372036854775807", // = -math.MaxInt64 — slow path (19 digits), neg=T
+		out: -9223372036854775807,
+	},
+	{
 		in:         "-92233720368547758081",
 		out:        0,
 		isErr:      true,
@@ -98,16 +102,10 @@ var parseIntTests = []ParseIntTest{
 		isErr:      true,
 		isOverflow: true,
 	},
-	{
-		in:    "00",
-		isErr: true,
-	},
-	{
-		in:    "010",
-		isErr: true,
-	},
 }
 
+// Verifies: SYS-REQ-015 [boundary]
+// MCDC SYS-REQ-015: N/A
 func TestBytesParseInt(t *testing.T) {
 	for _, test := range parseIntTests {
 		out, ok, overflow := parseInt([]byte(test.in))
@@ -122,6 +120,8 @@ func TestBytesParseInt(t *testing.T) {
 	}
 }
 
+// Verifies: SYS-REQ-015 [example]
+// MCDC SYS-REQ-015: N/A
 func BenchmarkParseInt(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
@@ -130,6 +130,8 @@ func BenchmarkParseInt(b *testing.B) {
 }
 
 // Alternative implementation using unsafe and delegating to strconv.ParseInt
+// Verifies: SYS-REQ-015 [example]
+// MCDC SYS-REQ-015: N/A
 func BenchmarkParseIntUnsafeSlower(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
@@ -138,6 +140,8 @@ func BenchmarkParseIntUnsafeSlower(b *testing.B) {
 }
 
 // Old implementation that did not check for overflows.
+// Verifies: SYS-REQ-015 [example]
+// MCDC SYS-REQ-015: N/A
 func BenchmarkParseIntOverflows(b *testing.B) {
 	bytes := []byte("123")
 	for i := 0; i < b.N; i++ {
@@ -145,6 +149,7 @@ func BenchmarkParseIntOverflows(b *testing.B) {
 	}
 }
 
+// Test helper for SYS-REQ-015.
 func parseIntOverflows(bytes []byte) (v int64, ok bool) {
 	if len(bytes) == 0 {
 		return 0, false

@@ -1,0 +1,16 @@
+id: no_input_mutation
+catalog_version: 1
+category: property
+order: 8010
+status: active
+name: no_input_mutation
+summary: Mutation operations (Set/Delete) shall not modify the content of the caller's input []byte beyond the returned slice — the input's backing array must remain byte-identical after the operation.
+description: |
+  Set and Delete accept a []byte input and return a new []byte result. Because
+  Go slices share backing arrays, an append() or in-place modification inside
+  Set/Delete can corrupt the caller's original buffer when the slice has spare
+  capacity. This obligation asserts that after any Set or Delete call, the
+  input buffer's content (including spare capacity) is byte-identical to its
+  pre-call state. The only way the caller observes the mutation is through the
+  returned slice. Found by issues #209 and #141 where Set's append() overwrote
+  subsequent array bytes in the caller's buffer.

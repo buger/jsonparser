@@ -1,0 +1,67 @@
+id: SYS-REQ-008
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !multipath_requests_are_provided | eachkey_callback_receives_found_values | missing_multipath_request_does_not_emit_callback | eachkey_malformed_input_returns_error | eachkey_completes_requested_scan
+description: When EachKey is called with one or more requested key paths, the parser shall emit callback results for found paths, omit found-value callbacks for missing paths, surface malformed-input errors, and complete the requested multi-path scan. EachKeyErr is the io.EOF-aware EachKey variant where the callback may stop iteration by returning an error; io.EOF stops iteration gracefully while any other non-nil error stops iteration and is propagated to the caller.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: EachKey is the documented single-pass multi-path lookup helper and needs explicit contract coverage for both found and missing path behavior.
+tags: []
+variables:
+    - multipath_requests_are_provided
+    - eachkey_callback_receives_found_values
+    - missing_multipath_request_does_not_emit_callback
+    - eachkey_malformed_input_returns_error
+    - eachkey_completes_requested_scan
+traces:
+    satisfies:
+        - STK-REQ-004
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_error_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.145909Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:8adf7c728588f2843516c9aacb92dd5349cc391f9d2ab1c4dda4f05ef7a0e86f
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:10:56Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:13Z"
+obligation_checklist:
+    - edge_case
+obligation_hazards:
+    - class: edge_case
+      worst_case: EachKeys with one requested path plus one malformed sibling emits a found-callback for the good path but loses or mis-routes the malformed-input error, leaving the caller with an incomplete scan and no error surfaced.
+      severity: low
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:14:56Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=2; known_issue:KI-1=none | tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

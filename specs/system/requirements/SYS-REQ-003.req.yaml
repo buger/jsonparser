@@ -1,0 +1,64 @@
+id: SYS-REQ-003
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !addressed_value_is_number | !raw_number_token_is_integer_parseable | returns_getint_value
+description: "When GetInt addresses a JSON number token that is parseable as an int64 value, the parser shall return the corresponding int64 result. GetUint64 is the uint64-typed variant of GetInt: when the addressed JSON number token is parseable as a uint64 (non-negative, magnitude within uint64 range), GetUint64 returns the corresponding uint64 result, returning OverflowIntegerError when the magnitude exceeds uint64 range and MalformedValueError when the addressed value is not a non-negative integer."
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: GetInt is a public typed helper for callers who expect integer-valued JSON fields and need contract-level error behavior on invalid access.
+tags: []
+variables:
+    - addressed_value_is_number
+    - raw_number_token_is_integer_parseable
+    - returns_getint_value
+traces:
+    satisfies:
+        - STK-REQ-003
+    verified_by_extra:
+        - mcdc_supplement_test.go
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.038843Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:0510c117515e4f43e27abb7707a6211d9e414b078b33624be62e97853ff8a83b
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: human:cli
+    created_at: "2026-04-13T17:10:46Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T14:54:13Z"
+obligation_checklist:
+    - determinism
+obligation_hazards:
+    - class: determinism
+      worst_case: GetInt returns a different int64 across calls on identical well-formed input, inverting downstream branching that relies on hash/equality invariants.
+      severity: medium
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-13T17:14:56Z"
+          from: draft
+          to: review
+          reason: ""
+          changed_by: human:cli
+        - date: "2026-07-26T13:23:26Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: nominal

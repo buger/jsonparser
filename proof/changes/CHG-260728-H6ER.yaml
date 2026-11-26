@@ -1,0 +1,19 @@
+id: CHG-260728-H6ER
+type: feature
+title: 'v1.5.0: Config, name aliases, streaming ReaderParser'
+intent: v1.5.0 introduces opt-in Config (AllowSingleQuotes, AllowUnknownEscapes, MaxBufferSize) plus package-level name aliases (EachArray/EachObject/EachArrayErr/EachArrayWildcard) and a streaming ReaderParser with Get, GetString, and ArrayEach backed by a bounded sliding window. New surface traces to SYS-REQ-115 (Config + lenient parsing) and SYS-REQ-116 (streaming ReaderParser) via source-native // SYS-REQ-xxx code annotations.
+owner: human:buger
+target_release: v1.5.0
+requirements:
+    - SYS-REQ-115
+    - SYS-REQ-116
+readiness_policy:
+    require_requirements_reviewed: true
+    require_tests: false
+    require_docs: false
+    require_no_suspect_links: true
+status: active
+history:
+    - at: "2026-07-28T13:58:48Z"
+      by: human:buger
+      action: created

@@ -1,0 +1,61 @@
+id: SYS-REQ-040
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy raw_int_token_is_well_formed | raw_int_token_overflows_int64 | returns_parseint_malformed_error
+description: When ParseInt receives a non-integer or otherwise malformed token that is not an overflow case, the parser shall return the documented malformed-value error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Malformed-token rejection is an externally visible ParseInt outcome and should be specified independently from valid integer parsing and overflow detection.
+tags:
+    - decomposition
+    - parse
+    - int
+    - edge-case
+variables:
+    - raw_int_token_is_well_formed
+    - raw_int_token_overflows_int64
+    - returns_parseint_malformed_error
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.657892Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:3452299929f04834610f0ed8a1542ad82f8747f648b08a6e03443748d4530f1f
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:codex
+    created_at: "2026-04-14T15:45:00Z"
+    last_modified_by: agent:codex
+    last_modified_at: "2026-04-14T15:45:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T15:45:00Z"
+          from: draft
+          to: review
+          reason: Added explicit malformed-token behavior for ParseInt.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

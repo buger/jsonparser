@@ -1,0 +1,60 @@
+id: SYS-REQ-038
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy raw_string_literal_is_well_formed | returns_parsestring_error
+description: When ParseString receives a malformed encoded string literal, the parser shall return the documented malformed-value error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Malformed-string failure is externally visible and should be specified independently from valid ParseString decoding behavior.
+tags:
+    - decomposition
+    - parse
+    - string
+    - edge-case
+variables:
+    - raw_string_literal_is_well_formed
+    - returns_parsestring_error
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - parser_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.63385Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:d60613452d780110a5c1c9c50a53108d7383b3748b2b69d88d722692045248b7
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:codex
+    created_at: "2026-04-14T15:45:00Z"
+    last_modified_by: agent:codex
+    last_modified_at: "2026-04-14T15:45:00Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T15:45:00Z"
+          from: draft
+          to: review
+          reason: Added explicit malformed-token behavior for ParseString.
+          changed_by: agent:codex
+        - date: "2026-07-26T13:23:29Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: malformed_input

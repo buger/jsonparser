@@ -1,0 +1,271 @@
+rules:
+  - id: go.runtime.panic-call
+    message: panic outside test code requires proof that hostile or malformed input cannot reach it.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: panic.risk
+        provider: opengrep
+        tags: [panic_safety]
+        obligations: [panic_free_input_handling]
+        confidence: medium
+    pattern: panic(...)
+
+  - id: go.error.discarded-result
+    message: Discarded call result requires explicit propagation or ignore-policy evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: error.discarded
+        provider: opengrep
+        tags: [error_propagation]
+        confidence: medium
+    pattern-either:
+      - pattern: _, $X := $CALL(...)
+      - pattern: _, $X = $CALL(...)
+      - pattern: $X, _ := $CALL(...)
+      - pattern: $X, _ = $CALL(...)
+
+  - id: go.error.ignored-close-result
+    message: Close result is ignored; require explicit propagation or documented close-error policy.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.ignored_close_error
+        provider: opengrep
+        tags: [error_propagation]
+        confidence: medium
+    patterns:
+      - pattern: $X.Close()
+      - pattern-not-inside: $ERR := $X.Close()
+      - pattern-not-inside: $ERR = $X.Close()
+      - pattern-not-inside: if $ERR := $X.Close(); $ERR != nil { ... }
+      - pattern-not-inside: if $X.Close() != nil { ... }
+      - pattern-not-inside: defer $X.Close()
+      - pattern-not-inside: return $X.Close()
+      - pattern-not-inside: _ = $X.Close()
+
+  - id: go.error.silent-haserrors-success-return
+    message: HasErrors state is followed by a silent success return.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.silent_error_swallow
+        provider: opengrep
+        tags: [error_propagation]
+        confidence: high
+    pattern-either:
+      - pattern: |
+          $X.HasErrors()
+          return nil
+      - pattern: |
+          $X.HasErrors()
+          return nil, nil
+      - pattern: |
+          $X.HasErrors()
+          return []byte{}, nil
+      - pattern: |
+          $X.HasErrors()
+          return "", nil
+
+  - id: go.encoding.lossy-string-conversion
+    message: Byte-to-string conversion may lose binary boundary semantics; require byte-preserving behavior or documented lossy contract.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: encoding.lossy_string_conversion
+        provider: opengrep
+        tags: [binary_safe_io]
+        obligations: [binary_data_preserved]
+        confidence: medium
+    pattern-either:
+      - pattern: string([]byte($X))
+      - pattern: string($X.Bytes())
+
+  - id: go.time.dependency
+    message: Time-dependent behavior requires determinism, timeout, or scheduling evidence.
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: time.dependency
+        provider: opengrep
+        tags: [scheduler]
+        confidence: medium
+    pattern-either:
+      - pattern: time.Now(...)
+      - pattern: time.Since(...)
+      - pattern: time.Until(...)
+      - pattern: time.After(...)
+      - pattern: time.AfterFunc(...)
+      - pattern: time.NewTimer(...)
+      - pattern: time.NewTicker(...)
+      - pattern: time.Sleep(...)
+      - pattern: time.Tick(...)
+
+  - id: go.random.math-rand
+    message: Randomness requires determinism or cryptographic-strength evidence depending on use.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: random.dependency
+        provider: opengrep
+        obligations: [determinism]
+        confidence: medium
+    pattern-either:
+      - pattern: import "math/rand"
+      - pattern: import $RAND "math/rand"
+      - pattern: import "math/rand/v2"
+      - pattern: import $RAND "math/rand/v2"
+
+  - id: go.env.read
+    message: Environment-dependent behavior requires configuration, determinism, and deployment evidence.
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: environment.dependency
+        provider: opengrep
+        tags: [process_local]
+        confidence: medium
+    pattern-either:
+      - pattern: os.Getenv(...)
+      - pattern: os.LookupEnv(...)
+
+  - id: go.net.raw-api
+    message: Raw network API use requires timeout, address-boundary, and failure-observation evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: network.dependency
+        provider: opengrep
+        tags: [ipc]
+        confidence: medium
+    pattern-either:
+      - pattern: net.Dial(...)
+      - pattern: net.DialTimeout(...)
+      - pattern: net.DialTCP(...)
+      - pattern: net.DialUDP(...)
+      - pattern: net.DialUnix(...)
+      - pattern: net.Listen(...)
+      - pattern: net.ListenTCP(...)
+      - pattern: net.ListenUDP(...)
+      - pattern: net.ListenUnix(...)
+      - pattern: net.ListenPacket(...)
+      - pattern: net.Pipe(...)
+      - pattern: net.ResolveIPAddr(...)
+      - pattern: net.ResolveTCPAddr(...)
+      - pattern: net.ResolveUDPAddr(...)
+      - pattern: net.ResolveUnixAddr(...)
+
+  - id: go.determinism.map-literal-iteration
+    message: Iteration over a map literal or freshly allocated map requires deterministic-order evidence.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.map_iteration
+        provider: opengrep
+        obligations: [determinism]
+        confidence: high
+    pattern-either:
+      - pattern: |
+          for $K, $V := range map[$KT]$VT{...} { ... }
+      - pattern: |
+          for $K := range map[$KT]$VT{...} { ... }
+      - pattern: |
+          for $K, $V := range make(map[$KT]$VT, ...) { ... }
+      - pattern: |
+          for $K := range make(map[$KT]$VT, ...) { ... }
+
+  - id: go.boundary.cyclic-reference-unbounded-loop
+    message: Loop follows reference or pointer fields without an obvious visited/depth/limit guard.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.cyclic_reference_unbounded_loop
+        provider: opengrep
+        tags: [panic_safety]
+        confidence: medium
+    patterns:
+      - pattern-inside: |
+          for ... { ... }
+      - pattern-either:
+          - pattern: $X.OfType
+          - pattern: $X.Elem
+          - pattern: $X.Ref
+      - pattern-not-inside: |
+          for $D := ...; ...; $D++ { ... }
+      - pattern-not-inside: |
+          for $D := ...; ...; $D-- { ... }
+      - pattern-not-inside: |
+          for ... {
+            ...
+            $D++
+            ...
+          }
+      - pattern-not-regex: "(?i)(visited|seen|limit|max)"
+
+  - id: go.sync.primitive
+    message: Synchronization primitive use requires concurrency ownership and race/liveness evidence.
+    languages: [go]
+    severity: INFO
+    metadata:
+      proof:
+        signal_id: sync.primitive
+        provider: opengrep
+        tags: [concurrent]
+        confidence: medium
+    pattern-either:
+      - pattern: sync.Mutex{...}
+      - pattern: sync.RWMutex{...}
+      - pattern: sync.WaitGroup{...}
+      - pattern: sync.Once{...}
+      - pattern: sync.Cond{...}
+      - pattern: sync.Map{...}
+      - pattern: atomic.$FUNC(...)
+
+  - id: go.runtime.pool-type-assertion-unchecked
+    message: |
+      Single-return type assertion on a sync.Pool / interface value
+      (pool.Get().(*T)) panics if the dynamic type differs from the asserted
+      type. Pools hold interface{} and a misconfigured New func, a shared pool
+      reused across types, or a future refactor can yield a value of another
+      type; the unchecked assertion turns that into an unrecoverable panic on
+      a hot path. Use the comma-ok form (v, ok := pool.Get().(*T)) and handle
+      the miss, or document the single-owner type invariant.
+    languages: [go]
+    severity: WARNING
+    metadata:
+      proof:
+        signal_id: go.pool_type_assertion_unchecked
+        provider: opengrep
+        tags: [panic_safety]
+        obligations: [nil_safety, panic_free_input_handling]
+        confidence: high
+        notes: |
+          Generalized signal F from the graphql-go-tools audit (issue #73).
+          The comma-ok form is excluded via a metavariable-regex that rejects
+          a comma in the assignment LHS, so v, ok := pool.Get().(*T) does not
+          match. The return form is matched separately. Restricted to the
+          .Get() accessor shape (sync.Pool and pool-like wrappers) to keep
+          false positives off ordinary checked assertions elsewhere.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $X := $POOL.Get().($T)
+                  - pattern: $X = $POOL.Get().($T)
+              - metavariable-regex:
+                  metavariable: $X
+                  regex: '^[^,]*$'
+          - patterns:
+              - pattern: return $POOL.Get().($T)

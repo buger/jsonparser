@@ -1,0 +1,59 @@
+id: SYS-REQ-093
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !getstring_input_has_unicode_edge_cases | getstring_handles_unicode_edges_safely
+description: When GetString is called on JSON containing Unicode edge cases such as BOM characters, zero-width joiners, or multi-byte sequences at string boundaries, the parser shall decode correctly or return a well-defined error without panicking.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: Unicode edge cases (BOM, ZWJ, emoji sequences) are common in real-world JSON from international APIs and must not cause undefined behavior.
+tags:
+    - getstring
+    - edge_case
+    - unicode
+variables:
+    - getstring_input_has_unicode_edge_cases
+    - getstring_handles_unicode_edges_safely
+traces:
+    satisfies:
+        - STK-REQ-002
+    verified_by_extra:
+        - obligation_property_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:52.367918Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:4358096aa62e9fea3e44c9bcfe92611ef09c4ae725bd129efe04d2f3a32576ec
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-21T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-21T00:00:00Z"
+    last_modified_by: human:cli
+    last_modified_at: "2026-07-26T13:17:40Z"
+verification_state: passing
+lifecycle:
+    change_history:
+        - date: "2026-04-21T00:00:00Z"
+          from: draft
+          to: review
+          reason: Added Unicode edge case obligation for GetString.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:33Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+obligation_class: edge_case

@@ -1,0 +1,64 @@
+id: SYS-REQ-058
+version: 1
+status: review
+priority: shall
+category: functional
+req_type: guarantee
+fretish: the parser shall always satisfy !raw_int_token_is_at_int64_max_boundary | returns_correct_value_at_int64_boundary
+description: When ParseInt receives integer tokens at the exact int64 boundary values (9223372036854775807 for max, -9223372036854775808 for min), the parser shall return the correct int64 value without overflow error.
+formalization_strategy: fretish
+informal_verification:
+    method: ""
+    evidence: ""
+    verified: false
+component: parser
+rationale: The int64 boundary is a critical boundary value where off-by-one errors in overflow detection would produce incorrect results. Both max positive and min negative must be tested.
+tags:
+    - parse
+    - int
+    - boundary
+variables:
+    - raw_int_token_is_at_int64_max_boundary
+    - returns_correct_value_at_int64_boundary
+traces:
+    satisfies:
+        - STK-REQ-007
+    verified_by_extra:
+        - deep_spec_test.go
+    documented_by_extra:
+        - README.md
+    reviewed_at: "2026-07-26T13:25:51.89291Z"
+    reviewed_by: human:buger
+    reviewed_fingerprint: sha256:ed9600010ce16123c7c5d51375af68cb4dfd75a9c2bca7dd0c4b71165d37feac
+verification:
+    assurance_level: E
+    formalization_status: valid
+    review:
+        status: approved
+        reviewer: human:leonidbugaev
+        reviewed_at: "2026-04-23T00:00:00Z"
+        ai_generated: false
+history:
+    created_by: agent:claude
+    created_at: "2026-04-14T18:00:00Z"
+    last_modified_by: agent:claude
+    last_modified_at: "2026-04-14T18:00:00Z"
+verification_state: failing
+lifecycle:
+    change_history:
+        - date: "2026-04-14T18:00:00Z"
+          from: draft
+          to: review
+          reason: Added explicit int64-boundary value correctness requirement for ParseInt.
+          changed_by: agent:claude
+        - date: "2026-07-26T13:23:30Z"
+          from: verification=not_started
+          to: verification=passing
+          reason: auto-derived [not_started→passing] signals=1; tests_pass:test_status=passing
+          changed_by: agent:auto-derive
+        - date: "2026-07-26T19:24:11Z"
+          from: verification=passing
+          to: verification=failing
+          reason: auto-derived [passing→failing] signals=2; known_issue:KI-2=failing | tests_pass:test_status=passing
+          changed_by: human:buger
+obligation_class: boundary
